@@ -1,6 +1,6 @@
 {
   "name": "game",
-  "description": "eve website",
+  "description": "a html5 mutiplayer game",
   "version": "0.0.1",
   "private": true,
   "dependencies": {
