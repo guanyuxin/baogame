@@ -1,0 +1,672 @@
+<html>
+<head>
+<script src="/js/socket.io.js"></script>
+<script src="/js/zepto.js"></script>
+<style>
+	body {
+		margin: 0;
+	}
+	#bg {
+		background: #333;
+	}
+	#fg {
+		position: absolute;
+		left: 0;
+		top: 0;
+	}
+	.frame {
+		display: flex;
+		-webkit-user-select: none;
+	}
+	.middle {
+		position: relative;
+	}
+	.title {
+		font-size: 30;
+		color: #ddd;
+	}
+	.left,.right {
+		color: white;
+		padding: 10px;
+		background: black;
+		display: -webkit-box;
+		-webkit-box-align: center;
+		flex: 1;
+		-webkit-box-pack: center;
+	}
+	.joing,.reborn {
+		font-size: 20px;
+		padding: 50px 10px;
+		display: inline-block;
+		border: 1px solid #ccc;
+	}
+	.joined,.reborn {
+		display: none;
+	}
+	.joing:hover {
+		background: #dd2;
+		color: black
+	}
+	.joing:active {
+		background: #ee2;
+	}
+	.noticeItem {
+	    padding: 3px 10px;
+	    border-bottom: 1px solid #ccc;
+	}
+	.noticeItem b {
+		font-weight: bolder;
+		color: red;
+	}
+</style>
+</head>
+<body><div class="frame">
+	<div class="left">
+		<div class="joing">
+			<div>加入游戏P1</div>
+			<div>按 e 加入</div>
+		</div>
+		<div class="joined">
+			<div class="title">P1</div>
+			<div>w,a,s,d:移动</div>
+			<div>q:使用物品</div>
+		</div>
+		<div class="reborn">
+			<div>你挂了</div>
+			<div>按 e 重生</div>
+		</div>
+	</div>
+	<div class="middle" id="middle">
+
+	</div>
+	<div class="right">
+		<div class="joing">
+			<div>加入游戏P2</div>
+			<div>按 shift 加入</div>
+		</div>
+		<div class="joined">
+			<div class="title">P2</div>
+			<div>↑,⬇,←,→:移动</div>
+			<div>?:使用物品</div>
+		</div>
+		<div class="reborn">
+			<div>你挂了</div>
+			<div>按 shift 重生</div>
+		</div>
+	</div>
+</div>
+<div class="notice">
+</div>
+</body>
+</html>
+<script>
+var scoreText = [
+	'小试牛刀',
+	'势不可挡',
+	'正在大杀特杀',
+	'已经主宰比赛',
+	'已经杀人如麻',
+	'已经无人能挡',
+	'已经变态杀戮',
+	'已经妖怪般的杀戮',
+	'已经如同神一般',
+	'已经超越神了'
+]
+
+function notice (str) {
+	$('.notice').prepend('<div class="noticeItem">'+str+'</div>');
+}
+
+var Flare = function (mine) {
+	this.x = mine.x;
+	this.y = mine.y;
+	this.txt = mine.txt || " 嘭！";
+	this.life = 40;
+}
+Flare.prototype.draw = function (ctx) {
+	ctx.fillStyle = "#fff";
+	ctx.font="34px 宋体";
+	ctx.fillText(this.txt, this.x, props.h - this.y + this.life - 40);
+	ctx.font="14px 宋体";
+}
+
+var ItemDead = function (item) {
+	this.life = 40;
+	this.item = item;
+}
+ItemDead.prototype.draw = function (ctx) {
+	ctx.strokeStyle = "rgba(255,255,255,"+(this.life)/40+")";
+	ctx.beginPath();
+	ctx.arc(this.item.x, props.h - this.item.y, props.itemSize + (40 - this.life)/2, 0, 2*Math.PI);
+	ctx.stroke();
+
+
+	ctx.font = (1600 - this.life*this.life)/160 + 12 + "px 宋体";
+	ctx.fillStyle = "#fff";
+	if (this.item.type == "gun") {
+		var label = "手枪";
+	} else if (this.item.type == "death") {
+		var label = "毒药";
+	} else if (this.item.type == "power") {
+		var label = "高压电";
+	} else if (this.item.type == "mine") {
+		var label = "地雷";
+	} else if (this.item.type == "hide") {
+		var label = "隐身";
+	}
+	ctx.fillText(label, this.item.x, props.h - this.item.y);
+	ctx.font="14px 宋体";
+}
+
+var ShotLine = function (x, y ,dir) {
+	this.life = 20;
+	this.x = x;
+	this.y = y;
+	this.dir = dir;
+}
+ShotLine.prototype.draw = function (ctx) {
+	ctx.strokeStyle = "rgba(255,255,0,"+(this.life)/20+")";
+	ctx.beginPath();
+	if (!this.dir) {
+		ctx.moveTo(this.x + 40, props.h - this.y);
+		ctx.lineTo(props.w, props.h - this.y);
+	} else {
+		ctx.moveTo(this.x - 40, props.h - this.y);
+		ctx.lineTo(0, props.h - this.y);
+	}
+	ctx.stroke();
+}
+
+var cdomBody,ctx,ctxBg,ctxBody,props;
+var p1 = {
+	upPress: false,
+	downPress: false,
+	leftPress: false,
+	rightPress: false,
+	itemPress: false
+}
+var p2 = {
+	upPress: false,
+	downPress: false,
+	leftPress: false,
+	rightPress: false,
+	itemPress: false
+}
+
+document.addEventListener('keydown', function (e) {
+	if (e.keyCode == 87) {
+		p1.upPress = true;
+	} else if (e.keyCode == 83) {
+		p1.downPress = true;
+	} else if (e.keyCode == 65) {
+		p1.leftPress = true;
+	} else if (e.keyCode == 68) {
+		p1.rightPress = true;
+	} else if (e.keyCode == 81) {
+		p1.itemPress = true;
+	} else if (e.keyCode == 38) {
+		p2.upPress = true;
+	} else if (e.keyCode == 40) {
+		p2.downPress = true;
+	} else if (e.keyCode == 37) {
+		p2.leftPress = true;
+	} else if (e.keyCode == 39) {
+		p2.rightPress = true;
+	} else if (e.keyCode == 191) {
+		p2.itemPress = true;
+	}
+});
+document.addEventListener('keyup', function (e) {
+	if (e.keyCode == 87) {
+		p1.upPress = false;
+	} else if (e.keyCode == 83) {
+		p1.downPress = false;
+	} else if (e.keyCode == 65) {
+		p1.leftPress = false;
+	} else if (e.keyCode == 68) {
+		p1.rightPress = false;
+	} else if (e.keyCode == 81) {
+		p1.itemPress = false;
+	} else if (e.keyCode == 38) {
+		p2.upPress = false;
+	} else if (e.keyCode == 40) {
+		p2.downPress = false;
+	} else if (e.keyCode == 37) {
+		p2.leftPress = false;
+	} else if (e.keyCode == 39) {
+		p2.rightPress = false;
+	} else if (e.keyCode == 191) {
+		p2.itemPress = false;
+	}
+	if (e.keyCode == 69) {
+		if (p1.id != undefined) {
+			$('.left .joined').show();
+			$('.left .reborn').hide();
+			socket.emit('rebornp1');
+		} else {
+			joing({currentTarget:$('.left .joing')});
+		}
+	}
+	if (e.keyCode == 16) {
+		if (p2.id != undefined) {
+			$('.right .joined').show();
+			$('.right .reborn').hide();
+			socket.emit('rebornp2');
+		} else {
+			joing({currentTarget:$('.right .joing')});
+		}
+	}
+});
+
+var userName = localStorage.userName;
+
+var socket = io.connect(location.href);
+$('.joing').click(joing);
+function joing (e) {
+	var target = $(e.currentTarget);
+	if (!userName || userName == '') {
+		userName = prompt('给自己起个名字吧');
+		if (userName != null) {
+			localStorage.userName = userName;
+		}
+	}
+	if (target.closest('.left').length) {
+		socket.emit('join', {
+			userName: userName,
+			p1: true
+		});
+		$('.left .joing').hide();
+		$('.left .joined').show();
+	} else {
+		socket.emit('join', {
+			userName: userName,
+			p2: true
+		});
+		$('.right .joing').hide();
+		$('.right .joined').show();
+	}
+}
+
+socket.on('init', function (data) {
+	props = data.props
+	var cdom = document.createElement('canvas');
+	var cdomBg = document.createElement('canvas');
+	cdomBody = document.createElement('canvas');
+	cdom.width = props.w;
+	cdom.height = props.h;
+	cdom.id = "fg";
+	cdomBg.width = props.w;
+	cdomBg.height = props.h;
+	cdomBg.id = "bg";
+	cdomBody.width = props.w;
+	cdomBody.height = props.h;
+	ctx = cdom.getContext("2d");
+	ctx.font="14px 宋体";
+	ctx.textBaseline = 'middle';//设置文本的垂直对齐方式
+	ctx.textAlign = 'center'; //设置文本的水平对对齐方式
+
+
+	ctxBg = cdomBg.getContext("2d");
+	ctxBody = cdomBody.getContext("2d");
+	ctxBody.font="14px 宋体";
+	ctxBody.textBaseline = 'middle';//设置文本的垂直对齐方式
+	ctxBody.textAlign = 'center'; //设置文本的水平对对齐方式
+
+	drawBg(ctxBg, data.map);
+	var middle = document.getElementById('middle');
+	middle.innerHTML = '';
+	middle.appendChild(cdomBg);
+	middle.appendChild(cdom);
+	for (var i = 0; i < data.bodies.length; i++) {
+		data.bodies[i].dead = true;
+		drawUser(ctxBody, data.bodies[i], {});
+	}
+	socket.on('tick', function (data) {
+		p1.id = data.p1;
+		p2.id = data.p2;
+		render(data);
+		socket.emit('control', {
+			p1: p1,
+			p2: p2
+		})
+	});
+	socket.on('userDead', function (data) {
+		var user = data.user;
+		if (user.killer) {
+			if (user.killedBy == 'drug') {
+				var str = "<b>" + user.name + "</b>让<b>" + user.name + "</b>品尝到了毒药的滋味";
+			} else if (user.killedBy == 'mine') {
+				if (user.killer == user.id) {
+					var str = "<b>" + user.name + "</b>用自己的身体检验了地雷的可靠性，结果很成功";
+				} else {
+					var str = "<b>" + user.name + "</b>的地雷让<b>" + user.name + "</b>的菊花一紧";
+				}
+			} else if (user.killedBy == 'gun') {
+				var str = "<b>" + user.name + "</b>开枪了，<b>" + user.name + "</b>应声倒地";
+			} else if (user.killedBy == 'power') {
+				var str = "<b>" + user.name + "</b>把<b>" + user.name + "</b>扔进了泥潭";
+			} else {
+				var str = "<b>" + user.name + "</b>把<b>" + user.name + "</b>扔进了泥潭";
+			}
+		} else {
+			if (user.killedBy == 'drug') {
+				var str = "<b>" + user.name + "</b>尝了一口毒药";
+			} else {
+				var str = "<b>" + user.name + "</b>完成了华丽的一跃";
+			}
+		}
+		notice(str);
+		user.dead = true;
+		drawUser(ctxBody, user, {});
+
+		if (user.id == p1.id) {
+			$('.left .joined').hide();
+			$('.left .reborn').show();
+		}
+		if (user.id == p2.id) {
+			$('.right .joined').hide();
+			$('.right .reborn').show();
+		}
+
+		var killer = data.killer;
+		if (killer && killer.score < 10) {
+			shinnys.push(new Flare({x: killer.x, y: killer.y, txt: killer.name+scoreText[killer.score - 1]}));
+		}
+	})
+});
+
+function drawBg (ctx, map) {
+	ctx.clearRect(0, 0, props.w, props.h);
+	//绘制柱子
+	ctx.fillStyle = "#aaa";
+	for (var i = 0; i < map.pilla.length; i++) {
+		var pilla = map.pilla[i];
+		ctx.fillRect(pilla.x * props.blockWidth - 2, props.h - pilla.y2*props.blockHeight, 4, (pilla.y2 - pilla.y1)*props.blockHeight);
+		ctx.beginPath();
+		ctx.arc(pilla.x * props.blockWidth, props.h - pilla.y2*props.blockHeight - 5, 5, 0, 2*Math.PI);
+		ctx.stroke();
+		ctx.fill();
+	}
+	//绘制block
+	ctx.fillStyle = "#9a0";
+	for (var i = 0; i < map.block.length; i++) {
+		for (var j = 0; j < map.block[i].length; j++) {
+			var x = j * props.blockWidth;
+			var y = props.h - (i) * props.blockHeight
+			if (map.block[i][j]) {
+				ctx.beginPath();
+				ctx.moveTo(x + 1, y)
+				ctx.lineTo(x + props.blockWidth - 1, y);
+				ctx.lineTo(x + props.blockWidth - 1, y + 4);
+				ctx.lineTo(x + props.blockWidth - 5, y + 8);
+				ctx.lineTo(x + 5, y + 8);
+				ctx.lineTo(x + 1, y + 4);
+				ctx.fill();
+			}
+		}
+	}
+	//绘制物品发生器
+	ctx.lineWidth = 4;
+	ctx.strokeStyle = "#aaa";
+	var cols = [[props.itemSize, props.h/2, 0],[props.w/2, props.itemSize, Math.PI/2],[props.w - props.itemSize, props.h/2, Math.PI]];
+	for (var i = 0; i < cols.length; i++) {
+		ctx.beginPath();
+		ctx.arc(cols[i][0], cols[i][1], props.itemSize, cols[i][2] + .5, cols[i][2] + 2*Math.PI-.5);
+		ctx.stroke();
+	}
+	ctx.lineWidth = 1;
+}
+
+var t = 0;
+function drawWater (ctx, height, color) {
+	var waveLen = 20;
+	var waveHeight = height/5;
+	var c = waveLen / 2;
+	var b = props.h - height;
+	t++;
+	var offset = Math.sin(t/50 + height) * 10;
+	start = offset - 10
+	ctx.fillStyle = color;
+	ctx.beginPath();
+	ctx.moveTo(start, props.h);
+	ctx.lineTo(start, props.h - height);
+	while (start < props.w) {
+		ctx.bezierCurveTo(start + c, b + waveHeight, start + waveLen - c, b + waveHeight, start + waveLen, b);
+		start += waveLen;
+		waveHeight *= -1;
+	}
+	ctx.lineTo(props.w, props.h);
+	ctx.fill();
+}
+
+var imgUrls = {
+	happy: "/imgs/head/happy.png",
+	throll: "/imgs/head/throll.png",
+	danger: "/imgs/head/danger3.png",
+	alone: "/imgs/head/alone.png",
+	alone2: "/imgs/head/alone2.png",
+	alone3: "/imgs/head/alone3.png",
+	normal: "/imgs/head/normal.png",
+	win: "/imgs/head/win.png"
+};
+var imgs = {};
+for (var key in imgUrls) {
+	var Img = new Image();
+	Img.src = imgUrls[key];
+	imgs[key] = Img;
+}
+
+function drawWeapon (ctx, index) {
+	ctx.strokeStyle = "#fff";
+	ctx.lineWidth = 6;
+	if (index < 10) {
+		ctx.rotate(1 - index/10);
+	}
+	ctx.beginPath();
+	ctx.moveTo(10, 0);
+	if (index < 10) {
+		ctx.lineTo(10 + index * 2, 10 - index);
+		ctx.lineTo(10 + index * 3, -5);
+		var endx = 10 + index * 3;
+	} else {
+		ctx.lineTo(10 + 20, 0);
+		ctx.lineTo(10 + 30, -5);
+		var endx = 10 + 30;
+	}
+	ctx.stroke();
+
+	ctx.strokeStyle = "#F00";
+	ctx.beginPath();
+	ctx.moveTo(endx, 0);
+	ctx.lineTo(endx, -6);
+	ctx.lineTo(endx + 9, -6);
+	ctx.stroke();
+	
+	ctx.lineWidth = 1;
+}
+
+function drawUser (ctx, user, data) {
+	ctx.save();
+	ctx.translate(user.x, props.h - user.y);
+
+	if (user.dead) {
+		var img = imgs.alone;
+	} else if (user.status == "dieing") {
+		var img = imgs.alone;
+	} else if (user.carry == "power") {
+		var img = imgs.win;
+	} else if (user.danger) {
+		var img = imgs.danger;
+	} else if (user.status == "crawling" || user.status == "mining") {
+		var img = imgs.throll;
+	} else if (user.status == "falling" || user.status == "climbing") {
+		var img = imgs.happy;
+	} else {
+		var img = imgs.normal;
+	}
+
+	if (user.id == data.p1) {
+		ctx.fillStyle = "#ffa";
+	} else if (user.id == data.p2) {
+		ctx.fillStyle = "#aaf";
+	} else {
+		ctx.fillStyle = "#f77";
+	}
+
+	//用户指示器
+	if (user.carry != "hide" || (user.id == p1.id && !p2.id)) {
+		ctx.fillText(user.name, 0, -50);
+		if (user.nearPilla && (user.id == p1.id || user.id == p2.id)) {
+			ctx.fillText("⬆️⬇️", 0, -70);
+		}
+	}
+
+	if (user.faceing) {
+		ctx.scale(-1, 1);
+	}
+	if (user.fireing) {
+		if (user.fireing == 5) {
+			shinnys.push(new ShotLine(user.x, user.y + 25, user.faceing));
+		}
+		ctx.save();
+			ctx.translate(0, -props.userWidth/2);
+			drawWeapon(ctx, props.userWidth/2 - user.fireing);
+		ctx.restore();
+	}
+
+	if (user.carry == "hide") {
+		ctx.globalAlpha = user.carryCount > 900 ? (user.carryCount - 900)/100 : user.carryCount > 100 ? 0 : (100 - user.carryCount)/100
+	}
+	
+	if (user.status == "crawling" || user.status == "mining") {
+		ctx.drawImage(img, -props.userWidth/2, -25, props.userWidth, props.userHeight);
+	} else {
+		ctx.drawImage(img, -props.userWidth/2, -props.userHeight, props.userWidth, props.userHeight);
+	}
+
+	if (user.carry == "hide") {
+		ctx.globalAlpha = 1;
+	}
+
+	ctx.restore();
+}
+
+function drawItem (ctx, item) {
+	ctx.save();
+	ctx.translate(item.x, props.h - item.y);
+	ctx.beginPath();
+	ctx.arc(0, 0, props.itemSize, 0, 2*Math.PI);
+	ctx.stroke();
+	ctx.fill();
+
+	if (item.type == "gun") {
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = "#aaa";
+		ctx.beginPath();
+		ctx.moveTo(-5, 3);
+		ctx.lineTo(-5, -3);
+		ctx.lineTo(4, -3);
+		ctx.stroke();
+		ctx.lineWidth = 1;
+	} else if (item.type == "death") {
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = "#f66";
+		ctx.beginPath();
+		ctx.moveTo(-5, -5);
+		ctx.lineTo(5, 5);
+
+		ctx.moveTo(-5, 5);
+		ctx.lineTo(5, -5);
+		ctx.stroke();
+		ctx.lineWidth = 1;
+	} else if (item.type == "mine") {
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = "#f00";
+		ctx.beginPath();
+		ctx.moveTo(-4, -2);
+		ctx.lineTo(4, -2);
+		ctx.stroke();
+
+		ctx.lineWidth = 6;
+		ctx.strokeStyle = "#ddd";
+		ctx.beginPath();
+		ctx.moveTo(-7, 2);
+		ctx.lineTo(7, 2);
+		ctx.stroke();
+		ctx.lineWidth = 1;
+	} else if (item.type == "hide") {
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = "#fff";
+		ctx.beginPath();
+		ctx.arc(0, 0, 10, 0, 2*Math.PI);
+		ctx.stroke();
+		ctx.lineWidth = 1;
+	} else {
+		ctx.strokeStyle = "#ff0";
+		ctx.beginPath();
+		ctx.moveTo(-5, -5);
+		ctx.lineTo(5, 1);
+		ctx.lineTo(5, 5);
+		ctx.lineTo(-5, -1);
+		ctx.lineTo(-5, -5);
+		ctx.stroke();
+	}
+	ctx.restore();
+}
+
+var shinnys = [];
+function render (data) {
+	if (!ctx) {return}
+	ctx.clearRect(0, 0, props.w, props.h);
+	
+	drawWater(ctx, 20, "#758");
+	
+	ctx.drawImage(cdomBody, 0, 0);
+	
+	data.mines.forEach(function (mine) {
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = "#f00";
+		ctx.beginPath();
+		ctx.moveTo(mine.x - 4, props.h - mine.y - 4);
+		ctx.lineTo(mine.x + 4, props.h - mine.y - 4);
+		ctx.stroke();
+
+		ctx.lineWidth = 6;
+		ctx.strokeStyle = "#ddd";
+		ctx.beginPath();
+		ctx.moveTo(mine.x - 7, props.h - mine.y);
+		ctx.lineTo(mine.x + 7, props.h - mine.y);
+		ctx.stroke();
+		ctx.lineWidth = 1;
+		if (mine.dead) {
+			shinnys.push(new Flare(mine));
+		}
+	});
+
+	for (var i = 0; i < data.users.length; i++) {
+		var user = data.users[i];
+		drawUser(ctx, user, data);
+	}
+
+	drawWater(ctx, 10, "#95a");
+
+	for (var i = 0; i < data.items.length; i++) {
+		var item = data.items[i];
+		drawItem(ctx, item);
+		if (item.dead) {
+			shinnys.push(new ItemDead(item));
+		}
+	}
+
+
+	for (var i = shinnys.length - 1; i >= 0; i--) {
+		var shinny = shinnys[i];
+		if (shinny.life < 0) {
+			shinnys.splice(i, 1);
+		} else {
+			shinny.draw(ctx);
+			shinny.life--;
+		}
+	}
+}
+</script>
