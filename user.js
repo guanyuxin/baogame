@@ -23,6 +23,8 @@ var User = function (game, name) {
 	this.fireing = 0;
 	this.mining = 0;
 	this.score = 0;
+	this.hasDoubleJump = false;
+	this.canDoubleJump = false;
 	this.lastTouch = null;
 }
 User.prototype.getStatus = function () {
@@ -31,7 +33,7 @@ User.prototype.getStatus = function () {
 	if ((this.vy <= 0 || this.onPilla) && this.game.checkMine(this)) {
 		return "dieing";
 	}
-	if (this.onPilla) {
+	if (this.onPilla && this.vx == 0 && this.vy == 0) {
 		return "climbing";
 	} else {
 		var onFloor = this.game.map.onFloor(this.x, this.y);
@@ -69,20 +71,19 @@ User.prototype.getStatus = function () {
 			if (this.mining > 0) {
 				this.mining--;
 				if (this.mining == 0) {
-					this.carryCount--;
-					this.game.addMine(this);
+					this.game.addMine(this) && this.carryCount--;
 				} else {
 					return 'mining';
 				}
 			}
-			if ((this.upPress || this.downPress) && this.nearPilla) {
+			if ((this.upDown || this.downDown) && this.nearPilla) {
 				this.onPilla = true;
 				this.onFloor = false;
 				this.vx = 0;
 				this.pilla = this.nearPilla;
 				this.x = this.pilla.x * this.game.props.blockWidth;
 				return "climbing";
-			} else if (this.downPress) {
+			} else if (this.downDown) {
 				this.crawl = true;
 				if (Math.abs(this.vx) < .2) {
 					return  "crawling";
@@ -97,11 +98,14 @@ User.prototype.getStatus = function () {
 			} else if (this.itemPress && this.vx == 0 && this.carry == 'gun' && this.carryCount > 0) {
 				this.fireing = 20;
 				return 'fireing';
-			} else if (this.itemPress && this.vx == 0 && this.carry == 'mine' && this.carryCount > 0) {
+			} else if (this.itemDown && this.vx == 0 && this.carry == 'mine' && this.carryCount > 0) {
 				this.mining = 20;
 				return 'mining';
 			} else {
 				this.lastTouch = null;
+				if (this.hasDoubleJump) {
+					this.canDoubleJump = true;
+				}
 				return "standing";
 			}
 		} else {
@@ -110,12 +114,19 @@ User.prototype.getStatus = function () {
 	}
 }
 User.prototype.update = function () {
+	this.doubleJumping = false;
+	this.flying = false;
+
 	for (var key in this.ignore) {
 		this.ignore[key]--;
 	}
-	if (this.carry == "power" || this.carry == "hide") {
+	
+	if (this.carry == "power" || this.carry == "hide" || this.carry == "bomb") {
 		this.carryCount--;
-		if (this.carryCount < 0) {
+		if (this.carryCount <= 0) {
+			if (this.carry == "bomb") {
+				this.game.explode(this.x + this.faceing * 20, this.y + this.game.props.userHeight/2, this);
+			}
 			this.carry = "";
 		}
 	}
@@ -127,42 +138,43 @@ User.prototype.update = function () {
 		this.r += this.vr;
 		this.vr *= .96;
 	} if (this.status == "climbing") {
-		if (this.upPress && !this.downPress && this.y < this.pilla.y2*this.game.props.blockHeight - this.game.props.userHeight) {
+		if (this.upDown && !this.downDown && this.y < this.pilla.y2*this.game.props.blockHeight - this.game.props.userHeight) {
 			this.y += 3;
-		} else if (this.downPress && !this.upPress && this.y > this.pilla.y1*this.game.props.blockHeight) {
+		} else if (this.downDown && !this.upDown && this.y > this.pilla.y1*this.game.props.blockHeight + 3) {
 			this.y -= 3;
 		}
-		if (this.leftPress) {
-			this.faceing = 1;
+		if (this.leftDown > 60) {
+			this.faceing = -1;
 			this.vx = -2;
 			this.onPilla = false;
-		} else if (this.rightPress) {
-			this.faceing = 0;
+		} else if (this.rightDown > 60) {
+			this.faceing = 1;
 			this.vx = 2;
 			this.onPilla = false;
 		}
 	} else if (this.status == "standing") {
-		if (this.leftPress && !this.rightPress) {
+		if (this.leftDown && !this.rightDown) {
 			if (this.vx > 0) {
 				this.vx = -1;
 			} else {
 				this.vx -= .2;
 			}
-			this.faceing = 1;
-			this.vx = Math.max(this.vx, -4);
-		} else if (!this.leftPress && this.rightPress) {
+			this.faceing = -1;
+			this.vx = Math.max(this.vx, -4, -this.leftDown/20);
+		} else if (!this.leftDown && this.rightDown) {
 			if (this.vx < 0) {
 				this.vx = 1;
 			} else {
 				this.vx += .2;
 			}
-			this.faceing = 0;
-			this.vx = Math.min(this.vx, 4);
+			this.faceing = 1;
+			this.vx = Math.min(this.vx, 4, this.rightDown/20);
 		} else {
 			this.vx = 0;
 		}
-		if (this.upPress && !this.downPress) {
+		if (this.upDown > 60 && !this.downDown) {
 			this.vy = 5;
+			this.flypackActive = false;
 		} else  {
 			this.vy = 0;
 		}
@@ -171,8 +183,22 @@ User.prototype.update = function () {
 	} else if (this.status == "rolling") {
 		this.vx *= .9;
 	} else if (this.status == "falling") {
+		if (this.upPress && this.canDoubleJump) {
+			this.doubleJumping = true;
+			this.canDoubleJump = false;
+			this.vy = 5;
+		}
+		if (this.upPress && this.carry == 'flypack') {
+			this.flypackActive = true;
+		}
+		if (this.upDown && this.carry == "flypack" && this.carryCount > 0 && this.flypackActive) {
+			this.vy += .3;
+			this.flying = true;
+			this.carryCount--;
+		}
 		this.vy -= .2;
 		this.vy = Math.max(-9, this.vy);
+		this.vy = Math.min(10, this.vy);
 		if (this.vy == -9) {
 			this.danger = true;
 		}
@@ -186,15 +212,9 @@ User.prototype.update = function () {
 	if (this.x >= this.game.props.w) {this.vx = -Math.abs(this.vx)}
 	if (this.y < 0) {
 		this.dead = true;
-		var killer = this.killer || this.lastTouch;
-		if (killer) {
-			killer = this.game.getUser(killer);
-			this.game.award(killer);
+		if (!this.dieing) {
+			this.killed('fall');
 		}
-		this.game.announce('userDead', {
-			user: this.getDataForDeath(),
-			killer: killer && killer.getData()
-		});
 	} else {
 		if (this.vy > 0) {
 			this.y += Math.floor(this.vy);
@@ -208,6 +228,64 @@ User.prototype.update = function () {
 			}
 		}
 	}
+}
+User.prototype.killed = function (action, byUser) {
+	if (this.dieing) {return}
+	this.killer = byUser && byUser.id;
+	this.dieing = true;
+	this.killedBy = action;
+
+	if (action == 'power') {
+		this.vy = 10;
+	} else if (action == 'drug') {
+		this.vy = 3;
+		this.killer = this.lastTouch;
+	} else if (action == 'gun') {
+		this.vy = 1;
+	} else if (action == 'mine') {
+		this.vy = 10;
+	} else if (action == 'bomb') {
+		this.vy = 8;
+	} else {
+		this.killer = this.lastTouch;
+	}
+
+	if (this.killer && this.killer != this.id) {
+		var killer = this.game.getUser(this.killer);
+		this.game.award(killer);
+	}
+
+	if (killer) {
+		if (action == 'drug') {
+			var message = "<b>" + killer.name + "</b>让<b>" + this.name + "</b>品尝到了毒药的滋味";
+		} else if (action == 'mine') {
+			if (this.killer == this.id) {
+				var message = "<b>" + killer.name + "</b>用自己的身体检验了地雷的可靠性，结果很成功";
+			} else {
+				var message = "<b>" + killer.name + "</b>的地雷让<b>" + this.name + "</b>的菊花一紧";
+			}
+		} else if (action == 'gun') {
+			var message = "<b>" + killer.name + "</b>开枪了，<b>" + this.name + "</b>应声倒地";
+		} else if (action == 'power') {
+			var message = "<b>" + killer.name + "</b>把<b>" + this.name + "</b>扔进了泥潭";
+		} else if (action == 'bomb') {
+			var message = "<b>" + this.name + "</b>没能从爆炸中逃生";
+		} else {
+			var message = "<b>" + killer.name + "</b>把<b>" + this.name + "</b>扔进了泥潭";
+		}
+	} else {
+		if (action == 'drug') {
+			var message = "<b>" + this.name + "</b>尝了一口毒药";
+		} else {
+			var message = "<b>" + this.name + "</b>完成了华丽的一跃";
+		}
+	}
+
+	this.game.announce('userDead', {
+		user: this.getDataForDeath(),
+		killer: killer && killer.getData(),
+		message: message
+	});
 }
 User.prototype.getDataForDeath = function () {
 	var killer = this.killer || this.lastTouch;
@@ -225,7 +303,7 @@ User.prototype.getDataForDeath = function () {
 	}
 }
 User.prototype.getData = function () {
-	return {
+	var data = {
 		carry: this.carry,
 		carryCount: this.carryCount,
 		nearPilla: this.nearPilla ? true : false,
@@ -237,7 +315,12 @@ User.prototype.getData = function () {
 		id: this.id,
 		x: this.x,
 		y: this.y,
+		vy: this.vy,
 		score: this.score
 	}
+	if (this.dead) {data.dead = true}
+	if (this.doubleJumping) {data.doubleJumping = true}
+	if (this.flying) {data.flying = true}
+	return data;
 }
 module.exports = User;

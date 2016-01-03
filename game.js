@@ -1,72 +1,7 @@
 var Map = require('./map.js');
 var User = require('./user.js');
 var Item = require('./item.js');
-
-var Con = function (soc, game) {
-	var _this = this;
-	this.p1 = null;
-	this.p2 = null;
-	this.soc = soc;
-	this.game = game;
-	this.name = null;
-
-	var bodiesData = [];
-	for (var i = 0; i < this.game.bodies.length; i++) {
-		bodiesData.push(this.game.bodies[i].getData());
-	}
-
-	//初始化数据
-	soc.emit("init", {
-		props: game.props,
-		map: game.map.getData(),
-		bodies: bodiesData
-	});
-	//加入
-	soc.on('join', function (data) {
-		_this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
-		var u = new User(game, _this.name);
-		if (data.p1) {
-			_this.p1 = u;
-		} else {
-			_this.p2 = u;
-		}
-		game.users.push(u);
-	})
-	//接收控制
-	soc.on("control", function (data) {
-		if (_this.p1 && data.p1) {
-			_this.p1.leftPress = data.p1.leftPress;
-			_this.p1.rightPress = data.p1.rightPress;
-			_this.p1.upPress = data.p1.upPress;
-			_this.p1.downPress = data.p1.downPress;
-			_this.p1.itemPress = data.p1.itemPress;
-		}
-
-		if (_this.p2 && data.p2) {
-			_this.p2.leftPress = data.p2.leftPress;
-			_this.p2.rightPress = data.p2.rightPress;
-			_this.p2.upPress = data.p2.upPress;
-			_this.p2.downPress = data.p2.downPress;
-			_this.p2.itemPress = data.p2.itemPress;
-		}
-	});
-
-	soc.on("rebornp1", function () {
-		if (!_this.p1 || _this.p1.dead) {
-			var u = new User(game, _this.name);
-			_this.p1 = u;
-			game.users.push(u);
-		}
-	});
-
-	soc.on("rebornp2", function () {
-		if (!_this.p2 || _this.p2.dead) {
-			var u = new User(game, _this.name+"_P2");
-			_this.p2 = u;
-			game.users.push(u);
-		}
-	});
-}
+var Con = require('./con.js');
 
 
 function userCollide(a, b, game) {
@@ -76,18 +11,22 @@ function userCollide(a, b, game) {
 
 	//带电情况
 	if (a.carry == "power" && b.carry != "power") {
-		b.dieing = true;
-		b.killer = a.id;
-		b.killedBy = "power";
-		b.vy = 10;
+		b.killed('power', a);
 		b.vx = (b.x - a.x)/2;
+		if (b.carry == "bomb") {
+			a.carry = "bomb";
+			a.carryCount = b.carryCount;
+			b.carry = '';
+		}
 		return;
 	} else if (a.carry != "power" && b.carry == "power") {
-		a.dieing = true;
-		a.killer = b.id;
-		a.killedBy = "power";
-		a.vy = 10;
+		a.killed('power', b);
 		a.vx = (a.x - b.x)/2;
+		if (a.carry == "bomb") {
+			b.carry = "bomb";
+			b.carryCount = b.carryCount;
+			a.carry = '';
+		}
 		return;
 	} else if (a.carry == "power" && b.carry == "power") {
 		a.carry = '';
@@ -96,6 +35,15 @@ function userCollide(a, b, game) {
 	//排除刚刚碰撞
 	if (a.ignore[b.id] > 0 || b.ignore[a.id] > 0) {return}
 	
+	if (b.carry == "bomb" && a.carry != "bomb") {
+		a.carry = "bomb";
+		a.carryCount = b.carryCount;
+		b.carry = '';
+	} else if (a.carry == "bomb" && b.carry != "bomb") {
+		b.carry = "bomb";
+		b.carryCount = a.carryCount;
+		a.carry = '';
+	}
 	//正常情况
 	if (a.onFloor && b.onFloor) {
 		if (a.crawl && !b.crawl) {
@@ -170,24 +118,20 @@ function userCollide(a, b, game) {
 	b.fireing = false;
 	a.mining = false;
 	b.mining = false;
-	a.onPilla = false;
-	b.onPilla = false;
 	a.lastTouch = b.id;
 	b.lastTouch = a.id;
 }
 
 function eatItem (a, b, game) {
 	if (a.dead || b.dead) {return}
+	if (a.carry == "bomb") {return}
 	if((a.x-b.x)*(a.x-b.x) + (a.y+game.props.userHeight/2-b.y)*(a.y+game.props.userHeight/2-b.y) > (game.props.userWidth+game.props.itemSize)*(game.props.userWidth+game.props.itemSize)/4) {return;}
 	b.dead = true;
 	if (b.type == 'gun') {
 		a.carry = 'gun';
 		a.carryCount = 3;
-	} else if (b.type == 'death') {
-		a.dieing = true;
-		a.killedBy = "drug";
-		a.killer = a.lastTouch;
-		a.vy = 3;
+	} else if (b.type == 'drug') {
+		a.killed('drug');
 	} else if (b.type == 'power') {
 		a.carry = "power";
 		a.carryCount = 1000;
@@ -197,6 +141,12 @@ function eatItem (a, b, game) {
 	} else if (b.type == 'hide') {
 		a.carry = 'hide';
 		a.carryCount = 1000;
+	} else if (b.type == 'random') {
+		a.carry = 'bomb';
+		a.carryCount = 600;
+	} else if (b.type == 'flypack') {
+		a.carry = 'flypack';
+		a.carryCount = 200;
 	}
 }
 
@@ -221,15 +171,20 @@ var Game = function () {
 	this.map = new Map(this, 22, 8);
 	this.tick = 0;
 	var _this = this;
-	this.running = setInterval(function () {
+	this.runningTimer = setInterval(function () {
 		_this.update();
 	}, 17);
 }
-Game.prototype.addUser = function () {
-	var u = new User(this);
+//增加玩家
+Game.prototype.addUser = function (name) {
+	var u = new User(this, name);
+	var place = this.map.born();
+	u.x = place.x;
+	u.y = place.y + this.props.blockHeight/2;
 	this.users.push(u);
 	return u;
 }
+//获得玩家（或者尸体）
 Game.prototype.getUser = function (uid) {
 	for (var i = 0; i < this.users.length; i++) {
 		if (this.users[i].id == uid) {
@@ -242,6 +197,29 @@ Game.prototype.getUser = function (uid) {
 		}
 	}
 }
+
+//发生爆炸了
+Game.prototype.explode = function (x, y , byUser) {
+	var _this = this;
+	this.users.forEach(function (user) {
+		var ux = user.x;
+		var uy = user.y + _this.props.userHeight;
+		var dist = (ux - x)*(ux - x) + (uy - y)*(uy - y);
+		if (dist < 10000) {
+			user.killed('bomb', byUser);
+		}
+		if (dist < 22500) {
+			var r = Math.atan2(uy - y, ux - x);
+			var force = 45000 / (dist + 2500);
+			user.vx += force * Math.cos(r);
+			user.vy += force * Math.sin(r);
+			user.danger = true;
+		} 
+	});
+	this.announce('explode', {x:x,y:y});
+}
+
+//发生枪击
 Game.prototype.checkShot = function (u) {
 	var game = this;
 	var x = u.x;
@@ -249,20 +227,14 @@ Game.prototype.checkShot = function (u) {
 	var f = u.faceing;
 
 	this.users.forEach(function (user) {
-		if (!user.crawl && f && x > user.x && user.y <= y && user.y + game.props.userHeight >= y) {
-			user.dieing = true;
-			user.killedBy = "gun";
-			user.killer = u.id;
-			user.vy = 1;
-			user.vx = -6;
+		if (!user.crawl && f < 0 && x > user.x && user.y <= y && user.y + game.props.userHeight >= y) {
+			user.killed('gun', u);
+			user.vx = 6 * f;
 		}
 
-		if (!user.crawl && !f && x < user.x && user.y <= y && user.y + game.props.userHeight >= y) {
-			user.dieing = true;
-			user.killedBy = "gun";
-			user.killer = u.id;
-			user.vy = 1;
-			user.vx = 6;
+		if (!user.crawl && f > 0 && x < user.x && user.y <= y && user.y + game.props.userHeight >= y) {
+			user.killed('gun', u);
+			user.vx = 6 * f;
 		}
 	});
 }
@@ -273,49 +245,56 @@ Game.prototype.award = function (u) {
 	}
 }
 Game.prototype.addMine = function (user) {
-	this.mines.push({
-		x: user.x + (user.faceing ? -40 : 40),
-		y: user.y,
-		creater: user.id,	
-	});
+	var x = user.x + user.faceing * 40;
+	if (this.map.onFloor(x, user.y)) {
+		this.mines.push({
+			x: x,
+			y: user.y,
+			creater: user,	
+		});
+		return true;
+	}
+	return false;
 }
 Game.prototype.checkMine = function (user) {
 	for (var i = this.mines.length - 1; i >= 0; i--) {
 		var mine = this.mines[i];
 		if (Math.abs(user.x - mine.x) < 10 && Math.abs(user.y - mine.y) < 5) {
-			user.dieing = true;
-			user.vy = 10;
-			user.killedBy = "mine";
-			user.killer = mine.creater;
+			user.killed('mine', mine.creater);
 			mine.dead = true;
 			return true;
 		}
 	}
 	return false;
 }
+//链接
 Game.prototype.addCon = function (soc) {
 	this.cons.push(new Con(soc, this));
 }
+//链接关闭
 Game.removeCon = function (con) {
 
 }
+//分发事件
 Game.prototype.announce = function (type, data) {
 	for (var i = 0; i < this.cons.length; i++) {
 		this.cons[i].soc.emit(type, data);
 	}
 }
+
+//游戏主流程
 Game.prototype.update = function () {
 	this.tick++;
+	//生成物品（如果需要）
 	if (this.items.length < this.users.length && Math.random() * 500 < this.users.length) {
 		this.items.push(new Item(this));
 	}
+	//物品更新
 	for(var i = this.items.length - 1; i >= 0; i--) {
 		var item = this.items[i];
-		if (!item.dead) {
-			item.update();
-		}
+		item.update();
 	};
-
+	//碰撞检测
 	for (var i = 0; i < this.users.length; i++) {
 		for (var j = i + 1; j < this.users.length; j++) {
 			userCollide(this.users[i], this.users[j], this);
@@ -324,14 +303,13 @@ Game.prototype.update = function () {
 			eatItem(this.users[i], this.items[j], this);
 		}
 	}
-
+	//user更新
 	this.users.forEach(function (user) {
-		if (!user.dead) {
-			user.update();
-		}
+		user.update();
 	});
-
-	this.dispatch();
+	//分发状态
+	this.sendTick();
+	//清理死亡的人物/物品
 	this.clean();
 }
 Game.prototype.clean = function () {
@@ -358,27 +336,30 @@ Game.prototype.clean = function () {
 		}
 	};
 }
-Game.prototype.dispatch = function () {
+Game.prototype.sendTick = function () {
 	
 	var itemdata = [];
 	for (var i = 0; i < this.items.length; i++) {
 		itemdata.push(this.items[i].getData());
 	}
+	var userdata = [];
+	this.users.forEach(function (user) {
+		userdata.push(user.getData());
+	});
 	for (var i = 0; i < this.cons.length; i++) {
 		var mines = [];
 		var p1 = this.cons[i].p1 && this.cons[i].p1.id;
 		var p2 = this.cons[i].p2 && this.cons[i].p2.id;
 		this.mines.forEach(function(mine) {
-			if ((mine.user == p1 && !p2) || mine.dead) {
-				mines.push(mine);
+			if ((mine.creater.id == p1 && !p2) || mine.dead) {
+				mines.push({
+					x: mine.x,
+					y: mine.y,
+					dead: mine.dead
+				});
 			}
 		});
-		var userdata = [];
-		this.users.forEach(function (user) {
-			//if (user.carry != 'hide' || (user.id == p1 && !p2)) {
-				userdata.push(user.getData());
-			//}
-		});
+		
 		this.cons[i].soc.emit('tick', {
 			users: userdata,
 			items: itemdata,

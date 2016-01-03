@@ -1,3 +1,30 @@
+var Items = [{
+	type: "power",
+	name: "无敌",
+	count: 1000
+}, {
+	type: "gun",
+	name: "枪",
+	count: 3
+}, {
+	type: "mine",
+	name: "地雷",
+	count: 2
+}, {
+	type: "drug",
+	name: "毒药"
+}, {
+	type: "hide",
+	name: "隐身",
+	count: 1000
+}, {
+	type: "random",
+	name: "惊喜！"
+}, {
+	type: "flypack",
+	name: "喷气背包",
+	count: 1000
+}];
 
 var Item = function (game) {
 	this.game = game;
@@ -13,19 +40,10 @@ var Item = function (game) {
 		this.y = game.props.h - game.props.itemSize;
 	}
 
-	
-	var type = Math.random() * 5;	
-	if (type < 1) {
-		this.type = "power";
-	} else if (type < 2) {
-		this.type = "gun";
-	} else if (type < 3) {
-		this.type = "mine";
-	} else if (type < 4) {
-		this.type = "death";
-	} else {
-		this.type = "hide"
-	}
+	var type = Math.floor(Math.random() * Items.length);
+	this.type = Items[type].type;
+	this.name = Items[type].name;
+	this.count = Items[type].count;
 	this.lifetime = 3000;
 	this.slowdown = 0;
 	this.vx = Math.random()+.5;
@@ -58,6 +76,7 @@ Item.prototype.getData = function () {
 		x: this.x,
 		y: this.y,
 		type: this.type,
+		name: this.name,
 		dead: this.dead
 	}
 }

@@ -80,6 +80,15 @@ var Map = function (game, w, h) {
 	this.block[h - 1][w - 4] = 1;
 	this.block[h - 1][w - 5] = 1;
 }
+Map.prototype.born = function () {
+	for (var i = 0; i < 10; i++) {
+		var x = Math.floor(Math.random()*(this.w - 2)) + 1;
+		var y = Math.floor(Math.random()*(this.h - 2)) + 1;
+		if (this.block[y][x]) {
+			return {x: (x+.5) * this.game.props.blockWidth, y: y * this.game.props.blockHeight}
+		}
+	}
+}
 Map.prototype.onFloor = function (x, y) {
 	x = Math.floor(x/this.game.props.blockWidth);
 	if (y % this.game.props.blockHeight != 0) {return false}
@@ -89,7 +98,7 @@ Map.prototype.onFloor = function (x, y) {
 }
 Map.prototype.nearPilla = function (u) {
 	if (this.onFloor(u.x, u.y) == false) {return false}
-	if (u.vx != 0 || u.vy !=0 || u.dieing) {return false}
+	if (Math.abs(u.vx) > 1 || Math.abs(u.vy) > 1 || u.dieing) {return false}
 	var x = u.x, y = u.y;
 	for (var i = 0; i < this.pilla.length; i++) {
 		var pilla = this.pilla[i]
