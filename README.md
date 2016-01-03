@@ -1,3 +1,4 @@
+![demo](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/demo.png)
 #在线游戏
 访问： http://guanyuxin.com:8030/
 
@@ -26,7 +27,7 @@
 	通常情况下，两个玩家碰撞时，跳起或者蹲下的一方会有优势
 
 ###道具：
-	游戏中有紫色的能量球，玩家吃到后会产生各种能力或者效果，
+	游戏中有紫色的能量球，玩家吃到后会产生各种能力或者效果，有些道具的效果能力强大，好好使用他们。详情在道具部分介绍。
 
 
 #搭建私服方法--通过npm
