@@ -29,6 +29,38 @@
 ###道具：
 	游戏中有紫色的能量球，玩家吃到后会产生各种能力或者效果，有些道具的效果能力强大，好好使用他们。详情在道具部分介绍。
 
+#道具
+###毒药:
+![drug](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/drug.png)
+
+*大部分道具是强大而有益的，但是看到毒药你还是离他远一些为好，他会让吃到他的玩家立即死亡*
+
+###手枪:
+![drug](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/gun.png)
+
+*按q向面前发射一颗子弹，消灭任何敢于正面对抗你的敌人，注意：只有三发子弹，请节约使用。无法消灭下蹲或者跳起的敌人*
+
+###无敌:
+![drug](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/power.png)
+
+*并不是真正的无敌，但是会让你直接消灭所有敢于触碰你的敌人，并且他们无法给你造成碰撞*
+
+###隐身:
+![drug](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/hide.png)
+
+*使用后慢慢从你的敌人视野里面消失，谁能可看不见的敌人战斗呢？*
+
+###惊喜:
+![drug](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/random.png)
+
+*surprise !*
+
+###喷气背包:
+![drug](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/flypack.png)
+
+*跳的不够高？干嘛不飞呢！跳起后再次按w进入飞行模式，让那些只会蹦跶的人羡慕吧。等等,好像没油了...*
+
+--
 
 #搭建私服方法--通过npm
 
