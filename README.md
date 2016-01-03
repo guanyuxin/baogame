@@ -1,8 +1,61 @@
-#to start:
+#在线游戏
+访问： http://guanyuxin.com:8030/
 
+由于官方服务器带宽和延迟较大，想玩的同学可以通过搭建私服在局域网中和好朋友一起玩。搭建私服方法在末尾给出。
+
+--
+#游戏简介
+
+###游戏目标:
+	把其他人推下水
+	使用道具消灭其他人
+	have fun
+
+###加入:
+	通过浏览器打开后可以查看目前的游戏状态，选择加入后可以进行游戏
+	
+	加入前给自己起个有个性的名字吧
+	
+	自己的角色顶部有黄色名称，敌人角色顶部有红色名称
+
+###移动碰撞：
+	wasd控制移动，当玩家处于平台上时，w为跳跃，d为下蹲；当玩家处于梯子附近时（头顶出现上下箭头），w,d为爬梯子上下
+	
+	两个玩家接触后会产生碰撞，将两个玩家弹开，使用这个机制把敌人推下平台吧
+	
+	通常情况下，两个玩家碰撞时，跳起或者蹲下的一方会有优势
+
+###道具：
+	游戏中有紫色的能量球，玩家吃到后会产生各种能力或者效果，
+
+
+#搭建私服方法--通过npm
+
+1.安装node和npm(如果安装出现问题请尝试将node升级至最新版本)
+
+2.shell中执行以下代码：
+
+```
+npm install fuzion-game &&
+cd node_modules/fuzion-game/ &&
 node app.js
+```
+
+3.打开http://localhost:8030  就可以开始玩了
+
+4.把localhost替换成你的域名或者ip，然后分享给你的朋友，一起玩吧
 
 --
 
-then open your browser with http://localhost:8030
-or with your host for other players
+#搭建私服方法--使用github
+
+将上面方法的第二部替换为：
+
+```
+git clone https://github.com/guanyuxin/baogame
+cd baogame
+npm install
+node app.js
+```
+--
+
