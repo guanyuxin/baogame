@@ -84,6 +84,15 @@
 		font-weight: bolder;
 		color: #f00;
 	}
+	.noticeFix {
+		box-shadow: 0 0 2px white;
+	    background: rgb(255, 255, 255);
+	    font-size: 30;
+	}
+	.noticeFix .noticeItem {
+		padding: 10px;
+		color: #333;
+	}
 	.mobileController {
 		position: absolute;
 		left: 0;
@@ -160,21 +169,24 @@
 		<h4 class="message">加入游戏</h4>
 		你的名字：<input id="name" class="txt-input" placeholder="无名小卒"/>
 		<div>
-			<a href="javascript:void(0)" class="btn">加入</a>
+			<a href="javascript:void(0)" class="btn joinBtn">加入</a>
 		</div>
 	</div></div>
 
 </div>
 <div class="notice">
-	<div class="noticeItem">w,a,s,d:移动  q:使用物品</div>
-	<div class="noticeItem"><a target="blank" href="https://github.com/guanyuxin/baogame">https://github.com/guanyuxin/baogame</a> 查看帮助详情</div>
+	<div class="noticeFix">
+		<div class="noticeItem">w,a,s,d:移动  q:使用物品</div>
+		<div class="noticeItem"><a target="blank" href="https://github.com/guanyuxin/baogame">https://github.com/guanyuxin/baogame</a> 查看帮助详情</div>
+	</div>
+	<div class="notiveIn"></div>
 </div>
 </body>
 </html>
 <script src="/static/js/effect.js"></script>
 <script>
 var controller = document.createElement('script');
-if (navigator.userAgent.indexOf('iPhone') == -1 && navigator.userAgent.indexOf('android') == -1 && navigator.userAgent.indexOf('iPad') == -1 ) {
+if (navigator.userAgent.indexOf('iPhone') == -1 && navigator.userAgent.indexOf('Android') == -1 && navigator.userAgent.indexOf('iPad') == -1 ) {
 	controller.src = '/static/js/pcController.js';
 } else {
 	controller.src = '/static/js/mobileController.js';
@@ -195,7 +207,7 @@ var scoreText = [
 ]
 
 function notice (str) {
-	$('.notice').prepend('<div class="noticeItem">'+str+'</div>');
+	$('.notice .notiveIn').prepend('<div class="noticeItem">'+str+'</div>');
 }
 
 var cdomBody,ctxBody,ctx,ctxBg,P,t = 0,cdx = 0,cdy = 0;

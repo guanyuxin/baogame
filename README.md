@@ -1,4 +1,4 @@
-![demo](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/demo.png)
+![demo](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/demo1.gif)
 #在线游戏
 访问： http://guanyuxin.com:8030/
 
@@ -22,12 +22,16 @@
 ###移动碰撞：
 	wasd控制移动，当玩家处于平台上时，w为跳跃，d为下蹲；当玩家处于梯子附近时（头顶出现上下箭头），w,d为爬梯子上下
 	
+    ** 手机上使用虚拟按键控制 **
+
 	两个玩家接触后会产生碰撞，将两个玩家弹开，使用这个机制把敌人推下平台吧
 	
 	通常情况下，两个玩家碰撞时，跳起或者蹲下的一方会有优势
 
 ###道具：
 	游戏中有紫色的能量球，玩家吃到后会产生各种能力或者效果，有些道具的效果能力强大，好好使用他们。详情在道具部分介绍。
+
+![demo](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/demo2.gif)
 
 #道具
 ###毒药:
@@ -62,7 +66,9 @@
 
 --
 
-#搭建私服方法--通过npm
+![demo](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/demo3.gif)
+
+#搭建私服方法--通过npm [稳定版]
 
 1.安装node和npm(如果安装出现问题请尝试将node升级至最新版本)
 
@@ -80,7 +86,7 @@ node app.js
 
 --
 
-#搭建私服方法--使用github
+#搭建私服方法--使用github [最新版]
 
 将上面方法的第二部替换为：
 
@@ -92,3 +98,10 @@ node app.js
 ```
 --
 
+#服务器管理
+
+```
+#启动参数：
+node app.js [端口，默认8030] [管理员口令]
+```
+http://localhost:port/admin  可以进入管理界面，需要在界面中输入管理员口令，然后可以创建物品或者封禁用户ip

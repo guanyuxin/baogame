@@ -370,6 +370,8 @@ Game.prototype.sendTick = function () {
 		consdata.push(con.getData());
 	});
 	this.cons.forEach(function (con) {
+		var p1 = con.p1 && con.p1.id;
+		var p2 = con.p2 && con.p2.id;
 		var mines = [];
 		_this.mines.forEach(function(mine) {
 			if ((mine.creater.id == p1 && !p2) || mine.dead) {
@@ -390,8 +392,6 @@ Game.prototype.sendTick = function () {
 				});
 			}
 		} else {
-			var p1 = con.p1 && con.p1.id;
-			var p2 = con.p2 && con.p2.id;
 			con.socket.emit('tick', {
 				users: userdata,
 				items: itemdata,

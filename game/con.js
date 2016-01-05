@@ -42,6 +42,11 @@ var Con = function (socket, game) {
 					con.banned = true;
 					banedip[con.ip] = true;
 				});
+				socket.on('unban', function (conid) {
+					var con = _this.game.getCon(conid);
+					con.banned = false;
+					banedip[con.ip] = false;
+				});
 			}
 		}
 		if (data.userName) {
@@ -58,6 +63,8 @@ var Con = function (socket, game) {
 			socket.emit('joinFail', "加入失败，服务器已满");
 			return;
 		}
+		if (data.p1 && _this.p1 && !_this.p1.dieing && !_this.p1.dead) {return}
+		if (data.p2 && _this.p2 && !_this.p2.dieing && !_this.p2.dead) {return}
 		_this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
 		var u = game.addUser(_this.name);
 		if (data.p1) {
@@ -110,6 +117,7 @@ Con.prototype.getData = function () {
 		id: this.id,
 		admin: this.admin,
 		name: this.name,
+		banned: this.banned,
 		joinTime: this.joinTime,
 		ip: this.ip
 	}

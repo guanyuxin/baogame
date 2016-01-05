@@ -17,7 +17,10 @@
 		}
 		.btn:active {
 			background: #004;
-			color: black;
+			color: #fff;
+		}
+		.btn.banned {
+			background: #c22;
 		}
 		.user {
 			margin: 5px;
@@ -83,16 +86,28 @@
 				} else {
 					var playerData = '<div class="player">ob</div>';
 				}
-				html += '<div class="user"><div class="con">'+con.name+"<br>"+con.ip+'</div>'+playerData+'<div class="action"><a data-conid="'+con.id+'" class="btn ban">ban</a></div></div>';
+				if (con.banned) {
+					var banBtn = '<a data-conid="'+con.id+'" class="btn ban banned">取消ban</a>';
+				} else {
+					var banBtn = '<a data-conid="'+con.id+'" class="btn ban">ban</a>';
+				}
+				html += '<div class="user"><div class="con">'+con.name+"<br>"+con.ip+'</div>'+playerData+'<div class="action">'+banBtn+'</div></div>';
 			});
 			$('.users').html(html);
 			$('.items').show();
 			$('.login').hide();
 		});
 		$('.users').on('click', '.btn.ban', function (e) {
-			var conid = $(e.currentTarget).data('conid');
+			var $t = $(e.currentTarget);
+			var conid = $t.data('conid');
 			console.log(conid);
-			socket.emit('ban', conid);
+			if ($t.is('.banned')) {
+				socket.emit('unban', conid);
+				$t.removeClass('banned');
+			} else {
+				socket.emit('ban', conid);
+				$t.addClass('banned')
+			}
 		});
 		$('.items .btn').click(function (e) {
 			var type = $(e.currentTarget).data('type');

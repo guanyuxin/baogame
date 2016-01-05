@@ -70,25 +70,14 @@ document.addEventListener('keyup', function (e) {
 		p2.itemDown = false;
 	}
 	if (e.keyCode == 69) {
-		if (p1.id != undefined) {
-			$('.left .joined').show();
-			$('.left .reborn').hide();
-			socket.emit('rebornp1');
-		} else {
-			joing(p1);
-		}
+		joing(p1);
 	}
 	if (e.keyCode == 16) {
-		if (p2.id != undefined) {
-			$('.right .joined').show();
-			$('.right .reborn').hide();
-			socket.emit('rebornp2');
-		} else {
-			joing(p2);
-		}
+		joing(p2);
 	}
 	e.preventDefault();
 });
 $('.txt-input').on('keydown', function (e) {e.stopPropagation()})
 $('.txt-input').on('keyup', function (e) {e.stopPropagation()})
 $('.joining .btn').click(function (){joing(true)});
+$('.joining .btn').text('按e加入');
