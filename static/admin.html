@@ -1,0 +1,103 @@
+<!doctype>
+<html>
+<head>
+	<title>暴走后台</title>
+	<script src="/static/js/socket.io.js"></script>
+	<script src="/static/js/zepto.js"></script>
+	<style>
+		.btn {
+			display: block;;
+			border: 1px solid #004;
+			padding: 10px 20px;
+			border-radius: 5px;
+			margin: 20px;
+			text-align: center;
+			color: #004;
+			text-decoration: none;
+		}
+		.btn:active {
+			background: #004;
+			color: black;
+		}
+		.user {
+			margin: 5px;
+			border: 1px solid black;
+			padding: 5px;
+			display: -webkit-box;
+		}
+		.con {
+			width: 200px;
+			background: #eee;
+		}
+		.player {
+			-webkit-box-flex: 1;
+			width: 100%;
+		}
+		.action {
+			width: 200px;
+			background: #eee;
+		}
+		.items {
+			display: -webkit-box;
+		}
+	</style>
+</head>
+<body>
+	<div class="login">
+		<input id="code"/>
+		<a class="btn join">进入</a>
+	</div>
+	<div class="items" style="display:none">
+		生成道具：
+		<a class="btn" data-type="0">无敌</a>
+		<a class="btn" data-type="1">枪</a>
+		<a class="btn" data-type="2">地雷</a>
+		<a class="btn" data-type="3">毒药</a>
+		<a class="btn" data-type="4">隐身</a>
+		<a class="btn" data-type="5">?</a>
+		<a class="btn" data-type="6">喷气背包</a>
+	</div>
+	<div class="users"></div>
+</body>
+</html>
+<script>
+	$('.btn.join').click(function () {
+		var code = $('#code').val();
+		var socket = io.connect(location.host);
+		socket.on('initFail', function () {alert('fail')})
+		socket.emit('init', {
+			code: code
+		});
+		socket.on('tick', function (data) {
+			var html = '<div class="cons">';
+			data.cons && data.cons.forEach(function (con) {
+				var p1 = null;
+				data.users.forEach(function (user) {
+					if (con.p1 == user.id) {
+						p1 = user;
+						return;
+					}
+				});
+				if (p1) {
+					var playerData = '<div class="player">'+p1.status+'</div>';
+				} else {
+					var playerData = '<div class="player">ob</div>';
+				}
+				html += '<div class="user"><div class="con">'+con.name+"<br>"+con.ip+'</div>'+playerData+'<div class="action"><a data-conid="'+con.id+'" class="btn ban">ban</a></div></div>';
+			});
+			$('.users').html(html);
+			$('.items').show();
+			$('.login').hide();
+		});
+		$('.users').on('click', '.btn.ban', function (e) {
+			var conid = $(e.currentTarget).data('conid');
+			console.log(conid);
+			socket.emit('ban', conid);
+		});
+		$('.items .btn').click(function (e) {
+			var type = $(e.currentTarget).data('type');
+			console.log(type);
+			socket.emit('createItem', type);
+		});
+	})
+</script>

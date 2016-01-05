@@ -2,20 +2,26 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
-var Game = require('./game.js');
+var Game = require('./game/game.js');
 
+var arg = process.argv.splice(2);
 
-server.listen(8030);
+server.listen(arg[0] || 8030);
 
-app.use('/imgs', express.static('imgs'));
-app.use('/js', express.static('js'));
+app.use('/static', express.static('static'));
 
+//游戏地址
 app.get('/', function (req, res) {
-	res.sendfile(__dirname + '/index.html');
+	res.sendFile(__dirname + '/static/index.html');
 });
 
-var game = new Game();
+//管理地址
+app.get('/admin', function (req, res) {
+	res.sendFile(__dirname + '/static/admin.html');
+});
 
-io.on('connection', function (socket) {
+var game = new Game(arg[1] || 'admin');
+
+io.on('connection', function (socket, data) {
 	game.addCon(socket);
 });

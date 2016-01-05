@@ -26,7 +26,7 @@ var Items = [{
 	count: 1000
 }];
 
-var Item = function (game) {
+var Item = function (game, type) {
 	this.game = game;
 	var target = Math.random()*3;
 	if (target < 1) {
@@ -39,8 +39,9 @@ var Item = function (game) {
 		this.x = game.props.w / 2;
 		this.y = game.props.h - game.props.itemSize;
 	}
-
-	var type = Math.floor(Math.random() * Items.length);
+	if (type === undefined) {
+		type = Math.floor(Math.random() * Items.length);
+	}
 	this.type = Items[type].type;
 	this.name = Items[type].name;
 	this.count = Items[type].count;

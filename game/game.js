@@ -125,7 +125,10 @@ function userCollide(a, b, game) {
 function eatItem (a, b, game) {
 	if (a.dead || b.dead) {return}
 	if (a.carry == "bomb") {return}
-	if((a.x-b.x)*(a.x-b.x) + (a.y+game.props.userHeight/2-b.y)*(a.y+game.props.userHeight/2-b.y) > (game.props.userWidth+game.props.itemSize)*(game.props.userWidth+game.props.itemSize)/4) {return;}
+	if((a.x-b.x)*(a.x-b.x) + (a.y+game.props.userHeight/2-b.y)*(a.y+game.props.userHeight/2-b.y) >
+			(game.props.userWidth+game.props.itemSize)*(game.props.userWidth+game.props.itemSize)/4) {
+		return;
+	}
 	b.dead = true;
 	if (b.type == 'gun') {
 		a.carry = 'gun';
@@ -150,7 +153,7 @@ function eatItem (a, b, game) {
 	}
 }
 
-var Game = function () {
+var Game = function (adminCode) {
 	this.props = {
 		w: 1100,
 		h: 600,
@@ -162,7 +165,7 @@ var Game = function () {
 		tileW: 22,
 		tileH: 8
 	}
-
+	this.adminCode = adminCode;
 	this.users = [];
 	this.cons = [];
 	this.items = [];
@@ -197,7 +200,17 @@ Game.prototype.getUser = function (uid) {
 		}
 	}
 }
-
+//获得链接
+Game.prototype.getCon = function (cid) {
+	for (var i = 0; i < this.cons.length; i++) {
+		if (this.cons[i].id == cid) {
+			return this.cons[i];
+		}
+	}
+}
+Game.prototype.createItem = function (type) {
+	this.items.push(new Item(this, type));
+}
 //发生爆炸了
 Game.prototype.explode = function (x, y , byUser) {
 	var _this = this;
@@ -268,17 +281,23 @@ Game.prototype.checkMine = function (user) {
 	return false;
 }
 //链接
-Game.prototype.addCon = function (soc) {
-	this.cons.push(new Con(soc, this));
+Game.prototype.addCon = function (socket) {
+	this.cons.push(new Con(socket, this));
 }
 //链接关闭
-Game.removeCon = function (con) {
-
+Game.prototype.removeCon = function (con) {
+	for (var i = 0; i < this.cons.length; i++) {
+		if (this.cons[i] == con) {
+			console.log('socket <' + con.name + '> ' + con.ip + ' ['+con.joinTime+':'+con.leaveTime+']');
+			this.cons.splice(i, 1);
+			return;
+		}
+	}
 }
 //分发事件
 Game.prototype.announce = function (type, data) {
 	for (var i = 0; i < this.cons.length; i++) {
-		this.cons[i].soc.emit(type, data);
+		this.cons[i].socket.emit(type, data);
 	}
 }
 
@@ -337,7 +356,7 @@ Game.prototype.clean = function () {
 	};
 }
 Game.prototype.sendTick = function () {
-	
+	var _this = this;
 	var itemdata = [];
 	for (var i = 0; i < this.items.length; i++) {
 		itemdata.push(this.items[i].getData());
@@ -346,11 +365,13 @@ Game.prototype.sendTick = function () {
 	this.users.forEach(function (user) {
 		userdata.push(user.getData());
 	});
-	for (var i = 0; i < this.cons.length; i++) {
+	var consdata = [];
+	this.cons.forEach(function (con) {
+		consdata.push(con.getData());
+	});
+	this.cons.forEach(function (con) {
 		var mines = [];
-		var p1 = this.cons[i].p1 && this.cons[i].p1.id;
-		var p2 = this.cons[i].p2 && this.cons[i].p2.id;
-		this.mines.forEach(function(mine) {
+		_this.mines.forEach(function(mine) {
 			if ((mine.creater.id == p1 && !p2) || mine.dead) {
 				mines.push({
 					x: mine.x,
@@ -359,14 +380,26 @@ Game.prototype.sendTick = function () {
 				});
 			}
 		});
-		
-		this.cons[i].soc.emit('tick', {
-			users: userdata,
-			items: itemdata,
-			mines: mines,
-			p1: p1,
-			p2: p2
-		});
-	}
+		if (con.admin) {
+			if (_this.tick % 60 == 0) {
+				con.socket.emit('tick', {
+					users: userdata,
+					items: itemdata,
+					mines: mines,
+					cons: consdata
+				});
+			}
+		} else {
+			var p1 = con.p1 && con.p1.id;
+			var p2 = con.p2 && con.p2.id;
+			con.socket.emit('tick', {
+				users: userdata,
+				items: itemdata,
+				mines: mines,
+				p1: p1,
+				p2: p2
+			});
+		}
+	});
 }
 module.exports = Game;

@@ -1,9 +1,9 @@
 <!doctype/>
 <html>
 <head>
-<meta name="viewport" content="width=1100, height=600, user-scalable=no">
-<script src="/js/socket.io.js"></script>
-<script src="/js/zepto.js"></script>
+<meta name="viewport" content="width=1100, user-scalable=no">
+<script src="/static/js/socket.io.js"></script>
+<script src="/static/js/zepto.js"></script>
 <style>
 	body {
 		background: #000;
@@ -171,13 +171,13 @@
 </div>
 </body>
 </html>
-<script src="/js/effect.js"></script>
+<script src="/static/js/effect.js"></script>
 <script>
 var controller = document.createElement('script');
-if (navigator.userAgent.indexOf('iPhone') == -1) {
-	controller.src = '/js/pcController.js';
+if (navigator.userAgent.indexOf('iPhone') == -1 && navigator.userAgent.indexOf('android') == -1 && navigator.userAgent.indexOf('iPad') == -1 ) {
+	controller.src = '/static/js/pcController.js';
 } else {
-	controller.src = '/js/mobileController.js';
+	controller.src = '/static/js/mobileController.js';
 }
 document.head.appendChild(controller);
 
@@ -199,7 +199,7 @@ function notice (str) {
 }
 
 var cdomBody,ctxBody,ctx,ctxBg,P,t = 0,cdx = 0,cdy = 0;
-var socket = io.connect(location.href);
+
 var userName = localStorage.userName;
 if (userName) {
 	$('#name').val(userName);
@@ -216,7 +216,10 @@ function joing (p1) {
 		p1: p1
 	});
 }
-
+var socket = io.connect(location.href);
+socket.emit('init', {
+	userName: userName
+})
 //初始化链接，监听事件（肯能由打开或刷新页面触发，也可能由后台重启触发）
 socket.on('init', function (data) {
 	Effect.clean();
@@ -318,32 +321,32 @@ socket.on('userDead', function (data) {
 })
 
 var imgUrls = {
-	happy: "/imgs/head/happy.png",
-	throll: "/imgs/head/throll.png",
-	danger: "/imgs/head/danger3.png",
-	alone: "/imgs/head/alone.png",
-	alone2: "/imgs/head/alone2.png",
-	alone3: "/imgs/head/alone3.png",
-	normal: "/imgs/head/normal.png",
-	win: "/imgs/head/win.png",
-	wtf: "/imgs/head/wtf.png",
+	happy: "/head/happy.png",
+	throll: "/head/throll.png",
+	danger: "/head/danger3.png",
+	alone: "/head/alone.png",
+	alone2: "/head/alone2.png",
+	alone3: "/head/alone3.png",
+	normal: "/head/normal.png",
+	win: "/head/win.png",
+	wtf: "/head/wtf.png",
 
-	drug: "/imgs/item/drug.png",
-	power: "/imgs/item/power.png",
-	gun: "/imgs/item/gun.png",
-	mine: "/imgs/item/mine.png",
-	random: "/imgs/item/random.png",
-	flypack: "/imgs/item/flypack.png",
-	hide: "/imgs/item/hide.png",
+	drug: "/item/drug.png",
+	power: "/item/power.png",
+	gun: "/item/gun.png",
+	mine: "/item/mine.png",
+	random: "/item/random.png",
+	flypack: "/item/flypack.png",
+	hide: "/item/hide.png",
 
-	bomb: "/imgs/bomb.png",
-	minePlaced: "/imgs/mine.png",
-	jet: "/imgs/jet.png"
+	bomb: "/bomb.png",
+	minePlaced: "/mine.png",
+	jet: "/jet.png"
 };
 var imgs = {};
 for (var key in imgUrls) {
 	var Img = new Image();
-	Img.src = imgUrls[key];
+	Img.src = "/static/imgs/" + imgUrls[key];
 	imgs[key] = Img;
 }
 
