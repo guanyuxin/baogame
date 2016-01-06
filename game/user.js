@@ -1,9 +1,10 @@
 
 var userCount = 0;
-var User = function (game, name) {
+var User = function (game, con) {
 	this.id = userCount++;
 	this.game = game;
-	this.name = name;
+	this.con = con;
+	this.name = con.name;
 	this.onFloor = false;
 	this.onPilla = false;
 	this.nearPilla = false;
@@ -234,6 +235,7 @@ User.prototype.killed = function (action, byUser) {
 	this.killer = byUser && byUser.id;
 	this.dieing = true;
 	this.killedBy = action;
+	this.con.death++;
 
 	if (action == 'power') {
 		this.vy = 10;
@@ -245,7 +247,6 @@ User.prototype.killed = function (action, byUser) {
 	} else if (action == 'mine') {
 		this.vy = 10;
 	} else if (action == 'bomb') {
-		this.vy = 8;
 	} else {
 		this.killer = this.lastTouch;
 	}

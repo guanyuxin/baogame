@@ -153,7 +153,7 @@ function eatItem (a, b, game) {
 	}
 }
 
-var Game = function (adminCode) {
+var Game = function (adminCode, logger) {
 	this.props = {
 		w: 1100,
 		h: 600,
@@ -166,6 +166,7 @@ var Game = function (adminCode) {
 		tileH: 8
 	}
 	this.adminCode = adminCode;
+	this.logger = logger;
 	this.users = [];
 	this.cons = [];
 	this.items = [];
@@ -179,8 +180,8 @@ var Game = function (adminCode) {
 	}, 17);
 }
 //增加玩家
-Game.prototype.addUser = function (name) {
-	var u = new User(this, name);
+Game.prototype.addUser = function (con) {
+	var u = new User(this, con);
 	var place = this.map.born();
 	u.x = place.x;
 	u.y = place.y + this.props.blockHeight/2;
@@ -253,8 +254,9 @@ Game.prototype.checkShot = function (u) {
 }
 Game.prototype.award = function (u) {
 	u.score++;
-	if (u.score == 5 && !u.dead) {
-		this.announce('winner', u.getData());
+	u.con.kill++;
+	if (u.con.kill > u.con.highestKill) {
+		u.con.highestKill = u.con.kill;
 	}
 }
 Game.prototype.addMine = function (user) {
@@ -288,7 +290,10 @@ Game.prototype.addCon = function (socket) {
 Game.prototype.removeCon = function (con) {
 	for (var i = 0; i < this.cons.length; i++) {
 		if (this.cons[i] == con) {
-			console.log('socket <' + con.name + '> ' + con.ip + ' ['+con.joinTime+':'+con.leaveTime+']');
+			this.logger.info('User <' + con.name + '> '
+				 + con.ip
+				 + ' ['+con.joinTime+':'+con.leaveTime+':'+Math.floor((con.joinTime/con.leaveTime)/60)+']'
+				 + ' ['+con.kill+','+con.death+','+con.highestKill+']');
 			this.cons.splice(i, 1);
 			return;
 		}
@@ -352,6 +357,9 @@ Game.prototype.clean = function () {
 		} else {
 			this.users.splice(i, 1);
 			this.bodies.push(user);
+			if (this.bodies.length > 100) {
+				this.bodies = this.bodies.slice(0, 50);
+			}
 		}
 	};
 }

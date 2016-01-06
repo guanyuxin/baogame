@@ -11,22 +11,28 @@ var Con = function (socket, game) {
 	this.name = '无名小卒';
 	this.joinTime = new Date().getTime();
 	this.ip = socket.handshake.address;
+	
+	this.kill = 0;
+	this.death = 0;
+	this.highestKill = 0;
+
 	if (banedip[this.ip]) {
 		this.banned = true;
 	} else {
 		this.banned = false;
 	}
+
+	//初始化数据
 	var bodiesData = [];
 	for (var i = 0; i < this.game.bodies.length; i++) {
 		bodiesData.push(this.game.bodies[i].getData());
 	}
-
-	//初始化数据
 	socket.emit("init", {
 		props: game.props,
 		map: game.map.getData(),
 		bodies: bodiesData
 	});
+
 	//接收初始化数据
 	socket.on('init', function (data) {
 		if (data.code != undefined) {
@@ -66,7 +72,7 @@ var Con = function (socket, game) {
 		if (data.p1 && _this.p1 && !_this.p1.dieing && !_this.p1.dead) {return}
 		if (data.p2 && _this.p2 && !_this.p2.dieing && !_this.p2.dead) {return}
 		_this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
-		var u = game.addUser(_this.name);
+		var u = game.addUser(_this);
 		if (data.p1) {
 			_this.p1 = u;
 		} else {
