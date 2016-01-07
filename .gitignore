@@ -5,5 +5,4 @@
 # node.js
 #
 node_modules/
-logs/*
 npm-debug.log
