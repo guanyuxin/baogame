@@ -292,7 +292,7 @@ Game.prototype.removeCon = function (con) {
 		if (this.cons[i] == con) {
 			this.logger.info('User <' + con.name + '> '
 				 + con.ip
-				 + ' ['+con.joinTime+':'+con.leaveTime+':'+Math.floor((con.joinTime/con.leaveTime)/60)+']'
+				 + ' ['+con.joinTime+':'+con.leaveTime+':'+Math.floor((con.joinTime-con.leaveTime)/60)+']'
 				 + ' ['+con.kill+','+con.death+','+con.highestKill+']');
 			this.cons.splice(i, 1);
 			return;

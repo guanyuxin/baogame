@@ -77,7 +77,10 @@ document.addEventListener('keyup', function (e) {
 	}
 	e.preventDefault();
 });
+
 $('.txt-input').on('keydown', function (e) {e.stopPropagation()})
 $('.txt-input').on('keyup', function (e) {e.stopPropagation()})
 $('.joining .btn').click(function (){joing(true)});
 $('.joining .btn').text('按e加入');
+
+initDone && initDone();

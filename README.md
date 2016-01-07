@@ -1,6 +1,6 @@
 ![demo](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/demo1.gif)
 #在线游戏
-访问： http://guanyuxin.com:8030/
+访问： http://guanyuxin.com/
 
 由于官方服务器带宽和延迟较大，想玩的同学可以通过搭建私服在局域网中和好朋友一起玩。搭建私服方法在末尾给出。
 
