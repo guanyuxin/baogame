@@ -118,6 +118,8 @@ function userCollide(a, b, game) {
 	b.fireing = false;
 	a.mining = false;
 	b.mining = false;
+	a.onPilla = false;
+	b.onPilla = false;
 	a.lastTouch = b.id;
 	b.lastTouch = a.id;
 }
@@ -252,11 +254,14 @@ Game.prototype.checkShot = function (u) {
 		}
 	});
 }
+//奖励玩家
 Game.prototype.award = function (u) {
-	u.score++;
-	u.con.kill++;
-	if (u.con.kill > u.con.highestKill) {
-		u.con.highestKill = u.con.kill;
+	if (u) {
+		u.score++;
+		u.con.kill++;
+		if (u.score > u.con.highestKill) {
+			u.con.highestKill = u.score;
+		}
 	}
 }
 Game.prototype.addMine = function (user) {
