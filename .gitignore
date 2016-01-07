@@ -5,5 +5,5 @@
 # node.js
 #
 node_modules/
-logs/
+logs/*
 npm-debug.log
