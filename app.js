@@ -62,10 +62,10 @@ wss.on('connection', function (ws) {
 	var socket = {
 		emit: function (name, data) {
 			try {
-				var c = lzString.compressToUint8Array(name + "$" + JSON.stringify(data));
-				//console.log(lzString.decompress(c));
-
-				ws.send(c, {binary: true});
+				//var c = lzString.compressToUint8Array(name + "$" + JSON.stringify(data));
+				//ws.send(c, {binary: true});
+				var c = name + "$" + JSON.stringify(data);
+				ws.send(c);
 			} catch (e) {}
 		},
 		on: function (name, callback) {

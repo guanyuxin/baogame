@@ -35,7 +35,6 @@ var Con = function (socket, game) {
 
 	//接收初始化数据
 	socket.on('init', function (data) {
-		console.log(data);
 		if (data.code != undefined) {
 			if (data.code != _this.game.adminCode) {
 				socket.emit('initFail');
