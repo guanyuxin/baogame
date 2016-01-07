@@ -10,7 +10,7 @@ var Con = function (socket, game) {
 	this.admin = false;
 	this.name = '无名小卒';
 	this.joinTime = new Date().getTime();
-	this.ip = socket.handshake.address;
+	this.ip = socket.ip;
 	
 	this.kill = 0;
 	this.death = 0;
@@ -35,6 +35,7 @@ var Con = function (socket, game) {
 
 	//接收初始化数据
 	socket.on('init', function (data) {
+		console.log(data);
 		if (data.code != undefined) {
 			if (data.code != _this.game.adminCode) {
 				socket.emit('initFail');

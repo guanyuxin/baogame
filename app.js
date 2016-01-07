@@ -1,13 +1,19 @@
 var express = require('express');
 var app = express();
+
 var server = require('http').Server(app);
-var io = require('socket.io')(server);
+//var io = require('socket.io')(server);
+
+var WebSocketServer = require('ws').Server
+  , wss = new WebSocketServer({server: server});
+
 var Game = require('./game/game.js');
+var lzString = require('./game/lzString.js');
 var log4js = require('log4js');  
 
 var arg = process.argv.splice(2);
 
-server.listen(arg[0] || 8030);
+server.listen(arg[0] || 8030, function () { console.log('Listening on ' + server.address().port) });
 
 log4js.configure({
 	appenders: [{
@@ -49,6 +55,48 @@ app.get('/admin', function (req, res) {
 
 var game = new Game(arg[1] || 'admin', loggerGame);
 
-io.on('connection', function (socket, data) {
+wss.on('connection', function (ws) {
+	//var location = url.parse(ws.upgradeReq.url, true);
+	// you might use location.query.access_token to authenticate or share sessions
+	// or ws.upgradeReq.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
+	var socket = {
+		emit: function (name, data) {
+			try {
+				var c = lzString.compressToUint8Array(name + "$" + JSON.stringify(data));
+				//console.log(lzString.decompress(c));
+
+				ws.send(c, {binary: true});
+			} catch (e) {}
+		},
+		on: function (name, callback) {
+			this.listeners[name] = callback;
+		},
+		ip: ws.upgradeReq.connection.remoteAddress,
+		listeners: {}
+	}
 	game.addCon(socket);
+	ws.on('message', function (message) {
+		if (message instanceof Function) { //no blob???
+			var reader = new FileReader();
+			reader.addEventListener("loadend", function() {
+				var x = new Float32Array(reader.result);
+				console.log(x);
+			});
+			reader.readAsArrayBuffer(message);
+		} else {
+			var $s = message.indexOf('$');
+			if ($s == -1) {
+				var name = message
+			} else {
+				var name = message.substring(0, $s);
+				var data = JSON.parse(message.substring($s + 1));
+			}
+			socket.listeners[name] && socket.listeners[name](data);
+		}
+	});
+
+	ws.on('close', function () {
+
+	})
 });
+

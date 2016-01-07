@@ -2,7 +2,8 @@
 <html>
 <head>
 <meta name="viewport" content="width=1100, user-scalable=no">
-<script src="/static/js/socket.io.js"></script>
+<script src="/static/js/lzString.js"></script>
+<script src="/static/js/socket.js"></script>
 <script src="/static/js/zepto.js"></script>
 <style>
 	body {
@@ -185,13 +186,6 @@
 </html>
 <script src="/static/js/effect.js"></script>
 <script>
-var controller = document.createElement('script');
-if (navigator.userAgent.indexOf('iPhone') == -1 && navigator.userAgent.indexOf('Android') == -1 && navigator.userAgent.indexOf('iPad') == -1 ) {
-	controller.src = '/static/js/pcController.js';
-} else {
-	controller.src = '/static/js/mobileController.js';
-}
-document.head.appendChild(controller);
 
 var scoreText = [
 	'小试牛刀',
@@ -228,109 +222,111 @@ function joing (p1) {
 		p1: p1
 	});
 }
-var socket = io.connect(location.href);
-socket.emit('init', {
-	userName: userName
-})
-//初始化链接，监听事件（肯能由打开或刷新页面触发，也可能由后台重启触发）
-socket.on('init', function (data) {
-	Effect.clean();
-	P = data.props	//常量
-	var cdom = document.createElement('canvas');	//玩家层
-	var cdomBg = document.createElement('canvas');	//背景层（只绘制一次）
-	cdomBody = document.createElement('canvas');	//标记层（只添加，不修改，尸体）
-	cdom.width = P.w;
-	cdom.height = P.h;
-	cdom.id = "fg";
-	cdomBg.width = P.w;
-	cdomBg.height = P.h;
-	cdomBg.id = "bg";
-	cdomBody.width = P.w;
-	cdomBody.height = P.h;
-	ctx = cdom.getContext("2d");
-	ctx.font="14px 宋体";
-	ctx.textBaseline = 'middle';//设置文本的垂直对齐方式
-	ctx.textAlign = 'center'; //设置文本的水平对对齐方式
-
-
-	ctxBg = cdomBg.getContext("2d");
-	ctxBody = cdomBody.getContext("2d");
-	ctxBody.font="14px 宋体";
-	ctxBody.textBaseline = 'middle';//设置文本的垂直对齐方式
-	ctxBody.textAlign = 'center'; //设置文本的水平对对齐方式
-
-	drawBg(ctxBg, data.map);
-	var middle = document.getElementById('middle');
-	middle.innerHTML = '';
-	middle.appendChild(cdomBg);
-	middle.appendChild(cdom);
-	//初始化尸体
-	for (var i = 0; i < data.bodies.length; i++) {
-		data.bodies[i].dead = true;
-		drawUser(ctxBody, data.bodies[i], {});
-	}
-});
-//加入
-socket.on('joinSuccess', function (p1) {
-	$('.joining').hide();
-});
-socket.on('joinFail', function (message) {
-	alert(message)
-});
-//主流程
-socket.on('tick', function (data) {
-	t++;
-	p1.id = data.p1;
-	p2.id = data.p2;
-	render(ctx, data);
-
-	socket.emit('control', {
-		p1: p1,
-		p2: p2
+function initDone () {
+	socket.emit('init', {
+		userName: userName
 	})
-	
-	p1.leftPress = false;
-	p1.rightPress = false;
-	p1.upPress = false;
-	p1.downPress = false;
-	p1.itemPress = false;
+	//初始化链接，监听事件（肯能由打开或刷新页面触发，也可能由后台重启触发）
+	socket.on('init', function (data) {
+		Effect.clean();
+		P = data.props	//常量
+		var cdom = document.createElement('canvas');	//玩家层
+		var cdomBg = document.createElement('canvas');	//背景层（只绘制一次）
+		cdomBody = document.createElement('canvas');	//标记层（只添加，不修改，尸体）
+		cdom.width = P.w;
+		cdom.height = P.h;
+		cdom.id = "fg";
+		cdomBg.width = P.w;
+		cdomBg.height = P.h;
+		cdomBg.id = "bg";
+		cdomBody.width = P.w;
+		cdomBody.height = P.h;
+		ctx = cdom.getContext("2d");
+		ctx.font="14px 宋体";
+		ctx.textBaseline = 'middle';//设置文本的垂直对齐方式
+		ctx.textAlign = 'center'; //设置文本的水平对对齐方式
 
-	p2.leftPress = false;
-	p2.rightPress = false;
-	p2.upPress = false;
-	p2.downPress = false;
-	p2.itemPress = false;
-});
 
-socket.on('explode', function (data) {
-	cdx = 8;
-	cdy = 9;
-	Effect.trigger(new Flare({x: data.x, y: data.y}, true));
-});
+		ctxBg = cdomBg.getContext("2d");
+		ctxBody = cdomBody.getContext("2d");
+		ctxBody.font="14px 宋体";
+		ctxBody.textBaseline = 'middle';//设置文本的垂直对齐方式
+		ctxBody.textAlign = 'center'; //设置文本的水平对对齐方式
 
-socket.on('userDead', function (data) {
-	var user = data.user;
-	notice(data.message);
-	//p1 dead
-	if (user.id == p1.id) {
-		$('.joining').show().find('h4').html('你挂了');	
-	}
-	//p2 dead
-	if (user.id == p2.id) {
-		$('.right .joined').hide();
-		$('.right .reborn').show();
-	}
+		drawBg(ctxBg, data.map);
+		var middle = document.getElementById('middle');
+		middle.innerHTML = '';
+		middle.appendChild(cdomBg);
+		middle.appendChild(cdom);
+		//初始化尸体
+		for (var i = 0; i < data.bodies.length; i++) {
+			data.bodies[i].dead = true;
+			drawUser(ctxBody, data.bodies[i], {});
+		}
+	});
+	//加入
+	socket.on('joinSuccess', function (p1) {
+		$('.joining').hide();
+	});
+	socket.on('joinFail', function (message) {
+		alert(message)
+	});
+	//主流程
+	socket.on('tick', function (data) {
+		t++;
+		p1.id = data.p1;
+		p2.id = data.p2;
+		render(ctx, data);
 
-	var killer = data.killer;
-	if (killer && killer.score <= 10) {
-		Effect.trigger(new Toast({
-			x: killer.x,
-			y: killer.y,
-			size: killer.score * 1.5 + 14,
-			txt: killer.name + scoreText[killer.score - 1]
-		}));
-	}
-})
+		socket.emit('control', {
+			p1: p1,
+			p2: p2
+		})
+		
+		p1.leftPress = false;
+		p1.rightPress = false;
+		p1.upPress = false;
+		p1.downPress = false;
+		p1.itemPress = false;
+
+		p2.leftPress = false;
+		p2.rightPress = false;
+		p2.upPress = false;
+		p2.downPress = false;
+		p2.itemPress = false;
+	});
+
+	socket.on('explode', function (data) {
+		cdx = 8;
+		cdy = 9;
+		Effect.trigger(new Flare({x: data.x, y: data.y}, true));
+	});
+
+	socket.on('userDead', function (data) {
+		var user = data.user;
+		notice(data.message);
+		//p1 dead
+		if (user.id == p1.id) {
+			$('.joining').show().find('h4').html('你挂了');	
+		}
+		//p2 dead
+		if (user.id == p2.id) {
+			$('.right .joined').hide();
+			$('.right .reborn').show();
+		}
+
+		var killer = data.killer;
+		if (killer && killer.score <= 10) {
+			Effect.trigger(new Toast({
+				x: killer.x,
+				y: killer.y,
+				size: killer.score * 1.5 + 14,
+				txt: killer.name + scoreText[killer.score - 1]
+			}));
+		}
+	});
+	socket.begin();
+}
 
 var imgUrls = {
 	happy: "/head/happy.png",
@@ -647,4 +643,14 @@ function render (ctx, data) {
 
 	ctx.restore();
 }
+
+var controller = document.createElement('script');
+if (navigator.userAgent.indexOf('iPhone') == -1
+		&& navigator.userAgent.indexOf('Android') == -1
+		&& navigator.userAgent.indexOf('iPad') == -1 ) {
+	controller.src = '/static/js/pcController.js';
+} else {
+	controller.src = '/static/js/mobileController.js';
+}
+document.head.appendChild(controller);
 </script>

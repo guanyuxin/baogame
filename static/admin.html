@@ -2,8 +2,9 @@
 <html>
 <head>
 	<title>暴走后台</title>
-	<script src="/static/js/socket.io.js"></script>
+	<script src="/static/js/lzString.js"></script>
 	<script src="/static/js/zepto.js"></script>
+	<script src="/static/js/socket.js"></script>
 	<style>
 		.btn {
 			display: block;
@@ -46,11 +47,7 @@
 	</style>
 </head>
 <body>
-	<div class="login">
-		<input id="code"/>
-		<a class="btn join">进入</a>
-	</div>
-	<div class="items" style="display:none">
+	<div class="items">
 		生成道具：
 		<a class="btn" data-type="0">无敌</a>
 		<a class="btn" data-type="1">枪</a>
@@ -64,55 +61,55 @@
 </body>
 </html>
 <script>
-	$('.btn.join').click(function () {
-		var code = $('#code').val();
-		var socket = io.connect(location.host);
-		socket.on('initFail', function () {alert('fail')})
-		socket.emit('init', {
-			code: code
-		});
-		socket.on('tick', function (data) {
-			var html = '<div class="cons">';
-			data.cons && data.cons.forEach(function (con) {
-				var p1 = null;
-				data.users.forEach(function (user) {
-					if (con.p1 == user.id) {
-						p1 = user;
-						return;
-					}
-				});
-				if (p1) {
-					var playerData = '<div class="player">'+p1.status+'</div>';
-				} else {
-					var playerData = '<div class="player">ob</div>';
-				}
-				if (con.banned) {
-					var banBtn = '<a data-conid="'+con.id+'" class="btn ban banned">取消ban</a>';
-				} else {
-					var banBtn = '<a data-conid="'+con.id+'" class="btn ban">ban</a>';
-				}
-				html += '<div class="user"><div class="con">'+con.name+"<br>"+con.ip+'</div>'+playerData+'<div class="action">'+banBtn+'</div></div>';
-			});
-			$('.users').html(html);
-			$('.items').show();
-			$('.login').hide();
-		});
-		$('.users').on('click', '.btn.ban', function (e) {
-			var $t = $(e.currentTarget);
-			var conid = $t.data('conid');
-			console.log(conid);
-			if ($t.is('.banned')) {
-				socket.emit('unban', conid);
-				$t.removeClass('banned');
-			} else {
-				socket.emit('ban', conid);
-				$t.addClass('banned')
-			}
-		});
-		$('.items .btn').click(function (e) {
-			var type = $(e.currentTarget).data('type');
-			console.log(type);
-			socket.emit('createItem', type);
-		});
+
+	var code = localStorage.code
+
+	socket.on('initFail', function () {
+		alert('fail')
 	})
+	socket.emit('init', {
+	 	code: code
+	});
+	socket.on('tick', function (data) {
+		var html = '<div class="cons">';
+		data.cons && data.cons.forEach(function (con) {
+			var p1 = null;
+			data.users.forEach(function (user) {
+				if (con.p1 == user.id) {
+					p1 = user;
+					return;
+				}
+			});
+			if (p1) {
+				var playerData = '<div class="player">'+p1.status+'</div>';
+			} else {
+				var playerData = '<div class="player">ob</div>';
+			}
+			if (con.banned) {
+				var banBtn = '<a data-conid="'+con.id+'" class="btn ban banned">取消ban</a>';
+			} else {
+				var banBtn = '<a data-conid="'+con.id+'" class="btn ban">ban</a>';
+			}
+			html += '<div class="user"><div class="con">'+con.name+"<br>"+con.ip+'</div>'+playerData+'<div class="action">'+banBtn+'</div></div>';
+		});
+		$('.users').html(html);
+	});
+	socket.begin();
+	$('.users').on('click', '.btn.ban', function (e) {
+		var $t = $(e.currentTarget);
+		var conid = $t.data('conid');
+		console.log(conid);
+		if ($t.is('.banned')) {
+			socket.emit('unban', conid);
+			$t.removeClass('banned');
+		} else {
+			socket.emit('ban', conid);
+			$t.addClass('banned')
+		}
+	});
+	$('.items .btn').click(function (e) {
+		var type = $(e.currentTarget).data('type');
+		console.log(type);
+		socket.emit('createItem', type);
+	});
 </script>

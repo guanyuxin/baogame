@@ -85,3 +85,5 @@ $('.mobileController .item').on('touchstart', function (e) {
 $('.mobileController .item').on('touchend', function (e) {
 	p1.itemDown = false;
 });
+
+initDone && initDone();
