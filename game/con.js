@@ -110,11 +110,6 @@ var Con = function (socket, game) {
 			_this.p2.itemPress = data.p2.itemPress;
 		}
 	});
-
-	socket.on("disconnect", function () {
-		_this.leaveTime = new Date().getTime();
-		_this.game.removeCon(_this);
-	});
 }
 Con.prototype.getData = function () {
 	return {

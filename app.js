@@ -95,7 +95,8 @@ wss.on('connection', function (ws) {
 	});
 
 	ws.on('close', function () {
-
+		game.removeCon(socket);
+		socket = null;
 	})
 });
 

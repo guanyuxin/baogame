@@ -292,11 +292,12 @@ Game.prototype.addCon = function (socket) {
 	this.cons.push(new Con(socket, this));
 }
 //链接关闭
-Game.prototype.removeCon = function (con) {
+Game.prototype.removeCon = function (socket) {
 	for (var i = 0; i < this.cons.length; i++) {
-		if (this.cons[i] == con) {
+		if (this.cons[i].socket == socket) {
+			var con = this.cons[i];
+			con.leaveTime = new Date().getTime();
 			this.logger.info('User <' + con.name + '> '
-				 + con.ip
 				 + ' ['+con.joinTime+':'+con.leaveTime+':'+Math.floor((con.joinTime-con.leaveTime)/60)+']'
 				 + ' ['+con.kill+','+con.death+','+con.highestKill+']');
 			this.cons.splice(i, 1);
