@@ -55,7 +55,8 @@
 		<a class="btn" data-type="3">毒药</a>
 		<a class="btn" data-type="4">隐身</a>
 		<a class="btn" data-type="5">?</a>
-		<a class="btn" data-type="6">喷气背包</a>
+		<a class="btn" data-type="6">二段跳</a>
+		<a class="btn" data-type="7">喷气背包</a>
 	</div>
 	<div class="users"></div>
 </body>
@@ -81,7 +82,12 @@
 				}
 			});
 			if (p1) {
-				var playerData = '<div class="player">'+p1.status+'</div>';
+				var playerData = `<div class="player">
+					${p1.status},${p1.score}<br/>
+					${p1.carry || "空"} : ${p1.carryCount}
+				</div>`;
+			} else if (con.admin) {
+				var playerData = '<div class="player">admin</div>';
 			} else {
 				var playerData = '<div class="player">ob</div>';
 			}
@@ -90,7 +96,15 @@
 			} else {
 				var banBtn = '<a data-conid="'+con.id+'" class="btn ban">ban</a>';
 			}
-			html += '<div class="user"><div class="con">'+con.name+"<br>"+con.ip+'</div>'+playerData+'<div class="action">'+banBtn+'</div></div>';
+			html += `<div class="user">
+				<div class="con">
+					名称: ${con.name}<br>
+					IP: ${con.ip}<br>
+					KDH: ${con.kill},${con.death},${con.highestKill}
+				</div>
+				${playerData}
+				<div class="action">${banBtn}</div>
+			</div>`;
 		});
 		$('.users').html(html);
 	});

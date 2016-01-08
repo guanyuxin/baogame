@@ -3,15 +3,15 @@ var socket = {
 	queueData: [],
 	ws: null,
 	begin: function () {
-		var _this = this;
-		_this.ws = new WebSocket("ws://"+location.host);
-		_this.ws.onopen = function () {
-			_this.open = true;
-			for (var i = 0; i < _this.queueData.length; i++) {
-				_this.emit(_this.queueData[i].name, _this.queueData[i].data);
+		this.ws = new WebSocket("ws://"+location.host);
+		this.ws.onopen = () => {
+			this.open = true;
+			for (var i = 0; i < this.queueData.length; i++) {
+				this.emit(this.queueData[i].name, this.queueData[i].data);
 			}
-		};
-		_this.ws.onmessage = function (evt) {
+		}
+		this.ws.onmessage = (evt) => {
+			var _this = this;
 			function processData (str) {
 				var $s = str.indexOf('$');
 				if ($s == -1) {
@@ -34,10 +34,12 @@ var socket = {
 				processData(evt.data);
 			}
 		};
-		_this.ws.onclose = function (evt) {
-			console.log("WebSocketClosed");
+		this.ws.onclose = (evt) => {
+			setTimeout(function () {
+				socket.begin();
+			}, 500);
 		};
-		_this.ws.onerror = function (evt) {
+		this.ws.onerror = (evt) => {
 			console.log("WebSocketError");
 		};
 	},

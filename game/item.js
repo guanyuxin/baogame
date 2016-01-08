@@ -21,6 +21,9 @@ var Items = [{
 	type: "random",
 	name: "惊喜！"
 }, {
+	type: "doublejump",
+	name: "二段跳"
+}, {
 	type: "flypack",
 	name: "喷气背包",
 	count: 1000

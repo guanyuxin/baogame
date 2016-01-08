@@ -24,7 +24,6 @@ var User = function (game, con) {
 	this.fireing = 0;
 	this.mining = 0;
 	this.score = 0;
-	this.hasDoubleJump = false;
 	this.canDoubleJump = false;
 	this.lastTouch = null;
 }
@@ -104,7 +103,7 @@ User.prototype.getStatus = function () {
 				return 'mining';
 			} else {
 				this.lastTouch = null;
-				if (this.hasDoubleJump) {
+				if (this.carry == 'doublejump') {
 					this.canDoubleJump = true;
 				}
 				return "standing";
@@ -230,6 +229,13 @@ User.prototype.update = function () {
 		}
 	}
 }
+User.prototype.scoreing = function () {
+	this.score++;
+	this.con.kill++;
+	if (this.score > this.con.highestKill) {
+		this.con.highestKill = this.score;
+	}
+}
 User.prototype.killed = function (action, byUser) {
 	if (this.dieing) {return}
 	this.killer = byUser && byUser.id;
@@ -253,7 +259,9 @@ User.prototype.killed = function (action, byUser) {
 
 	if (this.killer && this.killer != this.id) {
 		var killer = this.game.getUser(this.killer);
-		this.game.award(killer);
+		if (killer) {
+			killer.scoreing();
+		}
 	}
 
 	if (killer) {

@@ -6,6 +6,19 @@
 <script src="/static/js/socket.js"></script>
 <script src="/static/js/zepto.js"></script>
 <style>
+	@-webkit-keyframes popup {
+		0% {
+			opacity: 0;
+			-webkit-transform: scale(1.4)
+		}
+		70% {
+			opacity: 1;
+			-webkit-transform: scale(.9)
+		}
+		100% {
+			-webkit-transform: scale(1)
+		}
+	}
 	body {
 		background: #000;
 		margin: 0;
@@ -45,6 +58,7 @@
 		padding: 40px 80px;
 		background: rgba(0,0,0,.6);
 		border-radius: 20px;
+		-webkit-animation: popup .5s;
 	}
 	.center h4 {
 		margin-top: 0;
@@ -166,7 +180,7 @@
 		<div class="item">act</div>
 	</div>
 
-	<div class="joining"><div class="center">
+	<div class="joining" style="display:none"><div class="center">
 		<h4 class="message">加入游戏</h4>
 		你的名字：<input id="name" class="txt-input" placeholder="无名小卒"/>
 		<div>
@@ -263,6 +277,7 @@ function initDone () {
 			data.bodies[i].dead = true;
 			drawUser(ctxBody, data.bodies[i], {});
 		}
+		$('.joining').show();
 	});
 	//加入
 	socket.on('joinSuccess', function (p1) {
@@ -307,12 +322,7 @@ function initDone () {
 		notice(data.message);
 		//p1 dead
 		if (user.id == p1.id) {
-			$('.joining').show().find('h4').html('你挂了');	
-		}
-		//p2 dead
-		if (user.id == p2.id) {
-			$('.right .joined').hide();
-			$('.right .reborn').show();
+			setTimeout(() => $('.joining').show().find('h4').html('你挂了'), 500);	
 		}
 
 		var killer = data.killer;
@@ -587,8 +597,11 @@ function drawItem (ctx, item) {
 	ctx.stroke();
 	ctx.fill();
 	ctx.lineWidth = 1;
-
-	ctx.drawImage(imgs[item.type], -s, -s, s*2, s*2);
+	if (item.type == 'doublejump') {
+		ctx.drawImage(imgs['random'], -s, -s, s*2, s*2);
+	} else {
+		ctx.drawImage(imgs[item.type], -s, -s, s*2, s*2);
+	}
 	ctx.restore();
 }
 

@@ -1,7 +1,7 @@
+"use strict"
 var banedip = {};
 var concount = 0;
 var Con = function (socket, game) {
-	var _this = this;
 	this.id = concount++;
 	this.p1 = null;
 	this.p2 = null;
@@ -24,8 +24,8 @@ var Con = function (socket, game) {
 
 	//初始化数据
 	var bodiesData = [];
-	for (var i = 0; i < this.game.bodies.length; i++) {
-		bodiesData.push(this.game.bodies[i].getData());
+	for (let body of this.game.bodies) {
+		bodiesData.push(body.getData());
 	}
 	socket.emit("init", {
 		props: game.props,
@@ -34,34 +34,34 @@ var Con = function (socket, game) {
 	});
 
 	//接收初始化数据
-	socket.on('init', function (data) {
+	socket.on('init', data => {
 		if (data.code != undefined) {
-			if (data.code != _this.game.adminCode) {
+			if (data.code != this.game.adminCode) {
 				socket.emit('initFail');
 			} else {
-				_this.admin = true;
+				this.admin = true;
 				socket.on('createItem', function (type) {
 					game.createItem(type);
 				});
 				socket.on('ban', function (conid) {
-					var con = _this.game.getCon(conid);
+					var con = this.game.getCon(conid);
 					con.banned = true;
 					banedip[con.ip] = true;
 				});
 				socket.on('unban', function (conid) {
-					var con = _this.game.getCon(conid);
+					var con = this.game.getCon(conid);
 					con.banned = false;
 					banedip[con.ip] = false;
 				});
 			}
 		}
 		if (data.userName) {
-			_this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
+			this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
 		}
 	});
 	//加入
-	socket.on('join', function (data) {
-		if (_this.banned) {
+	socket.on('join', data => {
+		if (this.banned) {
 			socket.emit('joinFail', "you are banned");
 			return;
 		}
@@ -69,45 +69,45 @@ var Con = function (socket, game) {
 			socket.emit('joinFail', "加入失败，服务器已满");
 			return;
 		}
-		if (data.p1 && _this.p1 && !_this.p1.dieing && !_this.p1.dead) {return}
-		if (data.p2 && _this.p2 && !_this.p2.dieing && !_this.p2.dead) {return}
-		_this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
-		var u = game.addUser(_this);
+		if (data.p1 && this.p1 && !this.p1.dieing && !this.p1.dead) {return}
+		if (data.p2 && this.p2 && !this.p2.dieing && !this.p2.dead) {return}
+		this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
+		var u = game.addUser(this);
 		if (data.p1) {
-			_this.p1 = u;
+			this.p1 = u;
 		} else {
-			_this.p2 = u;
+			this.p2 = u;
 		}
 		socket.emit('joinSuccess', data.p1);
 	});
 	//接收控制
-	socket.on("control", function (data) {
-		if (_this.p1 && data.p1) {
-			_this.p1.leftDown = data.p1.leftDown;
-			_this.p1.rightDown = data.p1.rightDown;
-			_this.p1.upDown = data.p1.upDown;
-			_this.p1.downDown = data.p1.downDown;
-			_this.p1.itemDown = data.p1.itemDown;
+	socket.on("control", data => {
+		if (this.p1 && data.p1) {
+			this.p1.leftDown = data.p1.leftDown;
+			this.p1.rightDown = data.p1.rightDown;
+			this.p1.upDown = data.p1.upDown;
+			this.p1.downDown = data.p1.downDown;
+			this.p1.itemDown = data.p1.itemDown;
 
-			_this.p1.leftPress = data.p1.leftPress;
-			_this.p1.rightPress = data.p1.rightPress;
-			_this.p1.upPress = data.p1.upPress;
-			_this.p1.downPress = data.p1.downPress;
-			_this.p1.itemPress = data.p1.itemPress;
+			this.p1.leftPress = data.p1.leftPress;
+			this.p1.rightPress = data.p1.rightPress;
+			this.p1.upPress = data.p1.upPress;
+			this.p1.downPress = data.p1.downPress;
+			this.p1.itemPress = data.p1.itemPress;
 		}
 
-		if (_this.p2 && data.p2) {
-			_this.p2.leftDown = data.p2.leftDown;
-			_this.p2.rightDown = data.p2.rightDown;
-			_this.p2.upDown = data.p2.upDown;
-			_this.p2.downDown = data.p2.downDown;
-			_this.p2.itemDown = data.p2.itemDown;
+		if (this.p2 && data.p2) {
+			this.p2.leftDown = data.p2.leftDown;
+			this.p2.rightDown = data.p2.rightDown;
+			this.p2.upDown = data.p2.upDown;
+			this.p2.downDown = data.p2.downDown;
+			this.p2.itemDown = data.p2.itemDown;
 
-			_this.p2.leftPress = data.p2.leftPress;
-			_this.p2.rightPress = data.p2.rightPress;
-			_this.p2.upPress = data.p2.upPress;
-			_this.p2.downPress = data.p2.downPress;
-			_this.p2.itemPress = data.p2.itemPress;
+			this.p2.leftPress = data.p2.leftPress;
+			this.p2.rightPress = data.p2.rightPress;
+			this.p2.upPress = data.p2.upPress;
+			this.p2.downPress = data.p2.downPress;
+			this.p2.itemPress = data.p2.itemPress;
 		}
 	});
 }
@@ -120,7 +120,10 @@ Con.prototype.getData = function () {
 		name: this.name,
 		banned: this.banned,
 		joinTime: this.joinTime,
-		ip: this.ip
+		ip: this.ip,
+		kill: this.kill,
+		death: this.death,
+		highestKill: this.highestKill
 	}
 }
 module.exports = Con;
