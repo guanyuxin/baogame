@@ -70,10 +70,16 @@ $('.joining .dismissBtn').click(function () {
 	$('.joining').hide();
 });
 
-if(600 > window.innerHeight) {
-	var h = window.innerHeight;
-	var w = Math.floor(h/600*1100);
-	$('.middle').css('width', w).css('height', h);
+function checkDisplay () {
+	if(600 > window.innerHeight) {
+		var h = window.innerHeight;
+		var w = Math.floor(h/600*1100);
+		$('.middle').css('width', w).css('height', h);
+	} else {
+		$('.middle').css('width', '').css('height', '');
+	}
 }
+checkDisplay();
+$(window).resize(checkDisplay);
 
 initDone && initDone();
