@@ -22,7 +22,11 @@
 	}
 	body {
 		background: #000;
+		-webkit-user-select: none;
 		margin: 0;
+	}
+	canvas {
+		width: 100%;
 	}
 	#bg {
 		background: #333;
@@ -34,13 +38,13 @@
 		top: 0;
 	}
 	.frame {
-		-webkit-user-select: none;
 		position: relative;
 	}
 	.middle {
 		position: relative;
 		margin: auto;
 		width: 1100;
+		height: 600;
 	}
 	.joining {
 		position: absolute;
@@ -129,13 +133,16 @@
 		bottom: 20px;
 	}
 	.mobileController .moreBtn {
-		padding: 20px;
-		margin: 10px;
+		padding: 30px;
 		color: #fff;
-		border-radius: 20px;
-		border: 2px solid #fff;
+		border: 1px solid #fff;
 		background: rgba(255,255,255,.3);
 		text-align: center;
+		margin-top: -1px;
+		margin-left: -1px;
+	}
+	.mobileController .moreBtn:active {
+		background: rgba(255,255,255,.6);
 	}
 
 	a {

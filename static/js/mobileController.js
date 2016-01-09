@@ -70,4 +70,10 @@ $('.joining .dismissBtn').click(function () {
 	$('.joining').hide();
 });
 
+if(600 > window.innerHeight) {
+	var h = window.innerHeight;
+	var w = Math.floor(h/600*1100);
+	$('.middle').css('width', w).css('height', h);
+}
+
 initDone && initDone();
