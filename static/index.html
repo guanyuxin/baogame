@@ -2,7 +2,8 @@
 <html>
 <head>
 <meta name="viewport" content="width=1100, user-scalable=no">
-<script src="/static/js/lzString.js"></script>
+<title>暴走大乱斗</title>
+<script src="/static/js/JPack.js"></script>
 <script src="/static/js/socket.js"></script>
 <script src="/static/js/zepto.js"></script>
 <style>
@@ -53,6 +54,7 @@
 		display: -webkit-box;
 		-webkit-box-align: center;
 		-webkit-box-pack: center;
+		z-index: 100;
 	}
 	.joining .center {
 		padding: 40px 80px;
@@ -115,79 +117,66 @@
 		top: 0;
 		bottom: 0;
 	}
-	.mobileController .panel {
-		width: 200px;
-		height: 200px;
+	.mobileController .left {
 		position: absolute;
-		left: 50px;
-		bottom: 50px;
-		background: rgba(255,255,255,.3);
-		border-radius: 50%;
-		overflow: hidden;
-		border: 2px solid #eee;
+		left: 20px;
+		bottom: 20px;
+		display: -webkit-box;
 	}
-	.mobileController .panel .line {
-		height: 50%;
-	}
-	.mobileController .panel .cbtn {
-		width: 50%;
-		height: 100%;
-		display: inline-block;
-		box-sizing: border-box;
-		border: 2px solid #eee;
-	}
-	.mobileController .centerBtn {
-		box-sizing: border-box;
+	.mobileController .right {
 		position: absolute;
-		left: 50%;
-		top: 50%;
-		-webkit-transform: translate(-50%, -50%);
-		width: 50;
-		height: 50;
-		background: #fff;
-		border-radius: 50%;
+		right: 20px;
+		bottom: 20px;
 	}
-	.mobileController .item {
-		position: absolute;
-		right: 50px;
-		bottom: 50px;
+	.mobileController .moreBtn {
 		padding: 20px;
+		margin: 10px;
 		color: #fff;
 		border-radius: 20px;
 		border: 2px solid #fff;
 		background: rgba(255,255,255,.3);
+		text-align: center;
 	}
+
 	a {
 		color: #2be;
 	}
+	.rooms span {
+		display: inline-block;
+		background: rgba(255,255,0,.1);
+		border: 1px solid rgb(255,255,0);
+		padding: 10px;
+		margin: 10px;
+	}
+	.rooms span.active {
+		background: rgba(255,255,0,.4);
+	}
 </style>
 </head>
-<body><div class="frame">
-	<div class="middle" id="middle">
-
+<body>
+<div class="frame">
+	<div class="middle" id="middle"></div>
+	
+</div>
+<div class="joining" style="display:none"><div class="center">
+	<h4 class="message">加入游戏</h4>
+	你的名字：<input id="name" class="txt-input" placeholder="无名小卒"/>
+	<div class="rooms">
 	</div>
-
-	<div class="mobileController" style="display:none">
-		<div class="panel">
-			<div class="line">
-				<div class="cbtn"></div><div class="cbtn"></div>
-			</div>
-			<div class="line">
-				<div class="cbtn"></div><div class="cbtn"></div>
-			</div>
-			<div class="centerBtn"></div>
-		</div>
-		<div class="item">act</div>
+	<div>
+		<a href="javascript:void(0)" class="btn joinBtn">加入</a><a href="javascript:void(0)" class="btn dismissBtn">观战</a>
 	</div>
-
-	<div class="joining" style="display:none"><div class="center">
-		<h4 class="message">加入游戏</h4>
-		你的名字：<input id="name" class="txt-input" placeholder="无名小卒"/>
-		<div>
-			<a href="javascript:void(0)" class="btn joinBtn">加入</a>
-		</div>
-	</div></div>
-
+</div></div>
+<div class="mobileController" style="display:none">
+	<div class="left">
+		<div data-act="l" class="moreBtn l">左</div>
+		<div data-act="r" class="moreBtn r">右</div>
+	</div>
+	<div class="right">
+		<div data-act="a" class="moreBtn item">act</div>
+		<div data-act="u" class="moreBtn up">上</div>
+		<div data-act="d" class="moreBtn down">下</div>
+	</div>
 </div>
 <div class="notice">
 	<div class="noticeFix">
@@ -239,7 +228,10 @@ function joing (p1) {
 function initDone () {
 	socket.emit('init', {
 		userName: userName
-	})
+	});
+	socket.on('room', function () {
+
+	});
 	//初始化链接，监听事件（肯能由打开或刷新页面触发，也可能由后台重启触发）
 	socket.on('init', function (data) {
 		Effect.clean();
@@ -287,28 +279,34 @@ function initDone () {
 		alert(message)
 	});
 	//主流程
+	var controlCache = '';
 	socket.on('tick', function (data) {
 		t++;
 		p1.id = data.p1;
 		p2.id = data.p2;
+		for (var i = 0; i < data.users.length; i++) {
+			data.users[i] = Packs.userPack.decode(data.users[i]);
+		}
+		for (var i = 0; i < data.items.length; i++) {
+			data.items[i] = Packs.itemPack.decode(data.items[i]);
+		}
+		for (var i = 0; i < data.mines.length; i++) {
+			data.mines[i] = Packs.minePack.decode(data.mines[i]);
+		}
 		render(ctx, data);
 
-		socket.emit('control', {
-			p1: p1,
-			p2: p2
-		})
+		//发送控制
+		var control = JSON.stringify(Packs.controlPack.encode(p1));
+		if (controlCache != control) {
+			controlCache = control;
+			socket.emit('control', Packs.controlPack.encode(p1));
+		}
 		
 		p1.leftPress = false;
 		p1.rightPress = false;
 		p1.upPress = false;
 		p1.downPress = false;
 		p1.itemPress = false;
-
-		p2.leftPress = false;
-		p2.rightPress = false;
-		p2.upPress = false;
-		p2.downPress = false;
-		p2.itemPress = false;
 	});
 
 	socket.on('explode', function (data) {
@@ -322,7 +320,7 @@ function initDone () {
 		notice(data.message);
 		//p1 dead
 		if (user.id == p1.id) {
-			setTimeout(() => $('.joining').show().find('h4').html('你挂了'), 500);	
+			setTimeout(function () {$('.joining').show().find('h4').html('你挂了')}, 500);	
 		}
 
 		var killer = data.killer;
@@ -348,24 +346,35 @@ var imgUrls = {
 	normal: "/head/normal.png",
 	win: "/head/win.png",
 	wtf: "/head/wtf.png",
-
-	drug: "/item/drug.png",
-	power: "/item/power.png",
-	gun: "/item/gun.png",
-	mine: "/item/mine.png",
-	random: "/item/random.png",
-	flypack: "/item/flypack.png",
-	hide: "/item/hide.png",
-
+	items: [
+		"/item/power.png",
+		"/item/gun.png",
+		"/item/mine.png",
+		"/item/drug.png",
+		"/item/hide.png",
+		"/item/random.png",
+		"/item/random.png",
+		"/item/flypack.png",
+	],
 	bomb: "/bomb.png",
 	minePlaced: "/mine.png",
 	jet: "/jet.png"
 };
 var imgs = {};
 for (var key in imgUrls) {
-	var Img = new Image();
-	Img.src = "/static/imgs/" + imgUrls[key];
-	imgs[key] = Img;
+	if (typeof(imgUrls[key]) == "string") {
+		var Img = new Image();
+		Img.src = "/static/imgs/" + imgUrls[key];
+		imgs[key] = Img;
+	} else {
+		var arr = [];
+		for (var i = 0; i < imgUrls[key].length; i++) {
+			var Img = new Image();
+			Img.src = "/static/imgs/" + imgUrls[key][i];
+			arr.push(Img);
+		}
+		imgs[key] = arr;
+	}
 }
 
 //绘制背景
@@ -506,13 +515,13 @@ function drawUser (ctx, user, data) {
 		var img = imgs.alone;
 	} else if (user.status == "dieing") {
 		var img = imgs.alone;
-	} else if (user.carry == "power") {
+	} else if (user.carry == Packs.items.power.id) {
 		var img = imgs.win;
 	} else if (user.danger) {
 		var img = imgs.danger;
 	} else if (user.status == "crawling" || user.status == "mining" || user.status == "rolling2") {
 		var img = imgs.throll;
-	} else if (user.carry == 'bomb') {
+	} else if (user.carry == Packs.items.bomb.id) {
 		var img = imgs.wtf;
 	} else if (user.status == "falling" || user.status == "climbing") {
 		var img = imgs.happy;
@@ -529,7 +538,7 @@ function drawUser (ctx, user, data) {
 	}
 
 	//用户指示器
-	if (user.carry != "hide" || (user.id == p1.id && !p2.id)) {
+	if (user.carry != Packs.items.hide.id || (user.id == p1.id && !p2.id)) {
 		ctx.fillText(user.name, 0, -50);
 		if (user.nearPilla && (user.id == p1.id || user.id == p2.id)) {
 			ctx.fillText("⬆️⬇️", 0, -70);
@@ -548,7 +557,7 @@ function drawUser (ctx, user, data) {
 		ctx.restore();
 	}
 
-	if (user.carry == "hide") {
+	if (user.carry == Packs.items.hide.id) {
 		ctx.globalAlpha = user.carryCount > 900 ? (user.carryCount - 900)/100 : user.carryCount > 100 ? 0 : (100 - user.carryCount)/100
 	}
 	
@@ -557,21 +566,21 @@ function drawUser (ctx, user, data) {
 	} else {
 		ctx.drawImage(img, -P.userWidth/2, -P.userHeight, P.userWidth, P.userHeight);
 	}
-	if (user.carry == "flypack") {
+	if (user.carry == Packs.items.flypack.id) {
 		var bottleWidth = 10;
 		var bottleHeight = 30;
 		var wPadding = -P.userWidth/2 - bottleWidth;
 		ctx.lineWidth = 1;
 		ctx.beginPath();
 		ctx.fillStyle = "rgb(100,160,255)";
-		ctx.fillRect(wPadding, -bottleHeight * user.carryCount / 200, bottleWidth, bottleHeight * user.carryCount / 200);
+		ctx.fillRect(wPadding, -bottleHeight * user.carryCount / Packs.items.flypack.count, bottleWidth, bottleHeight * user.carryCount / Packs.items.flypack.count);
 		ctx.stroke();
 
 		ctx.drawImage(imgs.jet, wPadding - 16, -bottleHeight - 10, 40, bottleHeight + 20);
 		if (user.flying) {
 			Effect.trigger(new Brust(user, 1, 5, user.faceing * (wPadding + bottleWidth/2), -10))
 		}
-	} if (user.carry == "bomb") {
+	} if (user.carry == Packs.items.bomb.id) {
 		ctx.drawImage(imgs.bomb, P.userWidth/2 - 10, -P.userHeight, 30, 40);
 		if (!user.dead) {
 			ctx.scale(user.faceing, 1);
@@ -597,11 +606,7 @@ function drawItem (ctx, item) {
 	ctx.stroke();
 	ctx.fill();
 	ctx.lineWidth = 1;
-	if (item.type == 'doublejump') {
-		ctx.drawImage(imgs['random'], -s, -s, s*2, s*2);
-	} else {
-		ctx.drawImage(imgs[item.type], -s, -s, s*2, s*2);
-	}
+	ctx.drawImage(imgs.items[item.id - 1], -s, -s, s*2, s*2);
 	ctx.restore();
 }
 
@@ -648,7 +653,13 @@ function render (ctx, data) {
 		var item = data.items[i];
 		drawItem(ctx, item);
 		if (item.dead) {
-			Effect.trigger(new ItemDead(item));
+			var itemName = '';
+			for (var key in Packs.items) {
+				if (Packs.items[key].id == item.id) {
+					itemName = Packs.items[key].name;
+				}
+			}
+			Effect.trigger(new ItemDead(item, itemName));
 		}
 	}
 
@@ -657,6 +668,26 @@ function render (ctx, data) {
 	ctx.restore();
 }
 
+$.ajax({
+	url: "/rooms",
+	success: function (t) {
+		var count = parseInt(t);
+		if (count < 2) {return}
+		$('.rooms').append('<span class="active">1</span>');
+		for (var i = 1; i < count; i++) {
+			$('.rooms').append('<span>'+(i+1)+'</span>');
+		}
+		$('.rooms span').click(function (e) {
+			var $t = $(e.currentTarget);
+			if (!$t.is('.active')) {
+				$('.rooms span.active').removeClass('active');
+				$t.addClass('active');
+				socket.close();
+				socket.begin($t.index());
+			}
+		});
+	}
+});
 var controller = document.createElement('script');
 if (navigator.userAgent.indexOf('iPhone') == -1
 		&& navigator.userAgent.indexOf('Android') == -1

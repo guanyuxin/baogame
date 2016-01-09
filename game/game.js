@@ -1,4 +1,7 @@
 "use strict"
+var Pack = require('../static/js/JPack.js');
+
+
 var Map = require('./map.js');
 var User = require('./user.js');
 var Item = require('./item.js');
@@ -11,37 +14,37 @@ function userCollide(a, b, game) {
 	if((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) > game.props.userWidth*game.props.userWidth) {return;}
 
 	//带电情况
-	if (a.carry == "power" && b.carry != "power") {
+	if (a.carry == Pack.items.power.id && b.carry != Pack.items.power.id) {
 		b.killed('power', a);
 		b.vx = (b.x - a.x)/2;
-		if (b.carry == "bomb") {
-			a.carry = "bomb";
+		if (b.carry == Pack.items.bomb.id) {
+			a.carry = b.carry;
 			a.carryCount = b.carryCount;
 			b.carry = '';
 		}
 		return;
-	} else if (a.carry != "power" && b.carry == "power") {
+	} else if (a.carry != Pack.items.power.id && b.carry == Pack.items.power.id) {
 		a.killed('power', b);
 		a.vx = (a.x - b.x)/2;
-		if (a.carry == "bomb") {
-			b.carry = "bomb";
-			b.carryCount = b.carryCount;
+		if (a.carry == Pack.items.bomb.id) {
+			b.carry = a.carry;
+			b.carryCount = a.carryCount;
 			a.carry = '';
 		}
 		return;
-	} else if (a.carry == "power" && b.carry == "power") {
+	} else if (a.carry == Pack.items.power.id && b.carry == Pack.items.power.id) {
 		a.carry = '';
 		b.carry = '';
 	}
 	//排除刚刚碰撞
 	if (a.ignore[b.id] > 0 || b.ignore[a.id] > 0) {return}
 	
-	if (b.carry == "bomb" && a.carry != "bomb") {
-		a.carry = "bomb";
+	if (b.carry == Pack.items.bomb.id && a.carry != Pack.items.bomb.id) {
+		a.carry = b.carry;
 		a.carryCount = b.carryCount;
 		b.carry = '';
-	} else if (a.carry == "bomb" && b.carry != "bomb") {
-		b.carry = "bomb";
+	} else if (a.carry == Pack.items.bomb.id && b.carry != Pack.items.bomb.id) {
+		b.carry = a.carry;
 		b.carryCount = a.carryCount;
 		a.carry = '';
 	}
@@ -127,35 +130,12 @@ function userCollide(a, b, game) {
 
 function eatItem (a, b, game) {
 	if (a.dead || b.dead) {return}
-	if (a.carry == "bomb") {return}
+	if (a.carry == Pack.items.bomb.id) {return}
 	if((a.x-b.x)*(a.x-b.x) + (a.y+game.props.userHeight/2-b.y)*(a.y+game.props.userHeight/2-b.y) >
 			(game.props.userWidth+game.props.itemSize)*(game.props.userWidth+game.props.itemSize)/4) {
 		return;
 	}
-	b.dead = true;
-	if (b.type == 'gun') {
-		a.carry = 'gun';
-		a.carryCount = 3;
-	} else if (b.type == 'drug') {
-		a.killed('drug');
-	} else if (b.type == 'power') {
-		a.carry = "power";
-		a.carryCount = 1000;
-	} else if (b.type == 'mine') {
-		a.carry = 'mine';
-		a.carryCount = 2;
-	} else if (b.type == 'hide') {
-		a.carry = 'hide';
-		a.carryCount = 1000;
-	} else if (b.type == 'random') {
-		a.carry = 'bomb';
-		a.carryCount = 600;
-	} else if (b.type == 'flypack') {
-		a.carry = 'flypack';
-		a.carryCount = 200;
-	} else if (b.type == 'doublejump') {
-		a.carry = 'doublejump';
-	}
+	b.touchUser(a);
 }
 
 var Game = function (adminCode, logger) {
@@ -378,15 +358,11 @@ Game.prototype.sendTick = function () {
 		var p1 = con.p1 && con.p1.id;
 		var p2 = con.p2 && con.p2.id;
 		var mines = [];
-		this.mines.forEach(function(mine) {
+		for (let mine of this.mines) {
 			if ((mine.creater.id == p1 && !p2) || mine.dead) {
-				mines.push({
-					x: mine.x,
-					y: mine.y,
-					dead: mine.dead
-				});
+				mines.push(Pack.minePack.encode(mine));
 			}
-		});
+		};
 		if (con.admin) {
 			if (this.tick % 60 == 0) {
 				con.socket.emit('tick', {

@@ -70,7 +70,8 @@
 
 #搭建私服方法--通过npm [稳定版]
 
-1.安装node和npm(如果安装出现问题请尝试将node升级至最新版本)
+1.安装node4.2.4(或者以上版本)和npm
+# **如果安装出现问题请尝试将node升级至最新版本
 
 2.shell中执行以下代码：
 
@@ -102,6 +103,6 @@ node app.js
 
 ```
 #启动参数：
-node app.js [端口，默认8030] [管理员口令]
+node app.js [port=端口，默认8030] [code=管理员口令，默认admin] [room=房间数目，默认1]
 ```
-http://localhost:port/admin  可以进入管理界面，需要在界面中输入管理员口令，然后可以创建物品或者封禁用户ip
+http://localhost:port/admin  可以进入管理界面，需要localStorage中设置code=管理员口令，然后可以创建物品或者封禁用户ip

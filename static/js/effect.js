@@ -159,9 +159,10 @@ WaterDrops.prototype.draw = function (ctx) {
 }
 
 
-var ItemDead = function (item) {
+var ItemDead = function (item, name) {
 	this.life = 40;
 	this.item = item;
+	this.name = name
 }
 ItemDead.prototype.draw = function (ctx) {
 	ctx.strokeStyle = "rgba(255,255,255,"+(this.life)/40+")";
@@ -172,8 +173,7 @@ ItemDead.prototype.draw = function (ctx) {
 
 	ctx.font = (1600 - this.life*this.life)/160 + 12 + "px 宋体";
 	ctx.fillStyle = "#fff";
-	var label = this.item.name
-	ctx.fillText(label, this.item.x, P.h - this.item.y);
+	ctx.fillText(this.name, this.item.x, P.h - this.item.y);
 	ctx.font="14px 宋体";
 }
 

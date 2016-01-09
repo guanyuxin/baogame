@@ -1,3 +1,5 @@
+"use strict"
+var Pack = require('../static/js/JPack.js');
 
 var userCount = 0;
 var User = function (game, con) {
@@ -95,15 +97,15 @@ User.prototype.getStatus = function () {
 					return "rolling2";
 				}
 				
-			} else if (this.itemPress && this.vx == 0 && this.carry == 'gun' && this.carryCount > 0) {
+			} else if (this.itemPress && this.vx == 0 && this.carry == Pack.items.gun.id && this.carryCount > 0) {
 				this.fireing = 20;
 				return 'fireing';
-			} else if (this.itemDown && this.vx == 0 && this.carry == 'mine' && this.carryCount > 0) {
+			} else if (this.itemDown && this.vx == 0 && this.carry == Pack.items.mine.id && this.carryCount > 0) {
 				this.mining = 20;
 				return 'mining';
 			} else {
 				this.lastTouch = null;
-				if (this.carry == 'doublejump') {
+				if (this.carry == Pack.items.doublejump.id) {
 					this.canDoubleJump = true;
 				}
 				return "standing";
@@ -121,13 +123,14 @@ User.prototype.update = function () {
 		this.ignore[key]--;
 	}
 	
-	if (this.carry == "power" || this.carry == "hide" || this.carry == "bomb") {
+	if (this.carry == Pack.items.power.id || this.carry == Pack.items.hide.id || this.carry == Pack.items.bomb.id) {
 		this.carryCount--;
 		if (this.carryCount <= 0) {
-			if (this.carry == "bomb") {
+			if (this.carry == Pack.items.bomb.id) {
 				this.game.explode(this.x + this.faceing * 20, this.y + this.game.props.userHeight/2, this);
 			}
-			this.carry = "";
+			this.carry = 0;
+			this.carryCount = 0;
 		}
 	}
 	this.status = this.getStatus();
@@ -188,10 +191,10 @@ User.prototype.update = function () {
 			this.canDoubleJump = false;
 			this.vy = 5;
 		}
-		if (this.upPress && this.carry == 'flypack') {
+		if (this.upPress && this.carry == Pack.items.flypack.id) {
 			this.flypackActive = true;
 		}
-		if (this.upDown && this.carry == "flypack" && this.carryCount > 0 && this.flypackActive) {
+		if (this.upDown && this.carry == Pack.items.flypack.id && this.carryCount > 0 && this.flypackActive) {
 			this.vy += .3;
 			this.flying = true;
 			this.carryCount--;
@@ -312,24 +315,6 @@ User.prototype.getDataForDeath = function () {
 	}
 }
 User.prototype.getData = function () {
-	var data = {
-		carry: this.carry,
-		carryCount: this.carryCount,
-		nearPilla: this.nearPilla ? true : false,
-		faceing: this.faceing,
-		fireing: this.fireing,
-		danger: this.danger,
-		status: this.status,
-		name: this.name,
-		id: this.id,
-		x: this.x,
-		y: this.y,
-		vy: this.vy,
-		score: this.score
-	}
-	if (this.dead) {data.dead = true}
-	if (this.doubleJumping) {data.doubleJumping = true}
-	if (this.flying) {data.flying = true}
-	return data;
+	return Pack.userPack.encode(this);
 }
 module.exports = User;

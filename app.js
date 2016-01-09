@@ -1,18 +1,25 @@
+var url = require('url');
 var express = require('express');
 var app = express();
-
 var server = require('http').Server(app);
-
 var WebSocketServer = require('ws').Server
-  , wss = new WebSocketServer({server: server});
-
+var wss = new WebSocketServer({server: server});
 var Game = require('./game/game.js');
 var lzString = require('./game/lzString.js');
-var log4js = require('log4js');  
+var log4js = require('log4js');
 
-var arg = process.argv.splice(2);
+var opts = {};
+for (var key of process.argv.splice(2)) {
+	var keys = key.split('=');
+	opts[keys[0]] = keys[1];
+}
 
-server.listen(arg[0] || 8030, function () { console.log('Listening on ' + server.address().port) });
+
+server.listen(opts.port || 8030, function () {
+	console.log('Listening on ' + server.address().port);
+});
+
+app.use('/static', express.static('static'));
 
 log4js.configure({
 	appenders: [{
@@ -31,17 +38,14 @@ log4js.configure({
 		category: 'game' 
 	}]
 });
-
 var loggerAccess = log4js.getLogger('access');
 loggerAccess.setLevel('INFO');
 var loggerGame = log4js.getLogger('game');
 loggerGame.setLevel('INFO');
-
-app.use('/static', express.static('static'));
-
 app.use(log4js.connectLogger(loggerAccess, {
 	level:log4js.levels.INFO
 }));
+
 //游戏地址
 app.get('/', function (req, res) {
 	res.sendFile(__dirname + '/static/index.html');
@@ -52,12 +56,21 @@ app.get('/admin', function (req, res) {
 	res.sendFile(__dirname + '/static/admin.html');
 });
 
-var game = new Game(arg[1] || 'admin', loggerGame);
+//获取房间列表
+app.get('/rooms', function (req, res) {
+	res.writeHead(200, { 'Content-Type': 'text/plain' });
+	res.end(""+rooms.length);
+});
+
+var adminCode = opts.code || 'admin';
+var rooms = [];
+for (var i = 0; i < (opts.room || 1); i++) {
+	rooms.push(new Game(adminCode, loggerGame));
+}
 
 wss.on('connection', function (ws) {
-	//var location = url.parse(ws.upgradeReq.url, true);
-	// you might use location.query.access_token to authenticate or share sessions
-	// or ws.upgradeReq.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
+	var location = url.parse(ws.upgradeReq.url, true);
+	var roomID = location.query.room || 0;
 	var socket = {
 		emit: function (name, data) {
 			try {
@@ -73,9 +86,10 @@ wss.on('connection', function (ws) {
 		ip: ws.upgradeReq.connection.remoteAddress,
 		listeners: {}
 	}
-	game.addCon(socket);
+	rooms[roomID].addCon(socket);
+
 	ws.on('message', function (message) {
-		if (message instanceof Function) { //no blob???
+		if (message instanceof Function) {//no blob???
 			var reader = new FileReader();
 			reader.addEventListener("loadend", function() {
 				var x = new Float32Array(reader.result);
@@ -95,8 +109,9 @@ wss.on('connection', function (ws) {
 	});
 
 	ws.on('close', function () {
-		game.removeCon(socket);
+		console.log("leave:"+roomID);
+		rooms[roomID].removeCon(socket);
 		socket = null;
-	})
+	});
 });
 

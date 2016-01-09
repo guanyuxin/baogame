@@ -1,89 +1,73 @@
 //移动的控制器
 var p1 = {
-	upDown: false,
-	downDown: false,
-	leftDown: false,
-	rightDown: false,
-	itemDown: false
+	upDown: 0,
+	downDown: 0,
+	leftDown: 0,
+	rightDown: 0,
+	itemDown: 0
 }
 var p2 = {
-	upDown: false,
-	downDown: false,
-	leftDown: false,
-	rightDown: false,
-	itemDown: false
+	upDown: 0,
+	downDown: 0,
+	leftDown: 0,
+	rightDown: 0,
+	itemDown: 0
 }
-
-$('.joining .btn').click(function (){joing(true)});
-
 $('body').on('touchmove', function (e) {
 	e.preventDefault();
 });
 $('.notice').hide();
 $('.mobileController').show();
-var stick = $('.mobileController .centerBtn');
-var controlPanel = $('.mobileController .panel');
-var cx,cy,cw,ch
 
-function check (e) {
-	var t = e.touches[0];
-	var dx = Math.floor(t.pageX - cx);
-	var dy = Math.floor(t.pageY - cy);
-	var r = Math.atan2(dy, dx);
-	var dist = Math.sqrt(dx*dx + dy*dy);
 
-	stick.css('left', Math.cos(r) * Math.min(75, dist) + cw);
-	stick.css('top', Math.sin(r) * Math.min(75, dist) + ch);
-	r = r*180/Math.PI
-	if (r > 30 && r < 150 && dist > 10) {
-		p1.downDown = dist;
-	} else {
-		p1.downDown = false;
-	}
-	if (r < -30 && r > -150 && dist > 10) {
-		if (!p1.upDown) {
-			p1.upPress = dist;
+$('.mobileController .moreBtn').on('touchstart', function (e) {
+	var t = $(e.currentTarget).data('act');
+	if (t == 'a') {
+		if (!p1.itemDown) {
+			p1.itemPress = true;
 		}
-		p1.upDown = dist;
-	} else {
-		p1.upDown = false;
+		p1.itemDown = 20000;
+	} else if (t == 'l') {
+		if (!p1.leftDown) {
+			p1.leftPress = true;
+		}
+		p1.leftDown = 20000;
+	} else if (t == 'r') {
+		if (!p1.rightDown) {
+			p1.rightPress = true;
+		}
+		p1.rightDown = 20000;
+	} else if (t == 'u') {
+		if (!p1.upDown) {
+			p1.upPress = true;
+		}
+		p1.upDown = 20000;
+	} else if (t == 'd') {
+		if (!p1.downDown) {
+			p1.downPress = true;
+		}
+		p1.downDown = 20000;
 	}
-	if (r > -60 && r < 60 && dist > 10) {
-		p1.rightDown = dist;
-	} else {
-		p1.rightDown = false;
-	}
-	if (r < -120 || r > 120 && dist > 10) {
-		p1.leftDown = dist;
-	} else {
-		p1.leftDown = false;
-	}
-}
-$('.mobileController .panel').on('touchstart', function (e) {
-	var stickPos = controlPanel.offset();
-	cw = controlPanel.width()/2;
-	ch = controlPanel.height()/2;
-	cx = stickPos.left + cw;
-	cy = stickPos.top + ch;
-	check(e);
 });
-$('.mobileController .panel').on('touchmove', check);
-$('.mobileController .panel').on('touchend', function (e) {
-	stick.css('left', cw);
-	stick.css('top', ch);
-	p1.leftDown = false;
-	p1.rightDown = false;
-	p1.upDown = false;
-	p1.downDown = false;
-});
-$('.mobileController .item').on('touchstart', function (e) {
-	if (!p1.itemDown) {
-		p1.itemPress = true;
+
+$('.mobileController .moreBtn').on('touchend', function (e) {
+	var t = $(e.currentTarget).data('act');
+	if (t == 'a') {
+		p1.itemDown = 0;
+	} else if (t == 'l') {
+		p1.leftDown = 0;
+	} else if (t == 'r') {
+		p1.rightDown = 0;
+	} else if (t == 'u') {
+		p1.upDown = 0;
+	} else if (t == 'd') {
+		p1.downDown = 0;
 	}
-	p1.itemDown = true;
 });
-$('.mobileController .item').on('touchend', function (e) {
-	p1.itemDown = false;
+
+$('.joining .joinBtn').click(function () {joing(true)});
+$('.joining .dismissBtn').click(function () {
+	$('.joining').hide();
 });
 
 initDone && initDone();

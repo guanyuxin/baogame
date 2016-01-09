@@ -2,16 +2,16 @@ var socket = {
 	open: false,
 	queueData: [],
 	ws: null,
-	begin: function () {
-		this.ws = new WebSocket("ws://"+location.host);
-		this.ws.onopen = () => {
-			this.open = true;
-			for (var i = 0; i < this.queueData.length; i++) {
-				this.emit(this.queueData[i].name, this.queueData[i].data);
+	begin: function (room) {
+		var _this = this;
+		_this.ws = new WebSocket("ws://"+location.host+"?room="+(room||0));
+		_this.ws.onopen = function () {
+			_this.open = true;
+			for (var i = 0; i < _this.queueData.length; i++) {
+				_this.emit(_this.queueData[i].name, _this.queueData[i].data);
 			}
-		}
-		this.ws.onmessage = (evt) => {
-			var _this = this;
+		};
+		_this.ws.onmessage = function (evt) {
 			function processData (str) {
 				var $s = str.indexOf('$');
 				if ($s == -1) {
@@ -34,12 +34,14 @@ var socket = {
 				processData(evt.data);
 			}
 		};
-		this.ws.onclose = (evt) => {
-			setTimeout(function () {
-				socket.begin();
-			}, 500);
+		_this.ws.onclose = function (evt) {
+			if (this.open) {
+				setTimeout(function () {
+					socket.begin();
+				}, 500);
+			}
 		};
-		this.ws.onerror = (evt) => {
+		_this.ws.onerror = function (evt) {
 			console.log("WebSocketError");
 		};
 	},
@@ -52,6 +54,10 @@ var socket = {
 	},
 	on: function (name, callback) {
 		this.listeners[name] = callback;
+	},
+	close: function () {
+		this.open = false;
+		this.ws.close();
 	},
 	listeners: {}
 }

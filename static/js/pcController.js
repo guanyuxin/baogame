@@ -1,16 +1,16 @@
 //pc的控制器
 var p1 = {
-	upDown: false,
-	downDown: false,
-	leftDown: false,
-	rightDown: false,
+	upDown: 0,
+	downDown: 0,
+	leftDown: 0,
+	rightDown: 0,
 	itemDown: false
 }
 var p2 = {
-	upDown: false,
-	downDown: false,
-	leftDown: false,
-	rightDown: false,
+	upDown: 0,
+	downDown: 0,
+	leftDown: 0,
+	rightDown: 0,
 	itemDown: false
 }
 
@@ -49,25 +49,25 @@ document.addEventListener('keydown', function (e) {
 });
 document.addEventListener('keyup', function (e) {
 	if (e.keyCode == 87) {
-		p1.upDown = false;
+		p1.upDown = 0;
 	} else if (e.keyCode == 83) {
-		p1.downDown = false;
+		p1.downDown = 0;
 	} else if (e.keyCode == 65) {
-		p1.leftDown = false;
+		p1.leftDown = 0;
 	} else if (e.keyCode == 68) {
-		p1.rightDown = false;
+		p1.rightDown = 0;
 	} else if (e.keyCode == 81) {
-		p1.itemDown = false;
+		p1.itemDown = 0;
 	} else if (e.keyCode == 38) {
-		p2.upDown = false;
+		p2.upDown = 0;
 	} else if (e.keyCode == 40) {
-		p2.downDown = false;
+		p2.downDown = 0;
 	} else if (e.keyCode == 37) {
-		p2.leftDown = false;
+		p2.leftDown = 0;
 	} else if (e.keyCode == 39) {
-		p2.rightDown = false;
+		p2.rightDown = 0;
 	} else if (e.keyCode == 191) {
-		p2.itemDown = false;
+		p2.itemDown = 0;
 	}
 	if (e.keyCode == 69) {
 		joing(p1);
@@ -80,7 +80,10 @@ document.addEventListener('keyup', function (e) {
 
 $('.txt-input').on('keydown', function (e) {e.stopPropagation()})
 $('.txt-input').on('keyup', function (e) {e.stopPropagation()})
-$('.joining .btn').click(function (){joing(true)});
-$('.joining .btn').text('按e加入');
+$('.joining .joinBtn').click(function () {joing(true)});
+$('.joining .dismissBtn').click(function () {
+	$('.joining').hide();
+});
+$('.joining .joinBtn').text('按e加入');
 
 initDone && initDone();

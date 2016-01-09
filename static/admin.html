@@ -2,7 +2,7 @@
 <html>
 <head>
 	<title>暴走后台</title>
-	<script src="/static/js/lzString.js"></script>
+	<script src="/static/js/JPack.js"></script>
 	<script src="/static/js/zepto.js"></script>
 	<script src="/static/js/socket.js"></script>
 	<style>
@@ -44,9 +44,20 @@
 		.items {
 			display: -webkit-box;
 		}
+		.rooms span {
+			display: inline-block;
+			background: rgba(255,255,0,.1);
+			border: 1px solid rgb(255,255,0);
+			padding: 10px;
+			margin: 10px;
+		}
+		.rooms span.active {
+			background: rgba(255,255,0,.4);
+		}
 	</style>
 </head>
 <body>
+	<div class="rooms"></div>
 	<div class="items">
 		生成道具：
 		<a class="btn" data-type="0">无敌</a>
@@ -72,6 +83,15 @@
 	 	code: code
 	});
 	socket.on('tick', function (data) {
+		for (var i = 0; i < data.users.length; i++) {
+			data.users[i] = Packs.userPack.decode(data.users[i]);
+		}
+		for (var i = 0; i < data.items.length; i++) {
+			data.items[i] = Packs.itemPack.decode(data.items[i]);
+		}
+		for (var i = 0; i < data.mines.length; i++) {
+			data.mines[i] = Packs.minePack.decode(data.mines[i]);
+		}
 		var html = '<div class="cons">';
 		data.cons && data.cons.forEach(function (con) {
 			var p1 = null;
@@ -123,7 +143,28 @@
 	});
 	$('.items .btn').click(function (e) {
 		var type = $(e.currentTarget).data('type');
-		console.log(type);
 		socket.emit('createItem', type);
+	});
+
+
+	$.ajax({
+		url: "/rooms",
+		success: function (t) {
+			var count = parseInt(t);
+			if (count < 2) {return}
+			$('.rooms').append('<span class="active">1</span>');
+			for (var i = 1; i < count; i++) {
+				$('.rooms').append('<span>'+(i+1)+'</span>');
+			}
+			$('.rooms span').click(function (e) {
+				var $t = $(e.currentTarget);
+				if (!$t.is('.active')) {
+					$('.rooms span.active').removeClass('active');
+					$t.addClass('active');
+					socket.close();
+					socket.begin($t.index());
+				}
+			});
+		}
 	});
 </script>

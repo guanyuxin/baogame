@@ -1,33 +1,10 @@
-var Items = [{
-	type: "power",
-	name: "无敌",
-	count: 1000
-}, {
-	type: "gun",
-	name: "枪",
-	count: 3
-}, {
-	type: "mine",
-	name: "地雷",
-	count: 2
-}, {
-	type: "drug",
-	name: "毒药"
-}, {
-	type: "hide",
-	name: "隐身",
-	count: 1000
-}, {
-	type: "random",
-	name: "惊喜！"
-}, {
-	type: "doublejump",
-	name: "二段跳"
-}, {
-	type: "flypack",
-	name: "喷气背包",
-	count: 1000
-}];
+"use strict"
+var Pack = require('../static/js/JPack.js');
+
+var Items = [];
+for (let key in Pack.items) {
+	Items.push(Pack.items[key]);
+}
 
 var Item = function (game, type) {
 	this.game = game;
@@ -45,9 +22,8 @@ var Item = function (game, type) {
 	if (type === undefined) {
 		type = Math.floor(Math.random() * Items.length);
 	}
-	this.type = Items[type].type;
-	this.name = Items[type].name;
-	this.count = Items[type].count;
+	this.id = Items[type].id;
+	this.count = Items[type].count || 0;
 	this.lifetime = 3000;
 	this.slowdown = 0;
 	this.vx = Math.random()+.5;
@@ -75,14 +51,18 @@ Item.prototype.update = function () {
 		this.y += this.vy;
 	}
 }
-Item.prototype.getData = function () {
-	return {
-		x: this.x,
-		y: this.y,
-		type: this.type,
-		name: this.name,
-		dead: this.dead
+Item.prototype.touchUser = function (u) {
+	if (this.id == Pack.items.drug.id) {
+		this.dead = true;
+		u.killed('drug');
+	} else {
+		this.dead = true;
+		u.carry = this.id;
+		u.carryCount = this.count;
 	}
+}
+Item.prototype.getData = function () {
+	return Pack.itemPack.encode(this);
 }
 
 module.exports = Item;

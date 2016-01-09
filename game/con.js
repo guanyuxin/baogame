@@ -1,4 +1,6 @@
 "use strict"
+var Pack = require('../static/js/JPack.js');
+
 var banedip = {};
 var concount = 0;
 var Con = function (socket, game) {
@@ -82,32 +84,19 @@ var Con = function (socket, game) {
 	});
 	//接收控制
 	socket.on("control", data => {
-		if (this.p1 && data.p1) {
-			this.p1.leftDown = data.p1.leftDown;
-			this.p1.rightDown = data.p1.rightDown;
-			this.p1.upDown = data.p1.upDown;
-			this.p1.downDown = data.p1.downDown;
-			this.p1.itemDown = data.p1.itemDown;
+		if (this.p1 && data) {
+			var p1 =  Pack.controlPack.decode(data);
+			this.p1.leftDown = p1.leftDown;
+			this.p1.rightDown = p1.rightDown;
+			this.p1.upDown = p1.upDown;
+			this.p1.downDown = p1.downDown;
+			this.p1.itemDown = p1.itemDown;
 
-			this.p1.leftPress = data.p1.leftPress;
-			this.p1.rightPress = data.p1.rightPress;
-			this.p1.upPress = data.p1.upPress;
-			this.p1.downPress = data.p1.downPress;
-			this.p1.itemPress = data.p1.itemPress;
-		}
-
-		if (this.p2 && data.p2) {
-			this.p2.leftDown = data.p2.leftDown;
-			this.p2.rightDown = data.p2.rightDown;
-			this.p2.upDown = data.p2.upDown;
-			this.p2.downDown = data.p2.downDown;
-			this.p2.itemDown = data.p2.itemDown;
-
-			this.p2.leftPress = data.p2.leftPress;
-			this.p2.rightPress = data.p2.rightPress;
-			this.p2.upPress = data.p2.upPress;
-			this.p2.downPress = data.p2.downPress;
-			this.p2.itemPress = data.p2.itemPress;
+			this.p1.leftPress = p1.leftPress;
+			this.p1.rightPress = p1.rightPress;
+			this.p1.upPress = p1.upPress;
+			this.p1.downPress = p1.downPress;
+			this.p1.itemPress = p1.itemPress;
 		}
 	});
 }
