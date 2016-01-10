@@ -273,8 +273,8 @@ function initDone () {
 		middle.appendChild(cdom);
 		//初始化尸体
 		for (var i = 0; i < data.bodies.length; i++) {
-			data.bodies[i].dead = true;
-			drawUser(ctxBody, data.bodies[i], {});
+			var user = Packs.userPack.decode(data.bodies[i]);
+			drawUser(ctxBody, user, {});
 		}
 		$('.joining').show();
 	});
@@ -323,21 +323,22 @@ function initDone () {
 	});
 
 	socket.on('userDead', function (data) {
-		var user = data.user;
+		var user = Packs.userPack.decode(data.user);
 		notice(data.message);
 		//p1 dead
 		if (user.id == p1.id) {
 			setTimeout(function () {$('.joining').show().find('h4').html('你挂了')}, 500);	
 		}
-
-		var killer = data.killer;
-		if (killer && killer.score <= 10) {
-			Effect.trigger(new Toast({
-				x: killer.x,
-				y: killer.y,
-				size: killer.score * 1.5 + 14,
-				txt: killer.name + scoreText[killer.score - 1]
-			}));
+		if (data.killer) {
+			var killer = Packs.userPack.decode(data.killer);
+			if (killer.score <= 10) {
+				Effect.trigger(new Toast({
+					x: killer.x,
+					y: killer.y,
+					size: killer.score * 1.5 + 14,
+					txt: killer.name + scoreText[killer.score - 1]
+				}));
+			}
 		}
 	});
 	socket.begin();

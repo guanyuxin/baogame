@@ -35,7 +35,7 @@ var socket = {
 			}
 		};
 		_this.ws.onclose = function (evt) {
-			if (this.open) {
+			if (_this.open) {
 				setTimeout(function () {
 					socket.begin();
 				}, 500);

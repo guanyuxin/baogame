@@ -294,25 +294,10 @@ User.prototype.killed = function (action, byUser) {
 	}
 
 	this.game.announce('userDead', {
-		user: this.getDataForDeath(),
+		user: this.getData(),
 		killer: killer && killer.getData(),
 		message: message
 	});
-}
-User.prototype.getDataForDeath = function () {
-	var killer = this.killer || this.lastTouch;
-	if (killer) {
-		var killerName = this.game.getUser(killer).name;	
-	}
-	return {
-		killer: killer,
-		killerName: killerName,
-		killedBy: this.killedBy || "fall",
-		name: this.name,
-		id: this.id,
-		x: this.x,
-		y: this.y
-	}
 }
 User.prototype.getData = function () {
 	return Pack.userPack.encode(this);
