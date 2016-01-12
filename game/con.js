@@ -67,7 +67,7 @@ var Con = function (socket, game) {
 			socket.emit('joinFail', "you are banned");
 			return;
 		}
-		if (game.users.length > 6) {
+		if (game.users.length > game.props.maxUser) {
 			socket.emit('joinFail', "加入失败，服务器已满");
 			return;
 		}

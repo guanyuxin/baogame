@@ -65,7 +65,7 @@ app.get('/rooms', function (req, res) {
 var adminCode = opts.code || 'admin';
 var rooms = [];
 for (var i = 0; i < (opts.room || 1); i++) {
-	rooms.push(new Game(adminCode, loggerGame));
+	rooms.push(new Game(adminCode, opts.maxUser || 6, loggerGame));
 }
 
 wss.on('connection', function (ws) {
@@ -74,8 +74,6 @@ wss.on('connection', function (ws) {
 	var socket = {
 		emit: function (name, data) {
 			try {
-				//var c = lzString.compressToUint8Array(name + "$" + JSON.stringify(data));
-				//ws.send(c, {binary: true});
 				var c = name + "$" + JSON.stringify(data);
 				ws.send(c);
 			} catch (e) {}

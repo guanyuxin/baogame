@@ -98,7 +98,7 @@ User.prototype.getStatus = function () {
 				}
 				
 			} else if (this.itemPress && this.vx == 0 && this.carry == Pack.items.gun.id && this.carryCount > 0) {
-				this.fireing = 20;
+				this.fireing = 15;
 				return 'fireing';
 			} else if (this.itemDown && this.vx == 0 && this.carry == Pack.items.mine.id && this.carryCount > 0) {
 				this.mining = 20;
@@ -198,6 +198,16 @@ User.prototype.update = function () {
 			this.vy += .3;
 			this.flying = true;
 			this.carryCount--;
+		}
+		if (this.leftDown && this.carry == Pack.items.flypack.id && this.carryCount > 0) {
+			this.vx -= .1;
+			this.flying = true;
+			this.carryCount-=.2;
+		}
+		if (this.rightDown && this.carry == Pack.items.flypack.id && this.carryCount > 0) {
+			this.vx += .1;
+			this.flying = true;
+			this.carryCount-=.2;
 		}
 		this.vy -= .2;
 		this.vy = Math.max(-9, this.vy);

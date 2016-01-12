@@ -138,7 +138,7 @@ function eatItem (a, b, game) {
 	b.touchUser(a);
 }
 
-var Game = function (adminCode, logger) {
+var Game = function (adminCode, maxUser, logger) {
 	this.props = {
 		w: 1100,
 		h: 600,
@@ -148,6 +148,7 @@ var Game = function (adminCode, logger) {
 		userWidth: 40,
 		itemSize: 15,
 		tileW: 22,
+		maxUser: maxUser,
 		tileH: 8
 	}
 	this.adminCode = adminCode;

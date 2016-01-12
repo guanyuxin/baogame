@@ -85,6 +85,15 @@
 		background: #ff0;
 		color: black;
 	}
+
+	.btn[disabled] {
+		background: rgba(100, 100, 100, .5);
+		border: 1px solid rgba(190, 190, 190, .5);
+		color: rgba(190, 190, 190, .5);
+	}
+	.btn[disabled]:after {
+		content: attr(disabledText)
+	}
 	.txt-input {
 		background: rgba(255, 255, 255, .8);
 		border: 1px solid #ff0;
@@ -162,8 +171,10 @@
 </head>
 <body>
 <div class="frame">
-	<div class="middle" id="middle"></div>
-	
+	<div class="middle" id="middle">
+		<canvas id="Bg"></canvas>
+		<canvas id="Fg"></canvas>
+	</div>
 </div>
 <div class="joining" style="display:none"><div class="center">
 	<h4 class="message">加入游戏</h4>
@@ -214,13 +225,14 @@ function notice (str) {
 	$('.notice .notiveIn').prepend('<div class="noticeItem">'+str+'</div>');
 }
 
-var cdomBody,ctxBody,ctx,ctxBg,P,t = 0,cdx = 0,cdy = 0;
+var cdomBody,ctxBody,ctx,ctxBg,P,t = 0,cdx = 0,cdy = 0, canJoin = null;
 
 var userName = localStorage.userName;
 if (userName) {
 	$('#name').val(userName);
 }
 function joing (p1) {
+	if (!canJoin) {return}
 	userName = $('#name').val() || "无名小卒";
 	if ($('#name').val()) {
 		localStorage.userName = userName;
@@ -235,9 +247,6 @@ function joing (p1) {
 function initDone () {
 	socket.emit('init', {
 		userName: userName
-	});
-	socket.on('room', function () {
-
 	});
 	//初始化链接，监听事件（肯能由打开或刷新页面触发，也可能由后台重启触发）
 	socket.on('init', function (data) {
@@ -308,7 +317,15 @@ function initDone () {
 			controlCache = control;
 			socket.emit('control', Packs.controlPack.encode(p1));
 		}
-		
+		if (data.users.length < P.maxUser && canJoin !== true) {
+			canJoin = true;
+			$('.joining .joinBtn').removeAttr('disabled');
+			$('.joining .joinBtn').removeAttr('disabledText');
+		} else if (data.users.length >= P.maxUser && canJoin !== false) {
+			canJoin = false;
+			$('.joining .joinBtn').attr('disabled', 'disabled');
+			$('.joining .joinBtn').attr('disabledText', '：房间已满');
+		}
 		p1.leftPress = false;
 		p1.rightPress = false;
 		p1.upPress = false;
@@ -368,6 +385,7 @@ var imgUrls = {
 	minePlaced: "/mine.png",
 	jet: "/jet.png"
 };
+
 var imgs = {};
 for (var key in imgUrls) {
 	if (typeof(imgUrls[key]) == "string") {
@@ -561,7 +579,7 @@ function drawUser (ctx, user, data) {
 		}
 		ctx.save();
 			ctx.translate(0, -P.userWidth/2);
-			drawWeapon(ctx, P.userWidth/2 - user.fireing);
+			drawWeapon(ctx, 15 - user.fireing);
 		ctx.restore();
 	}
 
