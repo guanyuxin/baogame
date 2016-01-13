@@ -604,7 +604,7 @@ function drawUser (ctx, user, data) {
 
 		ctx.drawImage(imgs.jet, wPadding - 16, -bottleHeight - 10, 40, bottleHeight + 20);
 		if (user.flying) {
-			Effect.trigger(new Brust(user, 1, 5, user.faceing * (wPadding + bottleWidth/2), -10))
+			Effect.trigger(new Brust(user, 1, 5, user.faceing * (wPadding + bottleWidth/2), -10));
 		}
 	} if (user.carry == Packs.items.bomb.id) {
 		ctx.drawImage(imgs.bomb, P.userWidth/2 - 10, -P.userHeight, 30, 40);

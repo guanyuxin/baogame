@@ -117,7 +117,7 @@ User.prototype.getStatus = function () {
 }
 User.prototype.update = function () {
 	this.doubleJumping = false;
-	this.flying = false;
+	this.flying = 0;
 
 	for (var key in this.ignore) {
 		this.ignore[key]--;
@@ -196,22 +196,24 @@ User.prototype.update = function () {
 		}
 		if (this.upDown && this.carry == Pack.items.flypack.id && this.carryCount > 0 && this.flypackActive) {
 			this.vy += .3;
-			this.flying = true;
+			this.flying += 1;
 			this.carryCount--;
 		}
 		if (this.leftDown && this.carry == Pack.items.flypack.id && this.carryCount > 0) {
-			this.vx -= .1;
-			this.flying = true;
+			this.vx -= .15;
+			this.flying += 2;
 			this.carryCount-=.2;
 		}
 		if (this.rightDown && this.carry == Pack.items.flypack.id && this.carryCount > 0) {
-			this.vx += .1;
-			this.flying = true;
+			this.vx += .15;
+			this.flying += 4;
 			this.carryCount-=.2;
 		}
 		this.vy -= .2;
 		this.vy = Math.max(-9, this.vy);
 		this.vy = Math.min(10, this.vy);
+		this.vx = Math.max(-8, this.vx);
+		this.vx = Math.min(8, this.vx);
 		if (this.vy == -9) {
 			this.danger = true;
 		}

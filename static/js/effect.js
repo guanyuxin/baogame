@@ -99,15 +99,16 @@ Toast.prototype.draw = function (ctx) {
 	ctx.restore();
 }
 
-var Brust = function (u, size, w, dx, dy) {
+var Brust = function (u, count, w, dx, dy, size) {
 	this.x = u.x;
 	this.y = u.y;
+	this.size = size || 6
 	this.life = 100;
 	this.drops = [];
 	this.vy = 2;
 	dx = dx || 0;
 	dy = dy || 0;
-	for (var i = 0; i < size; i++) {
+	for (var i = 0; i < count; i++) {
 		this.drops.push({
 			x: Math.random()*w - w/2 + dx, y: Math.random()*10 - 5 + dy
 		});
@@ -123,7 +124,7 @@ Brust.prototype.draw = function (ctx) {
 	this.drops.forEach(function (drop) {
 		drop.y -= _this.vy;
 		ctx.beginPath();
-		ctx.arc(drop.x + _this.x, P.h - drop.y - _this.y, 6, 0, Math.PI * 2);
+		ctx.arc(drop.x + _this.x, P.h - drop.y - _this.y, _this.size, 0, Math.PI * 2);
 		ctx.fill();
 	});
 	ctx.restore();

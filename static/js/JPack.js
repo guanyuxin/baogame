@@ -110,7 +110,7 @@ var Packs = {
 		score: "INT",
 		dead: Boolean,
 		doubleJumping: Boolean,
-		flying: Boolean
+		flying: "INT"
 	}),
 	controlPack: new JPack({
 		leftDown: "INT",
