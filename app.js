@@ -5,7 +5,6 @@ var server = require('http').Server(app);
 var WebSocketServer = require('ws').Server
 var wss = new WebSocketServer({server: server});
 var Game = require('./game/game.js');
-var lzString = require('./game/lzString.js');
 var log4js = require('log4js');
 
 var opts = {};
@@ -87,29 +86,21 @@ wss.on('connection', function (ws) {
 	rooms[roomID].addCon(socket);
 
 	ws.on('message', function (message) {
-		if (message instanceof Function) {//no blob???
-			var reader = new FileReader();
-			reader.addEventListener("loadend", function() {
-				var x = new Float32Array(reader.result);
-				console.log(x);
-			});
-			reader.readAsArrayBuffer(message);
+		var $s = message.indexOf('$');
+		if ($s == -1) {
+			var name = message;
+			var data = {};
 		} else {
-			var $s = message.indexOf('$');
-			if ($s == -1) {
-				var name = message
-			} else {
-				var name = message.substring(0, $s);
-				var data = JSON.parse(message.substring($s + 1));
-			}
-			socket.listeners[name] && socket.listeners[name](data);
+			var name = message.substring(0, $s);
+			var data = JSON.parse(message.substring($s + 1));
 		}
+		socket.listeners[name] && socket.listeners[name](data);
 	});
 
 	ws.on('close', function () {
-		console.log("leave:"+roomID);
 		rooms[roomID].removeCon(socket);
 		socket = null;
+		ws = null;
 	});
 });
 

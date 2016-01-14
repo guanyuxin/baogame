@@ -4,10 +4,12 @@
   "version": "0.0.1",
   "private": false,
   "dependencies": {
+    "bufferutil": "^1.2.1",
     "compression": ">=1.0.0",
     "cookie-parser": ">=0.1.2",
     "ejs": ">=1.0.0",
     "express": ">=4.0",
+    "heapdump": "^0.3.7",
     "log4js": "^0.6.29",
     "serve-static": ">=0.0.0",
     "ws": "^1.0.1"

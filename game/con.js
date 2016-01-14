@@ -1,5 +1,6 @@
 "use strict"
 var Pack = require('../static/js/JPack.js');
+var heapdump = require('heapdump');
 
 var banedip = {};
 var concount = 0;
@@ -42,18 +43,22 @@ var Con = function (socket, game) {
 				socket.emit('initFail');
 			} else {
 				this.admin = true;
-				socket.on('createItem', function (type) {
+				socket.on('createItem', type => {
 					game.createItem(type);
 				});
-				socket.on('ban', function (conid) {
+				socket.on('ban', conid => {
 					var con = this.game.getCon(conid);
 					con.banned = true;
 					banedip[con.ip] = true;
 				});
-				socket.on('unban', function (conid) {
+				socket.on('unban', conid => {
 					var con = this.game.getCon(conid);
 					con.banned = false;
 					banedip[con.ip] = false;
+				});
+				socket.on('heapdump', data => {
+					console.log('heapdump');
+					heapdump.writeSnapshot('./' + Date.now() + '.heapsnapshot');
 				});
 			}
 		}

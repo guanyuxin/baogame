@@ -1,3 +1,4 @@
+"use strict"
 var Map = function (game, w, h) {
 	this.game = game;
 	this.w = w;
@@ -100,8 +101,7 @@ Map.prototype.nearPilla = function (u) {
 	if (this.onFloor(u.x, u.y) == false) {return false}
 	if (Math.abs(u.vx) > 1 || Math.abs(u.vy) > 1 || u.dieing) {return false}
 	var x = u.x, y = u.y;
-	for (var i = 0; i < this.pilla.length; i++) {
-		var pilla = this.pilla[i]
+	for (let pilla of this.pilla) {
 		if (Math.abs(x - pilla.x * this.game.props.blockWidth) < 8 && y >= pilla.y1*this.game.props.blockHeight && y <= pilla.y2*this.game.props.blockHeight) {
 			return pilla;
 		}

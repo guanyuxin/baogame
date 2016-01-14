@@ -58,6 +58,7 @@
 </head>
 <body>
 	<div class="rooms"></div>
+	<a class="btn btn-heap">heapdump</a>
 	<div class="items">
 		生成道具：
 		<a class="btn" data-type="0">无敌</a>
@@ -145,7 +146,9 @@
 		var type = $(e.currentTarget).data('type');
 		socket.emit('createItem', type);
 	});
-
+	$('.btn-heap').click(function () {
+		socket.emit('heapdump');
+	})
 
 	$.ajax({
 		url: "/rooms",

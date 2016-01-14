@@ -355,7 +355,7 @@ Game.prototype.sendTick = function () {
 	for (let con of this.cons) {
 		consdata.push(con.getData());
 	};
-	this.cons.forEach((con) => {
+	for (let con of this.cons) {
 		var p1 = con.p1 && con.p1.id;
 		var p2 = con.p2 && con.p2.id;
 		var mines = [];
@@ -382,6 +382,6 @@ Game.prototype.sendTick = function () {
 				p2: p2
 			});
 		}
-	});
+	}
 }
 module.exports = Game;
