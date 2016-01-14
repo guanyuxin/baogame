@@ -344,7 +344,11 @@ function initDone () {
 		notice(data.message);
 		//p1 dead
 		if (user.id == p1.id) {
-			setTimeout(function () {$('.joining').show().find('h4').html('你挂了')}, 500);	
+			setTimeout(function () {
+				if (user.id == p1.id) { //仍未复活
+					$('.joining').show().find('h4').html('你挂了')
+				}
+			}, 500);	
 		}
 		if (data.killer) {
 			var killer = Packs.userPack.decode(data.killer);

@@ -58,7 +58,7 @@ var Con = function (socket, game) {
 				});
 				socket.on('heapdump', data => {
 					console.log('heapdump');
-					heapdump.writeSnapshot('./' + Date.now() + '.heapsnapshot');
+					heapdump.writeSnapshot('./logs/' + Date.now() + '.heapsnapshot');
 				});
 			}
 		}

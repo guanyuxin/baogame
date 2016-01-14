@@ -25,14 +25,17 @@ log4js.configure({
 		type: 'console' 
 	}, {
 		type: 'file',
-		filename: 'logs/access.log', 
-		maxLogSize: 1024,
-		backups: 3,
+		filename: 'logs/access.log',
+　　　　　pattern: "-yyyy-MM-dd.log",
+　　　　　maxLogSize: 1024,
+　　　　　alwaysIncludePattern: true,
 		category: 'access' 
 	}, {
 		type: 'file',
-		filename: 'logs/game.log', 
-		maxLogSize: 1024,
+		filename: 'logs/game.log',
+　　　　　pattern: "-yyyy-MM-dd.log",
+　　　　　maxLogSize: 1024,
+　　　　　alwaysIncludePattern: true,
 		backups: 3,
 		category: 'game' 
 	}]

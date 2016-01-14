@@ -70,7 +70,9 @@ document.addEventListener('keyup', function (e) {
 		p2.itemDown = 0;
 	}
 	if (e.keyCode == 69) {
-		joing(p1);
+		if ($('.joining').css('display') != 'none') {
+			joing(p1);
+		}
 	}
 	if (e.keyCode == 16) {
 		joing(p2);
