@@ -1,7 +1,7 @@
 {
   "name": "fuzion-game",
   "description": "a html5 mutiplayer game",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": false,
   "dependencies": {
     "bufferutil": "^1.2.1",
