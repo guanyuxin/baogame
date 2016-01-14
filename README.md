@@ -52,7 +52,7 @@
 ###隐身:
 ![drug](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/hide.png)
 
-*使用后慢慢从你的敌人视野里面消失，谁能可看不见的敌人战斗呢？*
+*使用后慢慢从你的敌人视野里面消失，谁能和看不见的敌人战斗呢？*
 
 ###惊喜:
 ![drug](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/random.png)
