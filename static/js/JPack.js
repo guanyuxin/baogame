@@ -82,7 +82,7 @@ var Packs = {
 		bomb: {
 			id: 6,
 			name: "惊喜！",
-			count: 700
+			count: 550
 		},
 		doublejump: {
 			id: 7,

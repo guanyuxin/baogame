@@ -35,7 +35,7 @@ Grenade.prototype.update = function () {
 	this.life--;
 	if (this.life < 0) {
 		this.dead = true;
-		this.game.explode(this.x, this.y, this.creater, 70);
+		this.game.explode(this.x, this.y, this.creater, 100);
 	}
 }
 

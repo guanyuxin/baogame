@@ -339,7 +339,7 @@ function initDone () {
 	socket.on('explode', function (data) {
 		cdx = 8;
 		cdy = 9;
-		Effect.trigger(new Flare({x: data.x, y: data.y}, true));
+		Effect.trigger(new Flare(data, true));
 	});
 
 	socket.on('userDead', function (data) {

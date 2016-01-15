@@ -146,7 +146,7 @@ User.prototype.update = function () {
 		this.carryCount--;
 		if (this.carryCount <= 0) {
 			if (this.carry == Pack.items.bomb.id) {
-				this.game.explode(this.x + this.faceing * 20, this.y + this.game.props.userHeight/2, this, 100);
+				this.game.explode(this.x + this.faceing * 20, this.y + this.game.props.userHeight/2, this, 120);
 			}
 			this.carry = 0;
 			this.carryCount = 0;
@@ -156,7 +156,7 @@ User.prototype.update = function () {
 	if (this.grenadeing > 0) {
 		this.grenadeing--;
 		if (this.grenadeing == 0) {
-			this.game.explode(this.x, this.y + this.game.props.userHeight, this, 70);
+			this.game.explode(this.x, this.y + this.game.props.userHeight, this, 100);
 		}
 	}
 	this.status = this.getStatus();
@@ -167,7 +167,7 @@ User.prototype.update = function () {
 			this.grenadeing = 0;
 			this.itemPress = false;
 		} else if (this.carry == Pack.items.grenade.id) {
-			this.grenadeing = 200;
+			this.grenadeing = 140;
 			this.carryCount--;
 			if (this.carryCount == 0) {
 				this.carry = 0;
