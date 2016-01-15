@@ -92,6 +92,11 @@ var Packs = {
 			id: 8,
 			name: "喷气背包",
 			count: 250
+		},
+		grenade: {
+			id: 9,
+			name: "手雷",
+			count: 3
 		}
 	},
 	userPack: new JPack({
@@ -100,6 +105,7 @@ var Packs = {
 		nearPilla: Boolean,
 		faceing: "INT",
 		fireing: "INT",
+		grenadeing: "INT",
 		danger: Boolean,
 		status: "Str",
 		name: "Str",
@@ -135,6 +141,10 @@ var Packs = {
 		x: "INT",
 		y: "INT",
 		dead: Boolean
+	}),
+	entityPack: new JPack({
+		x: "INT",
+		y: "INT",
 	})
 }
 

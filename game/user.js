@@ -1,5 +1,6 @@
 "use strict"
 var Pack = require('../static/js/JPack.js');
+var Grenade = require('./entity/grenade.js');
 
 var userCount = 0;
 var User = function (game, con) {
@@ -23,11 +24,29 @@ var User = function (game, con) {
 	this.ignore = [];
 	this.carry = '';
 	this.carryCount = 0;
+
 	this.fireing = 0;
 	this.mining = 0;
+	this.grenadeing = 0;
+
 	this.score = 0;
 	this.canDoubleJump = false;
 	this.lastTouch = null;
+}
+User.prototype.throwGrenade = function () {
+	var g = new Grenade(this);
+	var vx = this.faceing * 5;
+	var vy = 4;
+	if (this.crawl) {
+		vx *= .3;
+		vy *= .2;
+	}
+	g.x = this.x - this.faceing * 20;
+	g.y = this.y + this.game.props.userHeight;
+	g.vx = this.vx + vx;
+	g.vy = this.vy + vy;
+	g.life = this.grenadeing;
+	this.game.entitys.push(g);
 }
 User.prototype.getStatus = function () {
 	this.crawl = false;
@@ -69,7 +88,7 @@ User.prototype.getStatus = function () {
 				if (this.fireing > 0) {
 					return 'fireing';
 				}
-			} 
+			}
 			if (this.mining > 0) {
 				this.mining--;
 				if (this.mining == 0) {
@@ -97,10 +116,10 @@ User.prototype.getStatus = function () {
 					return "rolling2";
 				}
 				
-			} else if (this.itemPress && this.vx == 0 && this.carry == Pack.items.gun.id && this.carryCount > 0) {
+			} else if (this.grenadeing == 0 && this.itemPress && this.vx == 0 && this.carry == Pack.items.gun.id && this.carryCount > 0) {
 				this.fireing = 15;
 				return 'fireing';
-			} else if (this.itemDown && this.vx == 0 && this.carry == Pack.items.mine.id && this.carryCount > 0) {
+			} else if (this.grenadeing == 0 && this.itemPress && this.vx == 0 && this.carry == Pack.items.mine.id && this.carryCount > 0) {
 				this.mining = 20;
 				return 'mining';
 			} else {
@@ -122,18 +141,40 @@ User.prototype.update = function () {
 	for (var key in this.ignore) {
 		this.ignore[key]--;
 	}
-	
+	//bomb
 	if (this.carry == Pack.items.power.id || this.carry == Pack.items.hide.id || this.carry == Pack.items.bomb.id) {
 		this.carryCount--;
 		if (this.carryCount <= 0) {
 			if (this.carry == Pack.items.bomb.id) {
-				this.game.explode(this.x + this.faceing * 20, this.y + this.game.props.userHeight/2, this);
+				this.game.explode(this.x + this.faceing * 20, this.y + this.game.props.userHeight/2, this, 100);
 			}
 			this.carry = 0;
 			this.carryCount = 0;
 		}
 	}
+	//grenade
+	if (this.grenadeing > 0) {
+		this.grenadeing--;
+		if (this.grenadeing == 0) {
+			this.game.explode(this.x, this.y + this.game.props.userHeight, this, 70);
+		}
+	}
 	this.status = this.getStatus();
+	
+	if (this.status != "dieing" && !this.danger && this.itemPress) {
+		if (this.grenadeing) {
+			this.throwGrenade();
+			this.grenadeing = 0;
+			this.itemPress = false;
+		} else if (this.carry == Pack.items.grenade.id) {
+			this.grenadeing = 200;
+			this.carryCount--;
+			if (this.carryCount == 0) {
+				this.carry = 0;
+			}
+		}
+	}
+
 	if (this.status == "dieing") {
 		this.vx *= .98;
 		this.vy -= .2;

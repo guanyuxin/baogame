@@ -138,7 +138,7 @@ function eatItem (a, b, game) {
 	b.touchUser(a);
 }
 
-var Game = function (adminCode, maxUser, logger) {
+var Game = function (adminCode, maxUser) {
 	this.props = {
 		w: 1100,
 		h: 600,
@@ -152,12 +152,13 @@ var Game = function (adminCode, maxUser, logger) {
 		tileH: 8
 	}
 	this.adminCode = adminCode;
-	this.logger = logger;
 	this.users = [];
 	this.cons = [];
 	this.items = [];
 	this.bodies = [];
 	this.mines = [];
+	this.entitys = [];
+
 	this.map = new Map(this, 22, 8);
 	this.tick = 0;
 	var _this = this;
@@ -198,24 +199,24 @@ Game.prototype.getCon = function (cid) {
 Game.prototype.createItem = function (type) {
 	this.items.push(new Item(this, type));
 }
-//发生爆炸了
-Game.prototype.explode = function (x, y , byUser) {
+//发生爆炸
+Game.prototype.explode = function (x, y, byUser, power) {
 	for (let user of this.users) {
 		var ux = user.x;
 		var uy = user.y + this.props.userHeight;
 		var dist = (ux - x)*(ux - x) + (uy - y)*(uy - y);
-		if (dist < 10000) {
+		if (dist < power*power) {
 			user.killed('bomb', byUser);
 		}
-		if (dist < 22500) {
+		if (dist < 2.25*power*power) {
 			var r = Math.atan2(uy - y, ux - x);
-			var force = 45000 / (dist + 2500);
+			var force = 4.5 * power / (dist + 2500);
 			user.vx += force * Math.cos(r);
 			user.vy += force * Math.sin(r);
 			user.danger = true;
 		} 
 	};
-	this.announce('explode', {x: x, y: y});
+	this.announce('explode', {x: x, y: y, power: power});
 }
 
 //发生枪击
@@ -271,7 +272,7 @@ Game.prototype.removeCon = function (socket) {
 		if (this.cons[i].socket == socket) {
 			var con = this.cons[i];
 			con.leaveTime = new Date().getTime();
-			this.logger.info('User <' + con.name + '> '
+			console.log('User <' + con.name + '> '
 				 + ' ['+con.joinTime+':'+con.leaveTime+':'+Math.floor((con.joinTime-con.leaveTime)/60)+']'
 				 + ' ['+con.kill+','+con.death+','+con.highestKill+']');
 			this.cons.splice(i, 1);
@@ -296,6 +297,10 @@ Game.prototype.update = function () {
 	//物品更新
 	for(let item of this.items) {
 		item.update();
+	}
+	//实体更新
+	for(let entity of this.entitys) {
+		entity.update();
 	}
 	//碰撞检测
 	for (var i = 0; i < this.users.length; i++) {
@@ -322,14 +327,21 @@ Game.prototype.clean = function () {
 		} else {
 			this.items.splice(i, 1);
 		}
-	};
+	}
 	for(var i = this.mines.length - 1; i >= 0; i--) {
 		var mine = this.mines[i];
 		if (!mine.dead) {
 		} else {
 			this.mines.splice(i, 1);
 		}
-	};
+	}
+	for(var i = this.entitys.length - 1; i >= 0; i--) {
+		var entity = this.entitys[i];
+		if (!entity.dead) {
+		} else {
+			this.entitys.splice(i, 1);
+		}
+	}
 	for(var i = this.users.length - 1; i >= 0; i--) {
 		var user = this.users[i];
 		if (!user.dead) {
@@ -340,7 +352,7 @@ Game.prototype.clean = function () {
 				this.bodies = this.bodies.slice(0, 50);
 			}
 		}
-	};
+	}
 }
 Game.prototype.sendTick = function () {
 	var itemdata = [];
@@ -350,18 +362,22 @@ Game.prototype.sendTick = function () {
 	var userdata = [];
 	for (let user of this.users) {
 		userdata.push(user.getData());
-	};
+	}
 	var consdata = [];
 	for (let con of this.cons) {
 		consdata.push(con.getData());
-	};
+	}
+	var entitydata = [];
+	for (let entity of this.entitys) {
+		entitydata.push(Pack.entityPack.encode(entity));
+	}
 	for (let con of this.cons) {
 		var p1 = con.p1 && con.p1.id;
 		var p2 = con.p2 && con.p2.id;
-		var mines = [];
+		var minedata = [];
 		for (let mine of this.mines) {
 			if ((mine.creater.id == p1 && !p2) || mine.dead) {
-				mines.push(Pack.minePack.encode(mine));
+				minedata.push(Pack.minePack.encode(mine));
 			}
 		};
 		if (con.admin) {
@@ -369,7 +385,7 @@ Game.prototype.sendTick = function () {
 				con.socket.emit('tick', {
 					users: userdata,
 					items: itemdata,
-					mines: mines,
+					mines: minedata,
 					cons: consdata
 				});
 			}
@@ -377,7 +393,8 @@ Game.prototype.sendTick = function () {
 			con.socket.emit('tick', {
 				users: userdata,
 				items: itemdata,
-				mines: mines,
+				mines: minedata,
+				entitys: entitydata,
 				p1: p1,
 				p2: p2
 			});
