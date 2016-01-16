@@ -5,7 +5,7 @@ var Pack = require('../static/js/JPack.js');
 var Map = require('./map.js');
 var User = require('./user.js');
 var Item = require('./item.js');
-var Con = require('./con.js');
+var Client = require('./client.js');
 
 
 function userCollide(a, b, game) {
@@ -153,7 +153,7 @@ var Game = function (adminCode, maxUser) {
 	}
 	this.adminCode = adminCode;
 	this.users = [];
-	this.cons = [];
+	this.clients = [];
 	this.items = [];
 	this.bodies = [];
 	this.mines = [];
@@ -167,8 +167,8 @@ var Game = function (adminCode, maxUser) {
 	}, 17);
 }
 //增加玩家
-Game.prototype.addUser = function (con) {
-	var u = new User(this, con);
+Game.prototype.addUser = function (client) {
+	var u = new User(this, client);
 	var place = this.map.born();
 	u.x = place.x;
 	u.y = place.y + this.props.blockHeight/2;
@@ -189,10 +189,10 @@ Game.prototype.getUser = function (uid) {
 	}
 }
 //获得链接
-Game.prototype.getCon = function (cid) {
-	for (let con of this.cons) {
-		if (con.id == cid) {
-			return con;
+Game.prototype.getClient = function (cid) {
+	for (let client of this.clients) {
+		if (client.id == cid) {
+			return client;
 		}
 	}
 }
@@ -267,27 +267,27 @@ Game.prototype.checkMine = function (user) {
 	return false;
 }
 //链接
-Game.prototype.addCon = function (socket) {
-	this.cons.push(new Con(socket, this));
+Game.prototype.addClient = function (socket) {
+	this.clients.push(new Client(socket, this));
 }
 //链接关闭
-Game.prototype.removeCon = function (socket) {
-	for (var i = 0; i < this.cons.length; i++) {
-		if (this.cons[i].socket == socket) {
-			var con = this.cons[i];
-			con.leaveTime = new Date().getTime();
-			console.log('User <' + con.name + '> '
-				 + ' ['+con.joinTime+':'+con.leaveTime+':'+Math.floor((con.joinTime-con.leaveTime)/60)+']'
-				 + ' ['+con.kill+','+con.death+','+con.highestKill+']');
-			this.cons.splice(i, 1);
+Game.prototype.removeClient = function (socket) {
+	for (var i = 0; i < this.clients.length; i++) {
+		if (this.clients[i].socket == socket) {
+			var client = this.clients[i];
+			client.leaveTime = new Date().getTime();
+			console.log('User <' + client.name + '> '
+				 + ' ['+client.joinTime+':'+client.leaveTime+':'+Math.floor((client.joinTime-client.leaveTime)/60)+']'
+				 + ' ['+client.kill+','+client.death+','+client.highestKill+']');
+			this.clients.splice(i, 1);
 			return;
 		}
 	}
 }
 //分发事件
 Game.prototype.announce = function (type, data) {
-	for (let con of this.cons) {
-		con.socket.emit(type, data);
+	for (let client of this.clients) {
+		client.socket.emit(type, data);
 	}
 }
 
@@ -367,34 +367,34 @@ Game.prototype.sendTick = function () {
 	for (let user of this.users) {
 		userdata.push(user.getData());
 	}
-	var consdata = [];
-	for (let con of this.cons) {
-		consdata.push(con.getData());
+	var clientsdata = [];
+	for (let client of this.clients) {
+		clientsdata.push(client.getData());
 	}
 	var entitydata = [];
 	for (let entity of this.entitys) {
 		entitydata.push(Pack.entityPack.encode(entity));
 	}
-	for (let con of this.cons) {
-		var p1 = con.p1 && con.p1.id;
-		var p2 = con.p2 && con.p2.id;
+	for (let client of this.clients) {
+		var p1 = client.p1 && client.p1.id;
+		var p2 = client.p2 && client.p2.id;
 		var minedata = [];
 		for (let mine of this.mines) {
 			if ((mine.creater.id == p1 && !p2) || mine.dead) {
 				minedata.push(Pack.minePack.encode(mine));
 			}
 		};
-		if (con.admin) {
+		if (client.admin) {
 			if (this.tick % 60 == 0) {
-				con.socket.emit('tick', {
+				client.socket.emit('tick', {
 					users: userdata,
 					items: itemdata,
 					mines: minedata,
-					cons: consdata
+					clients: clientsdata
 				});
 			}
 		} else {
-			con.socket.emit('tick', {
+			client.socket.emit('tick', {
 				users: userdata,
 				items: itemdata,
 				mines: minedata,

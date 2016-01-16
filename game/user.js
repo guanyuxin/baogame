@@ -3,11 +3,11 @@ var Pack = require('../static/js/JPack.js');
 var Grenade = require('./entity/grenade.js');
 
 var userCount = 0;
-var User = function (game, con) {
+var User = function (game, client) {
 	this.id = userCount++;
 	this.game = game;
-	this.con = con;
-	this.name = con.name;
+	this.client = client;
+	this.name = client.name;
 	this.onFloor = false;
 	this.onPilla = false;
 	this.nearPilla = false;
@@ -317,9 +317,9 @@ User.prototype.update = function () {
 }
 User.prototype.scoreing = function () {
 	this.score++;
-	this.con.kill++;
-	if (this.score > this.con.highestKill) {
-		this.con.highestKill = this.score;
+	this.client.kill++;
+	if (this.score > this.client.highestKill) {
+		this.client.highestKill = this.score;
 	}
 }
 User.prototype.killed = function (action, byUser) {
@@ -327,7 +327,7 @@ User.prototype.killed = function (action, byUser) {
 	this.killer = byUser && byUser.id;
 	this.dieing = true;
 	this.killedBy = action;
-	this.con.death++;
+	this.client.death++;
 
 	if (action == 'power') {
 		this.vy = 10;

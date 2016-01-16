@@ -672,6 +672,7 @@ function drawEntity (ctx, entity) {
 	var h = 18;
 	ctx.save();
 	ctx.translate(entity.x, P.h - entity.y);
+	ctx.rotate(entity.r/10);
 	ctx.drawImage(imgs.grenade, -w, -h, w*2, h*2);
 	ctx.restore();
 }

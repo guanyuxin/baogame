@@ -29,7 +29,7 @@
 			padding: 5px;
 			display: -webkit-box;
 		}
-		.con {
+		.client {
 			width: 200px;
 			background: #eee;
 		}
@@ -94,11 +94,11 @@
 		for (var i = 0; i < data.mines.length; i++) {
 			data.mines[i] = Packs.minePack.decode(data.mines[i]);
 		}
-		var html = '<div class="cons">';
-		data.cons && data.cons.forEach(function (con) {
+		var html = '<div class="clients">';
+		data.clients && data.clients.forEach(function (client) {
 			var p1 = null;
 			data.users.forEach(function (user) {
-				if (con.p1 == user.id) {
+				if (client.p1 == user.id) {
 					p1 = user;
 					return;
 				}
@@ -108,21 +108,21 @@
 					${p1.status},${p1.score}<br/>
 					${p1.carry || "空"} : ${p1.carryCount}
 				</div>`;
-			} else if (con.admin) {
+			} else if (client.admin) {
 				var playerData = '<div class="player">admin</div>';
 			} else {
 				var playerData = '<div class="player">ob</div>';
 			}
-			if (con.banned) {
-				var banBtn = '<a data-conid="'+con.id+'" class="btn ban banned">取消ban</a>';
+			if (client.banned) {
+				var banBtn = '<a data-clientid="'+client.id+'" class="btn ban banned">取消ban</a>';
 			} else {
-				var banBtn = '<a data-conid="'+con.id+'" class="btn ban">ban</a>';
+				var banBtn = '<a data-clientid="'+client.id+'" class="btn ban">ban</a>';
 			}
 			html += `<div class="user">
-				<div class="con">
-					名称: ${con.name}<br>
-					IP: ${con.ip}<br>
-					KDH: ${con.kill},${con.death},${con.highestKill}
+				<div class="client">
+					名称: ${client.name}<br>
+					IP: ${client.ip}<br>
+					KDH: ${client.kill},${client.death},${client.highestKill}
 				</div>
 				${playerData}
 				<div class="action">${banBtn}</div>
@@ -133,13 +133,12 @@
 	socket.begin();
 	$('.users').on('click', '.btn.ban', function (e) {
 		var $t = $(e.currentTarget);
-		var conid = $t.data('conid');
-		console.log(conid);
+		var clientid = $t.data('clientid');
 		if ($t.is('.banned')) {
-			socket.emit('unban', conid);
+			socket.emit('unban', clientid);
 			$t.removeClass('banned');
 		} else {
-			socket.emit('ban', conid);
+			socket.emit('ban', clientid);
 			$t.addClass('banned')
 		}
 	});

@@ -5,12 +5,14 @@ var Grenade = function (user) {
 	this.vx = 0;
 	this.vy = 0;
 	this.life = 0;
+	this.r = 0;
 	this.dead = false;
 	this.game = user.game;
 }
 
 Grenade.prototype.update = function () {
 	this.x += this.vx;
+	this.r += this.vx/5;
 	if (this.x < 0 || this.x > this.game.props.w) {
 		this.vx *= -1;
 	}

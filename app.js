@@ -86,7 +86,7 @@ wss.on('connection', function (ws) {
 		ip: ws.upgradeReq.connection.remoteAddress,
 		listeners: {}
 	}
-	rooms[roomID].addCon(socket);
+	rooms[roomID].addClient(socket);
 
 	ws.on('message', function (message) {
 		var $s = message.indexOf('$');
@@ -101,7 +101,7 @@ wss.on('connection', function (ws) {
 	});
 
 	ws.on('close', function () {
-		rooms[roomID].removeCon(socket);
+		rooms[roomID].removeClient(socket);
 		socket = null;
 		ws = null;
 	});

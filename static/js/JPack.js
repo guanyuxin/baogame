@@ -145,6 +145,7 @@ var Packs = {
 	entityPack: new JPack({
 		x: "INT",
 		y: "INT",
+		r: "INT"
 	})
 }
 
