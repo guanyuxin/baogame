@@ -223,16 +223,20 @@ Game.prototype.explode = function (x, y, byUser, power) {
 Game.prototype.checkShot = function (u) {
 	var game = this;
 	var x = u.x;
-	var y = u.y + game.props.userHeight/2;
+	var y = u.y + game.props.userHeight*2/3;
 	var f = u.faceing;
 
 	for (let user of this.users) {
-		if (!user.crawl && f < 0 && x > user.x && user.y <= y && user.y + game.props.userHeight >= y) {
+		var uh = game.props.userHeight;
+		if (user.crawl) {
+			uh /= 2;
+		}
+		if (f < 0 && x > user.x && user.y <= y && user.y + uh >= y) {
 			user.killed('gun', u);
 			user.vx = 6 * f;
 		}
 
-		if (!user.crawl && f > 0 && x < user.x && user.y <= y && user.y + game.props.userHeight >= y) {
+		if (f > 0 && x < user.x && user.y <= y && user.y + uh >= y) {
 			user.killed('gun', u);
 			user.vx = 6 * f;
 		}

@@ -388,6 +388,7 @@ var imgUrls = {
 		"/item/grenade.png",
 	],
 	bomb: "/bomb.png",
+	arm: "/arm.png",
 	grenade: "/grenade.png",
 	minePlaced: "/mine.png",
 	jet: "/jet.png"
@@ -586,7 +587,7 @@ function drawUser (ctx, user, data) {
 		}
 		ctx.save();
 			ctx.translate(0, -P.userWidth/2);
-			drawWeapon(ctx, 15 - user.fireing);
+			drawWeapon(ctx, 25 - user.fireing);
 		ctx.restore();
 	}
 
@@ -627,7 +628,17 @@ function drawUser (ctx, user, data) {
 		}
 	}
 	if (user.grenadeing > 0) {
-		ctx.drawImage(imgs.grenade, -P.userWidth/2 - 20, -P.userHeight - 20, 30, 40);
+		var gtime = 140 - user.grenadeing;
+		ctx.save();
+
+		if (gtime < 10) {
+			ctx.rotate((10 - gtime)/10)
+		}
+		ctx.translate(-50, -P.userHeight/2 - 20);
+
+		ctx.drawImage(imgs.arm, 0, 0, 40, 40);
+		ctx.drawImage(imgs.grenade, -10, -13, 30, 40);
+		ctx.restore();
 		if (!user.dead) {
 			ctx.scale(user.faceing, 1);
 			var x = user.faceing * (P.userWidth/2 + 10)
