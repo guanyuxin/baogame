@@ -33,8 +33,8 @@ var Flare = function (mine, large) {
 			for (var i = 0; i < len; i++) {
 				var r1 = r + (Math.random()*1 - .5) * (len - i) / len;
 				this.smokes.push(new Smoke(
-					i * 5 * Math.sin(r),
-					-i * 5 * Math.cos(r) + i*i/30,
+					i * .04 * mine.power * Math.sin(r),
+					-i * .04 * mine.power * Math.cos(r) + i*i*mine.power/3000,
 					5 * Math.pow((len - i)/len, .6) * (Math.random() + 2),
 					-i + Math.random()*len
 				));

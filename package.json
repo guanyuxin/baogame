@@ -3,6 +3,13 @@
   "description": "a html5 mutiplayer game",
   "version": "1.0.0",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:guanyuxin/baogame.git"
+  },
+  "engines": {
+    "node": ">=4"
+  },
   "dependencies": {
     "bufferutil": "^1.2.1",
     "compression": ">=1.0.0",
@@ -10,7 +17,6 @@
     "ejs": ">=1.0.0",
     "express": ">=4.0",
     "heapdump": "^0.3.7",
-    "log4js": "^0.6.29",
     "serve-static": ">=0.0.0",
     "ws": "^1.0.1"
   }

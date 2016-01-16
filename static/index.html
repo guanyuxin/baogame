@@ -309,6 +309,9 @@ function initDone () {
 		for (var i = 0; i < data.mines.length; i++) {
 			data.mines[i] = Packs.minePack.decode(data.mines[i]);
 		}
+		for (var i = 0; i < data.entitys.length; i++) {
+			data.entitys[i] = Packs.entityPack.decode(data.entitys[i]);
+		}
 		render(ctx, data);
 
 		//发送控制
@@ -336,7 +339,7 @@ function initDone () {
 	socket.on('explode', function (data) {
 		cdx = 8;
 		cdy = 9;
-		Effect.trigger(new Flare({x: data.x, y: data.y}, true));
+		Effect.trigger(new Flare(data, true));
 	});
 
 	socket.on('userDead', function (data) {
@@ -345,9 +348,7 @@ function initDone () {
 		//p1 dead
 		if (user.id == p1.id) {
 			setTimeout(function () {
-				if (user.id == p1.id) { //仍未复活
-					$('.joining').show().find('h4').html('你挂了')
-				}
+				$('.joining').show().find('h4').html('你挂了')
 			}, 500);	
 		}
 		if (data.killer) {
@@ -384,8 +385,11 @@ var imgUrls = {
 		"/item/random.png",
 		"/item/random.png",
 		"/item/flypack.png",
+		"/item/grenade.png",
 	],
 	bomb: "/bomb.png",
+	arm: "/arm.png",
+	grenade: "/grenade.png",
 	minePlaced: "/mine.png",
 	jet: "/jet.png"
 };
@@ -583,7 +587,7 @@ function drawUser (ctx, user, data) {
 		}
 		ctx.save();
 			ctx.translate(0, -P.userWidth/2);
-			drawWeapon(ctx, 15 - user.fireing);
+			drawWeapon(ctx, 25 - user.fireing);
 		ctx.restore();
 	}
 
@@ -610,7 +614,8 @@ function drawUser (ctx, user, data) {
 		if (user.flying) {
 			Effect.trigger(new Brust(user, 1, 5, user.faceing * (wPadding + bottleWidth/2), -10));
 		}
-	} if (user.carry == Packs.items.bomb.id) {
+	}
+	if (user.carry == Packs.items.bomb.id) {
 		ctx.drawImage(imgs.bomb, P.userWidth/2 - 10, -P.userHeight, 30, 40);
 		if (!user.dead) {
 			ctx.scale(user.faceing, 1);
@@ -618,6 +623,28 @@ function drawUser (ctx, user, data) {
 			ctx.font="28px 宋体";
 			ctx.fillStyle = "#ff0";
 			ctx.fillText(Math.floor(user.carryCount*17/1000) + 1, x, -P.userHeight - 10);
+			ctx.font="14px 宋体";
+			ctx.scale(user.faceing, 1);
+		}
+	}
+	if (user.grenadeing > 0) {
+		var gtime = 140 - user.grenadeing;
+		ctx.save();
+
+		if (gtime < 10) {
+			ctx.rotate((10 - gtime)/10)
+		}
+		ctx.translate(-50, -P.userHeight/2 - 20);
+
+		ctx.drawImage(imgs.arm, 0, 0, 40, 40);
+		ctx.drawImage(imgs.grenade, -10, -13, 30, 40);
+		ctx.restore();
+		if (!user.dead) {
+			ctx.scale(user.faceing, 1);
+			var x = user.faceing * (P.userWidth/2 + 10)
+			ctx.font="28px 宋体";
+			ctx.fillStyle = "#ff0";
+			ctx.fillText(Math.floor(user.grenadeing*17/1000) + 1, x, -P.userHeight - 10);
 			ctx.font="14px 宋体";
 			ctx.scale(user.faceing, 1);
 		}
@@ -637,6 +664,15 @@ function drawItem (ctx, item) {
 	ctx.fill();
 	ctx.lineWidth = 1;
 	ctx.drawImage(imgs.items[item.id - 1], -s, -s, s*2, s*2);
+	ctx.restore();
+}
+
+function drawEntity (ctx, entity) {
+	var w = 15;
+	var h = 18;
+	ctx.save();
+	ctx.translate(entity.x, P.h - entity.y);
+	ctx.drawImage(imgs.grenade, -w, -h, w*2, h*2);
 	ctx.restore();
 }
 
@@ -691,6 +727,11 @@ function render (ctx, data) {
 			}
 			Effect.trigger(new ItemDead(item, itemName));
 		}
+	}
+
+	for (var i = 0; i < data.entitys.length; i++) {
+		var entity = data.entitys[i];
+		drawEntity(ctx, entity);
 	}
 
 	Effect.render(ctx);

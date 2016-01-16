@@ -64,6 +64,11 @@
 
 *跳的不够高？干嘛不飞呢！跳起后再次按w进入飞行模式，让那些只会蹦跶的人羡慕吧。等等,好像没油了...*
 
+###手雷:
+![drug](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/grenade.png)
+
+*使用后进入手雷准备状态并开始倒数，3秒后手雷爆炸，期间再次使用可以将手雷扔出。手雷扔出的速度受角色影响，所以跑动时手雷速度更快，跳起时仍的更高*
+
 --
 
 ![demo](https://raw.githubusercontent.com/guanyuxin/baogame/master/doc/demo3.gif)

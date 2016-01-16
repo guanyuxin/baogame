@@ -1,5 +1,6 @@
 "use strict"
 var Pack = require('../static/js/JPack.js');
+var Grenade = require('./entity/grenade.js');
 
 var userCount = 0;
 var User = function (game, con) {
@@ -23,11 +24,29 @@ var User = function (game, con) {
 	this.ignore = [];
 	this.carry = '';
 	this.carryCount = 0;
+
 	this.fireing = 0;
 	this.mining = 0;
+	this.grenadeing = 0;
+
 	this.score = 0;
 	this.canDoubleJump = false;
 	this.lastTouch = null;
+}
+User.prototype.throwGrenade = function () {
+	var g = new Grenade(this);
+	var vx = this.faceing * 5;
+	var vy = 4;
+	if (this.crawl) {
+		vx *= .3;
+		vy *= .2;
+	}
+	g.x = this.x - this.faceing * 20;
+	g.y = this.y + this.game.props.userHeight;
+	g.vx = this.vx + vx;
+	g.vy = this.vy + vy;
+	g.life = this.grenadeing;
+	this.game.entitys.push(g);
 }
 User.prototype.getStatus = function () {
 	this.crawl = false;
@@ -60,16 +79,6 @@ User.prototype.getStatus = function () {
 					return  "rolling";
 				}
 			} 
-			if (this.fireing > 0) {
-				this.fireing--;
-				if (this.fireing == 5) {
-					this.carryCount--;
-					this.game.checkShot(this);
-				}
-				if (this.fireing > 0) {
-					return 'fireing';
-				}
-			} 
 			if (this.mining > 0) {
 				this.mining--;
 				if (this.mining == 0) {
@@ -97,10 +106,7 @@ User.prototype.getStatus = function () {
 					return "rolling2";
 				}
 				
-			} else if (this.itemPress && this.vx == 0 && this.carry == Pack.items.gun.id && this.carryCount > 0) {
-				this.fireing = 15;
-				return 'fireing';
-			} else if (this.itemDown && this.vx == 0 && this.carry == Pack.items.mine.id && this.carryCount > 0) {
+			} else if (this.grenadeing == 0 && this.itemPress && this.vx == 0 && this.carry == Pack.items.mine.id && this.carryCount > 0) {
 				this.mining = 20;
 				return 'mining';
 			} else {
@@ -122,18 +128,55 @@ User.prototype.update = function () {
 	for (var key in this.ignore) {
 		this.ignore[key]--;
 	}
-	
+	//时限
 	if (this.carry == Pack.items.power.id || this.carry == Pack.items.hide.id || this.carry == Pack.items.bomb.id) {
 		this.carryCount--;
 		if (this.carryCount <= 0) {
 			if (this.carry == Pack.items.bomb.id) {
-				this.game.explode(this.x + this.faceing * 20, this.y + this.game.props.userHeight/2, this);
+				this.game.explode(this.x + this.faceing * 20, this.y + this.game.props.userHeight/2, this, 120);
 			}
 			this.carry = 0;
 			this.carryCount = 0;
 		}
 	}
+	//grenade
+	if (this.grenadeing > 0) {
+		this.grenadeing--;
+		if (this.grenadeing == 0) {
+			this.game.explode(this.x, this.y + this.game.props.userHeight, this, 100);
+		}
+	}
 	this.status = this.getStatus();
+	
+	if (this.status != "dieing" && !this.danger && this.itemPress) {
+		if (this.grenadeing) {
+			this.throwGrenade();
+			this.grenadeing = 0;
+			this.itemPress = false;
+		} else if (this.carry == Pack.items.grenade.id) {
+			this.grenadeing = 140;
+			this.carryCount--;
+			if (this.carryCount == 0) {
+				this.carry = 0;
+			}
+		}
+	}
+
+	//开枪
+	if (this.status == "falling" || this.status == "standing" || this.status == "climbing") {
+		if (this.fireing > 0) {
+			this.fireing--;
+			if (this.fireing == 5) {
+				this.carryCount--;
+				this.game.checkShot(this);
+			}
+		} else if (this.grenadeing == 0 && this.itemPress && this.carry == Pack.items.gun.id && this.carryCount > 0) {
+			this.fireing = 25;
+		}
+	} else {
+		this.fireing = 0;
+	}
+
 	if (this.status == "dieing") {
 		this.vx *= .98;
 		this.vy -= .2;
@@ -146,29 +189,51 @@ User.prototype.update = function () {
 		} else if (this.downDown && !this.upDown && this.y > this.pilla.y1*this.game.props.blockHeight + 3) {
 			this.y -= 3;
 		}
-		if (this.leftDown > 60) {
-			this.faceing = -1;
-			this.vx = -2;
-			this.onPilla = false;
-		} else if (this.rightDown > 60) {
-			this.faceing = 1;
-			this.vx = 2;
-			this.onPilla = false;
+		if (this.leftPress) {
+			if (this.faceing != -1) {
+				this.faceing = -1;
+			} else {
+				this.vx = -2;
+				this.onPilla = false;
+			}
+		} else if (this.rightPress) {
+			if (this.faceing != 1) {
+				this.faceing = 1;
+			} else {
+				this.vx = 2;
+				this.onPilla = false;
+			}
 		}
 	} else if (this.status == "standing") {
 		if (this.leftDown && !this.rightDown) {
 			if (this.vx > 0) {
-				this.vx = -1;
+				if (this.carry == Pack.items.power.id) {
+					this.vx = -.4;
+				} else {
+					this.vx = -1;
+				}
 			} else {
-				this.vx -= .2;
+				if (this.carry == Pack.items.power.id) {
+					this.vx -= .08;
+				} else {
+					this.vx -= .2;
+				}
 			}
 			this.faceing = -1;
 			this.vx = Math.max(this.vx, -4, -this.leftDown/20);
 		} else if (!this.leftDown && this.rightDown) {
 			if (this.vx < 0) {
-				this.vx = 1;
+				if (this.carry == Pack.items.power.id) {
+					this.vx = .4;
+				} else {
+					this.vx = 1;
+				}
 			} else {
-				this.vx += .2;
+				if (this.carry == Pack.items.power.id) {
+					this.vx += .08;
+				} else {
+					this.vx += .2;
+				}
 			}
 			this.faceing = 1;
 			this.vx = Math.min(this.vx, 4, this.rightDown/20);
@@ -198,6 +263,12 @@ User.prototype.update = function () {
 			this.vy += .3;
 			this.flying += 1;
 			this.carryCount--;
+		}
+		if (this.leftPress && this.faceing == 1) {
+			this.faceing = -1;
+		}
+		if (this.rightPress && this.faceing == -1) {
+			this.faceing = 1;
 		}
 		if (this.leftDown && this.carry == Pack.items.flypack.id && this.carryCount > 0) {
 			this.vx -= .15;

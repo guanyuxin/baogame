@@ -5,7 +5,7 @@ var server = require('http').Server(app);
 var WebSocketServer = require('ws').Server
 var wss = new WebSocketServer({server: server});
 var Game = require('./game/game.js');
-var log4js = require('log4js');
+//var log4js = require('log4js');
 
 var opts = {};
 for (var key of process.argv.splice(2)) {
@@ -20,33 +20,33 @@ server.listen(opts.port || 8030, function () {
 
 app.use('/static', express.static('static'));
 
-log4js.configure({
-	appenders: [{
-		type: 'console' 
-	}, {
-		type: 'file',
-		filename: 'logs/access.log',
-　　　　　pattern: "-yyyy-MM-dd.log",
-　　　　　maxLogSize: 1024,
-　　　　　alwaysIncludePattern: true,
-		category: 'access' 
-	}, {
-		type: 'file',
-		filename: 'logs/game.log',
-　　　　　pattern: "-yyyy-MM-dd.log",
-　　　　　maxLogSize: 1024,
-　　　　　alwaysIncludePattern: true,
-		backups: 3,
-		category: 'game' 
-	}]
-});
-var loggerAccess = log4js.getLogger('access');
-loggerAccess.setLevel('INFO');
-var loggerGame = log4js.getLogger('game');
-loggerGame.setLevel('INFO');
-app.use(log4js.connectLogger(loggerAccess, {
-	level:log4js.levels.INFO
-}));
+// log4js.configure({
+// 	appenders: [{
+// 		type: 'console' 
+// 	}, {
+// 		type: 'file',
+// 		filename: 'logs/access.log',
+// 　　　　　pattern: "-yyyy-MM-dd.log",
+// 　　　　　maxLogSize: 1024,
+// 　　　　　alwaysIncludePattern: true,
+// 		category: 'access' 
+// 	}, {
+// 		type: 'file',
+// 		filename: 'logs/game.log',
+// 　　　　　pattern: "-yyyy-MM-dd.log",
+// 　　　　　maxLogSize: 1024,
+// 　　　　　alwaysIncludePattern: true,
+// 		backups: 3,
+// 		category: 'game' 
+// 	}]
+// });
+// var loggerAccess = log4js.getLogger('access');
+// loggerAccess.setLevel('INFO');
+// var loggerGame = log4js.getLogger('game');
+// loggerGame.setLevel('INFO');
+// app.use(log4js.connectLogger(loggerAccess, {
+// 	level:log4js.levels.INFO
+// }));
 
 //游戏地址
 app.get('/', function (req, res) {
@@ -67,7 +67,7 @@ app.get('/rooms', function (req, res) {
 var adminCode = opts.code || 'admin';
 var rooms = [];
 for (var i = 0; i < (opts.room || 1); i++) {
-	rooms.push(new Game(adminCode, opts.maxUser || 6, loggerGame));
+	rooms.push(new Game(adminCode, opts.maxUser || 6));
 }
 
 wss.on('connection', function (ws) {
