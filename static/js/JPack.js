@@ -63,7 +63,7 @@ var Packs = {
 		gun: {
 			id: 2,
 			name: "枪",
-			count: 30
+			count: 3
 		},
 		mine: {
 			id: 3,
