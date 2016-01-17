@@ -4,7 +4,7 @@ var Grenade = function (user) {
 	this.creater = user;
 	this.vx = 0;
 	this.vy = 0;
-	this.life = 0;
+	this.life = 100;
 	this.r = 0;
 	this.dead = false;
 	this.game = user.game;
@@ -12,7 +12,7 @@ var Grenade = function (user) {
 
 Grenade.prototype.update = function () {
 	this.x += this.vx;
-	this.r += this.vx/5;
+	this.r += this.vx / 5;
 	if (this.x < 0 || this.x > this.game.props.w) {
 		this.vx *= -1;
 	}
@@ -24,11 +24,15 @@ Grenade.prototype.update = function () {
 		this.y += Math.floor(this.vy);
 	} else {
 		for (var i = 0; i < -this.vy; i++) {
-			this.y--;
-			if(!this.dieing && this.game.map.onFloor(this.x, this.y)) {
-				this.vy *= -.85;
-				break;
+			if(this.game.map.onFloor(this.x, this.y)) {
+				if (this.game.map.onPilla(this.x, this.y)) {
+					this.vx *=.7;
+				} else {
+					this.vy *= -.85;
+					break;
+				}
 			}
+			this.y--;
 		}
 	}
 	if (this.y < 0) {

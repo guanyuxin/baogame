@@ -108,6 +108,15 @@ Map.prototype.nearPilla = function (u) {
 	}
 	return false;
 }
+Map.prototype.onPilla = function (x, y) {
+	for (let pilla of this.pilla) {
+		if (Math.abs(x - pilla.x * this.game.props.blockWidth) < 8 && y >= pilla.y1*this.game.props.blockHeight && y <= pilla.y2*this.game.props.blockHeight) {
+			return true;
+		}
+	}
+	return false;
+}
+
 Map.prototype.getData = function () {
 	return {
 		block: this.block,

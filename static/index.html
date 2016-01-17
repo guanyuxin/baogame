@@ -200,6 +200,8 @@
 	<div class="noticeFix">
 		<div class="noticeItem">w,a,s,d:移动  q:使用物品</div>
 		<div class="noticeItem"><a target="blank" href="https://github.com/guanyuxin/baogame">https://github.com/guanyuxin/baogame</a> 查看帮助详情</div>
+		<div class="noticeItem">[2016-01-17]修改了手雷的控制方式：按住act扔出，按住的时间越久，扔的越远，扔出后一段时间爆炸；蹲下时扔出的手雷会贴着地滚。
+		</div>
 	</div>
 	<div class="notiveIn"></div>
 </div>
@@ -628,26 +630,15 @@ function drawUser (ctx, user, data) {
 		}
 	}
 	if (user.grenadeing > 0) {
-		var gtime = 140 - user.grenadeing;
 		ctx.save();
 
-		if (gtime < 10) {
-			ctx.rotate((10 - gtime)/10)
-		}
-		ctx.translate(-50, -P.userHeight/2 - 20);
+		ctx.translate(-10, -20);
+		ctx.rotate((25 - user.grenadeing)/10);
+		ctx.translate(-40, -P.userHeight/2);
 
 		ctx.drawImage(imgs.arm, 0, 0, 40, 40);
 		ctx.drawImage(imgs.grenade, -10, -13, 30, 40);
 		ctx.restore();
-		if (!user.dead) {
-			ctx.scale(user.faceing, 1);
-			var x = user.faceing * (P.userWidth/2 + 10)
-			ctx.font="28px 宋体";
-			ctx.fillStyle = "#ff0";
-			ctx.fillText(Math.floor(user.grenadeing*17/1000) + 1, x, -P.userHeight - 10);
-			ctx.font="14px 宋体";
-			ctx.scale(user.faceing, 1);
-		}
 	}
 	ctx.restore();
 }
