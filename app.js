@@ -1,11 +1,11 @@
+"use strict"
 var url = require('url');
 var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var WebSocketServer = require('ws').Server
 var wss = new WebSocketServer({server: server});
-var Game = require('./game/game.js');
-//var log4js = require('log4js');
+var Room = require('./game/room.js');
 
 var opts = {};
 for (var key of process.argv.splice(2)) {
@@ -13,72 +13,61 @@ for (var key of process.argv.splice(2)) {
 	opts[keys[0]] = keys[1];
 }
 
-
 server.listen(opts.port || 8030, function () {
 	console.log('Listening on ' + server.address().port);
 });
 
 app.use('/static', express.static('static'));
 
-// log4js.configure({
-// 	appenders: [{
-// 		type: 'console' 
-// 	}, {
-// 		type: 'file',
-// 		filename: 'logs/access.log',
-// 　　　　　pattern: "-yyyy-MM-dd.log",
-// 　　　　　maxLogSize: 1024,
-// 　　　　　alwaysIncludePattern: true,
-// 		category: 'access' 
-// 	}, {
-// 		type: 'file',
-// 		filename: 'logs/game.log',
-// 　　　　　pattern: "-yyyy-MM-dd.log",
-// 　　　　　maxLogSize: 1024,
-// 　　　　　alwaysIncludePattern: true,
-// 		backups: 3,
-// 		category: 'game' 
-// 	}]
-// });
-// var loggerAccess = log4js.getLogger('access');
-// loggerAccess.setLevel('INFO');
-// var loggerGame = log4js.getLogger('game');
-// loggerGame.setLevel('INFO');
-// app.use(log4js.connectLogger(loggerAccess, {
-// 	level:log4js.levels.INFO
-// }));
-
 //游戏地址
 app.get('/', function (req, res) {
 	res.sendFile(__dirname + '/static/index.html');
 });
-
+//游戏地址
+app.get('/rooms', function (req, res) {
+	res.sendFile(__dirname + '/static/rooms.html');
+});
 //管理地址
 app.get('/admin', function (req, res) {
 	res.sendFile(__dirname + '/static/admin.html');
 });
 
-//获取房间列表
-app.get('/rooms', function (req, res) {
+
+//游戏地址
+app.get('/createRoom', function (req, res) {
+	var type = req.query.type;
+	var room = Room.createRoom(type);
 	res.writeHead(200, { 'Content-Type': 'text/plain' });
-	res.end(""+rooms.length);
+	res.end(room.id+"");
+});
+
+//获取房间列表
+app.get('/roomsData', function (req, res) {
+	res.writeHead(200, { 'Content-Type': 'text/plain' });
+	res.end(JSON.stringify(Room.getRoomData()));
 });
 
 var adminCode = opts.code || 'admin';
-var rooms = [];
 for (var i = 0; i < (opts.room || 1); i++) {
-	rooms.push(new Game(adminCode, opts.maxUser || 6));
+	Room.createRoom("大乱斗", true);
 }
 
 wss.on('connection', function (ws) {
 	var location = url.parse(ws.upgradeReq.url, true);
-	var roomID = location.query.room || 0;
+	var roomID = location.query.roomID || 1;
+	var room = Room.findRoom(roomID);
+	if (!room) {
+		ws.close();
+		return;
+	}
 	var socket = {
 		emit: function (name, data) {
 			try {
 				var c = name + "$" + JSON.stringify(data);
 				ws.send(c);
-			} catch (e) {}
+			} catch (e) {
+				console.log(e);
+			}
 		},
 		on: function (name, callback) {
 			this.listeners[name] = callback;
@@ -86,7 +75,7 @@ wss.on('connection', function (ws) {
 		ip: ws.upgradeReq.connection.remoteAddress,
 		listeners: {}
 	}
-	rooms[roomID].addClient(socket);
+	room.game.addClient(socket);
 
 	ws.on('message', function (message) {
 		var $s = message.indexOf('$');
@@ -101,9 +90,10 @@ wss.on('connection', function (ws) {
 	});
 
 	ws.on('close', function () {
-		rooms[roomID].removeClient(socket);
+		room.game.removeClient(socket);
 		socket = null;
 		ws = null;
+		room = null;
 	});
 });
 

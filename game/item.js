@@ -8,17 +8,6 @@ for (let key in Pack.items) {
 
 var Item = function (game, type) {
 	this.game = game;
-	var target = Math.random()*3;
-	if (target < 1) {
-		this.x = game.props.itemSize;
-		this.y = game.props.h / 2;
-	} else if (target < 2) {
-		this.x = game.props.w - game.props.itemSize;
-		this.y = game.props.h / 2;
-	} else {
-		this.x = game.props.w / 2;
-		this.y = game.props.h - game.props.itemSize;
-	}
 	if (type === undefined) {
 		type = Math.floor(Math.random() * Items.length);
 	}

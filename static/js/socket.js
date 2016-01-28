@@ -2,9 +2,9 @@ var socket = {
 	open: false,
 	queueData: [],
 	ws: null,
-	begin: function (room) {
+	begin: function (roomID) {
 		var _this = this;
-		_this.ws = new WebSocket("ws://"+location.host+"?room="+(room||0));
+		_this.ws = new WebSocket("ws://"+location.host+"?roomID="+(roomID || 1));
 		_this.ws.onopen = function () {
 			_this.open = true;
 			for (var i = 0; i < _this.queueData.length; i++) {

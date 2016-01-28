@@ -1,6 +1,8 @@
 "use strict"
 var Pack = require('../static/js/JPack.js');
+var C = require('../static/js/const.js');
 var Grenade = require('./entity/grenade.js');
+var AI = require('./ai.js');
 
 var userCount = 0;
 var User = function (game, client) {
@@ -24,6 +26,7 @@ var User = function (game, client) {
 	this.ignore = [];
 	this.carry = '';
 	this.carryCount = 0;
+	this.onStruct = 0;
 
 	this.fireing = 0;
 	this.mining = 0;
@@ -93,7 +96,7 @@ User.prototype.getStatus = function () {
 				this.onFloor = false;
 				this.vx = 0;
 				this.pilla = this.nearPilla;
-				this.x = this.pilla.x * this.game.props.blockWidth;
+				this.x = this.pilla.x * C.TW;
 				return "climbing";
 			} else if (this.downDown) {
 				this.crawl = true;
@@ -144,6 +147,15 @@ User.prototype.update = function () {
 	
 
 	
+	if (this.status == "standing" || this.status == "crawling") {
+		this.onStruct = this.game.map.onStruct(this);
+	} else {
+		this.onStruct = 0;
+	}
+	
+	if (this.npc && this.AI) {
+		AI(this);
+	}
 	if (this.status == "falling" || this.status == "standing" || this.status == "climbing") {
 		//开枪	
 		if (this.fireing > 0) {
@@ -158,8 +170,6 @@ User.prototype.update = function () {
 		} else if (this.itemPress && this.carry == Pack.items.gun.id && this.carryCount > 0) {
 			this.fireing = 25;
 		}
-
-		
 	} else {
 		this.fireing = 0;
 	}
@@ -191,9 +201,9 @@ User.prototype.update = function () {
 		this.r += this.vr;
 		this.vr *= .96;
 	} if (this.status == "climbing") {
-		if (this.upDown && !this.downDown && this.y < this.pilla.y2*this.game.props.blockHeight - this.game.props.userHeight) {
+		if (this.upDown && !this.downDown && this.y < this.pilla.y2*C.TH - this.game.props.userHeight) {
 			this.y += 3;
-		} else if (this.downDown && !this.upDown && this.y > this.pilla.y1*this.game.props.blockHeight + 3) {
+		} else if (this.downDown && !this.upDown && this.y > this.pilla.y1*C.TH + 3) {
 			this.y -= 3;
 		}
 		if (this.leftPress) {
@@ -328,6 +338,9 @@ User.prototype.scoreing = function () {
 	if (this.score > this.client.highestKill) {
 		this.client.highestKill = this.score;
 	}
+	if (this.game.map.hooks.onKill) {
+		this.game.map.hooks.onKill(this.game, this);
+	}
 }
 User.prototype.killed = function (action, byUser) {
 	if (this.dieing) {return}
@@ -350,6 +363,9 @@ User.prototype.killed = function (action, byUser) {
 		this.killer = this.lastTouch;
 	}
 
+	if (this.game.map.hooks.onKilled) {
+		this.game.map.hooks.onKilled(this.game, this);
+	}
 	if (this.killer && this.killer != this.id) {
 		var killer = this.game.getUser(this.killer);
 		if (killer) {

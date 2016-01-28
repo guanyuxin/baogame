@@ -1,0 +1,77 @@
+<!doctype>
+<html>
+<head>
+	<title>暴走大乱斗</title>
+	<script src="/static/js/zepto.js"></script>
+	<style>
+		body {
+			margin: 0;
+			background: #333;
+		}
+		.room {
+			border-radius: 10px;
+			padding: 10px;
+			margin: 10px;
+			background: #ffe;
+			border: 2px solid #ccc;
+			text-align: center;
+		}
+		a {
+			text-decoration: none;
+			color: inherit;
+		}
+		.title {
+			text-align: center;
+			font-size: 35px;
+			color: #fff;
+			margin: 30px 0;
+		}
+		.btn {
+			display: block;
+			border-radius: 10px;
+			padding: 10px;
+			margin: 10px;
+			background: #8E2D2D;
+			border: 2px solid #ccc;
+			color: #fff;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<div>
+		<h4 class="title">乱斗：</h4>
+		<div class="rooms">
+		</div>
+		<h4 class="title">教程：</h4>
+		<div>
+			<a href="javascript:void(0)" class="btn btn-lesson" roomtype="lesson1">基础教学</a>
+			<a href="javascript:void(0)" class="btn btn-lesson" roomtype="lesson2">物品教学</a>
+		</div>
+		<h4 class="title">竞技：</h4>
+		<div>
+
+		</div>
+	</div>
+</body>
+</html>
+<script>
+	$('.btn-lesson').click(function (e) {
+		$.get('./createRoom?type='+$(e.currentTarget).attr("roomtype"), function (roomID) {
+			location.href = './?roomID='+roomID
+		});
+	});
+	function refresh () {
+		$.get('./roomsData', function (data) {
+			var data = JSON.parse(data);
+			var rooms = [];
+			for (var i = 0; i < data.length; i++) {
+				var room = data[i];
+				rooms.push('<a href="/?roomID='+room.id+'"><div class="room">'+room.name+'['+room.users+'/'+room.maxUser+']</div></a>');
+			}
+			$('.rooms').html('').append(rooms.join(''));
+		});
+		setTimeout(refresh, 1500);
+	}
+	refresh();
+</script>

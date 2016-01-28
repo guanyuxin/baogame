@@ -1,6 +1,7 @@
 "use strict"
 var Pack = require('../static/js/JPack.js');
 var heapdump = require('heapdump');
+var C = require('../static/js/const.js');
 
 var banedip = {};
 var concount = 0;
@@ -30,21 +31,19 @@ var Client = function (socket, game) {
 	for (let body of this.game.bodies) {
 		bodiesData.push(body.getData());
 	}
-	socket.emit("init", {
-		props: game.props,
-		map: game.map.getData(),
-		bodies: bodiesData
-	});
 
 	//接收初始化数据
 	socket.on('init', data => {
 		if (data.code != undefined) {
 			if (data.code != this.game.adminCode) {
 				socket.emit('initFail');
+				return;
 			} else {
 				this.admin = true;
 				socket.on('createItem', type => {
-					game.createItem(type);
+					var item = game.createItem(type);
+					item.x = Math.random()*C.TW;
+					item.y = Math.random()*C.TH;
 				});
 				socket.on('ban', cliID => {
 					var client = this.game.getClient(cliID);
@@ -64,7 +63,13 @@ var Client = function (socket, game) {
 		if (data.userName) {
 			this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
 		}
+		socket.emit("init", {
+			props: game.props,
+			map: game.map.getData(),
+			bodies: bodiesData
+		});
 	});
+
 	//加入
 	socket.on('join', data => {
 		if (this.banned) {
@@ -78,7 +83,7 @@ var Client = function (socket, game) {
 		if (data.p1 && this.p1 && !this.p1.dieing && !this.p1.dead) {return}
 		if (data.p2 && this.p2 && !this.p2.dieing && !this.p2.dead) {return}
 		this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
-		var u = game.addUser(this);
+		var u = game.createUser(this);
 		if (data.p1) {
 			this.p1 = u;
 		} else {

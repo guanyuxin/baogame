@@ -1,11 +1,15 @@
 "use strict"
 var Pack = require('../static/js/JPack.js');
+var C = require('../static/js/const.js');
 
 
 var Map = require('./map.js');
 var User = require('./user.js');
 var Item = require('./item.js');
 var Client = require('./client.js');
+
+var map1 = require('./maps/lesson1.js');
+var map2 = require('./maps/lesson2.js');
 
 
 function userCollide(a, b, game) {
@@ -132,25 +136,13 @@ function eatItem (a, b, game) {
 	if (a.dead || b.dead) {return}
 	if (a.carry == Pack.items.bomb.id) {return}
 	if((a.x-b.x)*(a.x-b.x) + (a.y+game.props.userHeight/2-b.y)*(a.y+game.props.userHeight/2-b.y) >
-			(game.props.userWidth+game.props.itemSize)*(game.props.userWidth+game.props.itemSize)/4) {
+			(game.props.userWidth+C.IS)*(game.props.userWidth+C.IS)/4) {
 		return;
 	}
 	b.touchUser(a);
 }
 
-var Game = function (adminCode, maxUser) {
-	this.props = {
-		w: 1100,
-		h: 600,
-		blockWidth: 50,
-		blockHeight: 70,
-		userHeight: 40,
-		userWidth: 40,
-		itemSize: 15,
-		tileW: 22,
-		maxUser: maxUser,
-		tileH: 8
-	}
+var Game = function (adminCode, maxUser, type, remove) {
 	this.adminCode = adminCode;
 	this.users = [];
 	this.clients = [];
@@ -158,20 +150,49 @@ var Game = function (adminCode, maxUser) {
 	this.bodies = [];
 	this.mines = [];
 	this.entitys = [];
-
-	this.map = new Map(this, 22, 8);
 	this.tick = 0;
-	var _this = this;
+	this.remove = remove;
+	this.props = {
+		userHeight: 40,
+		userWidth: 40,
+		itemSize: 15,
+		tw: 28,
+		th: 15,
+		maxUser: maxUser,
+	}
+	if (type == "lesson1") {
+		this.props.th = map1.h;
+		this.props.tw = map1.w;
+	} else if (type == "lesson2") {
+		this.props.th = map2.h;
+		this.props.tw = map2.w;
+	}
+	this.props.w = this.props.tw * C.TW;
+	this.props.h = this.props.th * C.TH;
+	
+	if (type == "lesson1") {
+		this.map = new Map(this, map1);
+	} else if (type == "lesson2") {
+		this.map = new Map(this, map2);
+	} else {
+		this.map = new Map(this);
+	}
 	this.runningTimer = setInterval(() => {
-		_this.update();
+		this.update();
 	}, 17);
 }
+Game.prototype.createNPC = function (data) {
+	var u = new User(this, data);
+	u.npc = true;
+	this.users.push(u);
+	return u;
+}
 //增加玩家
-Game.prototype.addUser = function (client) {
+Game.prototype.createUser = function (client) {
 	var u = new User(this, client);
 	var place = this.map.born();
 	u.x = place.x;
-	u.y = place.y + this.props.blockHeight/2;
+	u.y = place.y + C.TH/2;
 	this.users.push(u);
 	return u;
 }
@@ -197,7 +218,9 @@ Game.prototype.getClient = function (cid) {
 	}
 }
 Game.prototype.createItem = function (type) {
-	this.items.push(new Item(this, type));
+	var item = new Item(this, type);
+	this.items.push(item);
+	return item;
 }
 //发生爆炸
 Game.prototype.explode = function (x, y, byUser, power) {
@@ -210,7 +233,7 @@ Game.prototype.explode = function (x, y, byUser, power) {
 		}
 		if (dist < 2.25*power*power) {
 			var r = Math.atan2(uy - y, ux - x);
-			var force = 4.5 * power / (dist + 2500);
+			var force = 450 * power / (dist + 2500);
 			user.vx += force * Math.cos(r);
 			user.vy += force * Math.sin(r);
 			user.danger = true;
@@ -291,13 +314,18 @@ Game.prototype.announce = function (type, data) {
 	}
 }
 
+Game.prototype.win = function (user) {
+	this.announce('win', user.id);
+	setTimeout(() => {
+		clearInterval(this.runningTimer);
+		this.remove && this.remove(this);
+	}, 1000);
+}
+
 //游戏主流程
 Game.prototype.update = function () {
 	this.tick++;
-	//生成物品（如果需要）
-	if (this.items.length < this.users.length && Math.random() * 500 < this.users.length) {
-		this.items.push(new Item(this));
-	}
+	this.map.update();
 	//物品更新
 	for(let item of this.items) {
 		item.update();
@@ -378,6 +406,7 @@ Game.prototype.sendTick = function () {
 	for (let client of this.clients) {
 		var p1 = client.p1 && client.p1.id;
 		var p2 = client.p2 && client.p2.id;
+		var onStruct = client.p1 && client.p1.onStruct;
 		var minedata = [];
 		for (let mine of this.mines) {
 			if ((mine.creater.id == p1 && !p2) || mine.dead) {
@@ -400,6 +429,7 @@ Game.prototype.sendTick = function () {
 				mines: minedata,
 				entitys: entitydata,
 				p1: p1,
+				onStruct: onStruct,
 				p2: p2
 			});
 		}

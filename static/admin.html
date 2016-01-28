@@ -151,9 +151,9 @@
 	})
 
 	$.ajax({
-		url: "/rooms",
+		url: "/roomsData",
 		success: function (t) {
-			var count = parseInt(t);
+			var count = JSON.parse(t).length;
 			if (count < 2) {return}
 			$('.rooms').append('<span class="active">1</span>');
 			for (var i = 1; i < count; i++) {
