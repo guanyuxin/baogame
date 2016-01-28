@@ -115,6 +115,7 @@ var Packs = {
 		vy: "INT",
 		score: "INT",
 		dead: Boolean,
+		npc: Boolean,
 		doubleJumping: Boolean,
 		flying: "INT"
 	}),

@@ -375,11 +375,17 @@ function initDone () {
 			controlCache = control;
 			socket.emit('control', Packs.controlPack.encode(p1));
 		}
-		if (data.users.length < P.maxUser && canJoin !== true) {
+		var userCount = 0;
+		for (var i = 0; i < data.users.length; i++) {
+			if (!data.users[i].npc) {
+				userCount++;
+			}
+		}
+		if (userCount < P.maxUser && canJoin !== true) {
 			canJoin = true;
 			$('.joining .joinBtn').removeAttr('disabled');
 			$('.joining .joinBtn').removeAttr('disabledText');
-		} else if (data.users.length >= P.maxUser && canJoin !== false) {
+		} else if (userCount >= P.maxUser && canJoin !== false) {
 			canJoin = false;
 			$('.joining .joinBtn').attr('disabled', 'disabled');
 			$('.joining .joinBtn').attr('disabledText', '：房间已满');

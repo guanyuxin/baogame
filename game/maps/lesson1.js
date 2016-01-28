@@ -73,9 +73,8 @@ var map = {
 		}
 	],
 	hooks: {
-		onKill: function (game, u, target) {
-			console.log('onKill')
-			if (!u.npc) {
+		onKilled: function (game, u) {
+			if (u.npc) {
 				game.win(u);
 			}
 		}

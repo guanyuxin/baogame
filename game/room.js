@@ -18,9 +18,7 @@ var Room = {
 	},
 	createRoom: function (type, presist) {
 		var maxUser = 6;
-		if (type) {
-			maxUser = 20;
-		}
+		
 		var room = {
 			id: roomID++,
 			presist: presist,
@@ -48,10 +46,16 @@ var Room = {
 	getRoomData: function () {
 		var rdata = [];
 		for (let room of rooms) {
+			var users = 0;
+			for (let user of room.game.users) {
+				if (!user.npc) {
+					users++;
+				}
+			}
 			rdata.push({
 				id: room.id,
 				maxUser: room.game.props.maxUser,
-				users: room.game.users.length,
+				users: users,
 				name: room.name
 			})
 		}

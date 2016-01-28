@@ -76,7 +76,13 @@ var Client = function (socket, game) {
 			socket.emit('joinFail', "you are banned");
 			return;
 		}
-		if (game.users.length > game.props.maxUser) {
+		var u = 0;
+		for (let user of game.users) {
+			if (!user.npc) {
+				u++;
+			}
+		}
+		if (u >= game.props.maxUser) {
 			socket.emit('joinFail', "加入失败，服务器已满");
 			return;
 		}
