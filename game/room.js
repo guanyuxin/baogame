@@ -8,12 +8,12 @@ var rooms = [];
 setInterval(function () {
 	for (var i = 0; i < rooms.length; i++) {
 		if (rooms[i].game.clients.length == 0 && !rooms[i].presist) {
-			if (rooms.dead > 10) {
+			if (rooms[i].dead > 10) {
 				rooms.splice(i, 1);
-			} else if (rooms.dead > 0) {
-				rooms.dead++;
+			} else if (rooms[i].dead > 0) {
+				rooms[i].dead++;
 			} else {
-				rooms.dead = 1;
+				rooms[i].dead = 1;
 			}
 		}
 	}
