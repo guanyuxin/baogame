@@ -58,20 +58,45 @@
 </head>
 <body>
 	<div class="rooms"></div>
-	<a class="btn btn-heap">heapdump</a>
-	<div class="items">
-		生成道具：
-		<a class="btn" data-type="0">无敌</a>
-		<a class="btn" data-type="1">枪</a>
-		<a class="btn" data-type="2">地雷</a>
-		<a class="btn" data-type="3">毒药</a>
-		<a class="btn" data-type="4">隐身</a>
-		<a class="btn" data-type="5">?</a>
-		<a class="btn" data-type="6">二段跳</a>
-		<a class="btn" data-type="7">喷气背包</a>
-		<a class="btn" data-type="8">手雷</a>
+	<div class="tab">
+		<div class="tabline">
+			<a class="tabItem" tabTarget="items">道具</a>
+			<a class="tabItem" tabTarget="clients">用户</a>
+			<a class="tabItem" tabTarget="entitys">人物</a>
+			<a class="tabItem" tabTarget="map">地图</a>
+			<a class="tabItem" tabTarget="config">配置</a>
+		</div>
+		<div class="tabbody">
+			<div class="tabpage" data-target="items">
+				<div class="items">
+					生成道具：
+					<a class="btn" data-type="0">无敌</a>
+					<a class="btn" data-type="1">枪</a>
+					<a class="btn" data-type="2">地雷</a>
+					<a class="btn" data-type="3">毒药</a>
+					<a class="btn" data-type="4">隐身</a>
+					<a class="btn" data-type="5">?</a>
+					<a class="btn" data-type="6">二段跳</a>
+					<a class="btn" data-type="7">喷气背包</a>
+					<a class="btn" data-type="8">手雷</a>
+				</div>
+			</div>
+			<div class="tabpage" data-target="clients">
+				<div class="users"></div>
+			</div>
+			<div class="tabpage" data-target="entitys">
+
+			</div>
+			<div class="tabpage" data-target="map">
+
+			</div>
+			<div class="tabpage" data-target="config">
+				<a class="btn btn-heap">heapdump</a>
+			</div>
+		</div>
 	</div>
-	<div class="users"></div>
+	
+	
 </body>
 </html>
 <script>
@@ -95,6 +120,19 @@
 			data.mines[i] = Packs.minePack.decode(data.mines[i]);
 		}
 		var html = '<div class="clients">';
+
+		data.users && data.users.forEach(function (user) {
+			var watch = [];
+			for (var key in user.watchData) {
+				watch.push(`<div><span>${key}:</span>${user.watchData[key]}</div>`);
+			}
+			html += `<div class="user">
+				<h1>${user.name}:${user.id}</h1>
+				<div style="flex:1">${watch.join('')}</div>
+				<div>[${user.x},${user.y}]</div>
+			</div>`
+		})
+
 		data.clients && data.clients.forEach(function (client) {
 			var p1 = null;
 			data.users.forEach(function (user) {
@@ -113,6 +151,11 @@
 			} else {
 				var playerData = '<div class="player">ob</div>';
 			}
+			if (p1) {
+				for (var key in p1.watchData) {
+					playerData += `<div><span>key</span>${p1.watchData[key]}</div>`
+				}
+			}
 			if (client.banned) {
 				var banBtn = '<a data-clientid="'+client.id+'" class="btn ban banned">取消ban</a>';
 			} else {
@@ -125,9 +168,11 @@
 					KDH: ${client.kill},${client.death},${client.highestKill}
 				</div>
 				${playerData}
-				<div class="action">${banBtn}</div>
+				<div class="action">:${banBtn}</div>
 			</div>`;
 		});
+
+
 		$('.users').html(html);
 	});
 	socket.begin();

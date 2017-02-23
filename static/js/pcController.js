@@ -4,14 +4,8 @@ var p1 = {
 	downDown: 0,
 	leftDown: 0,
 	rightDown: 0,
-	itemDown: false
-}
-var p2 = {
-	upDown: 0,
-	downDown: 0,
-	leftDown: 0,
-	rightDown: 0,
-	itemDown: false
+	itemDown: false,
+	team: 0
 }
 
 document.addEventListener('keydown', function (e) {
@@ -71,18 +65,17 @@ document.addEventListener('keyup', function (e) {
 	}
 	if (e.keyCode == 69) {
 		if ($('.joining').css('display') != 'none') {
-			joing(p1);
+			joing();
 		}
-	}
-	if (e.keyCode == 16) {
-		joing(p2);
 	}
 	e.preventDefault();
 });
 
 $('.txt-input').on('keydown', function (e) {e.stopPropagation()})
 $('.txt-input').on('keyup', function (e) {e.stopPropagation()})
-$('.joining .joinBtn').click(function () {joing(true)});
+$('.joining .joinBtn').click(function () {joing()});
+$('.joining .join1Btn').click(function () {joing(1)});
+$('.joining .join2Btn').click(function () {joing(2)});
 $('.joining .dismissBtn').click(function () {
 	$('.joining').hide();
 });

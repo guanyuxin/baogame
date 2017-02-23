@@ -4,15 +4,11 @@ var p1 = {
 	downDown: 0,
 	leftDown: 0,
 	rightDown: 0,
-	itemDown: 0
+	itemDown: 0,
+	team: 0
 }
-var p2 = {
-	upDown: 0,
-	downDown: 0,
-	leftDown: 0,
-	rightDown: 0,
-	itemDown: 0
-}
+
+
 $('body').on('touchmove', function (e) {
 	e.preventDefault();
 });

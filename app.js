@@ -3,9 +3,11 @@ var url = require('url');
 var express = require('express');
 var app = express();
 var server = require('http').Server(app);
-var WebSocketServer = require('ws').Server
+var cookieParser = require('cookie-parser')
+var WebSocketServer = require('ws').Server;
 var wss = new WebSocketServer({server: server});
 var Room = require('./game/room.js');
+var cookieparser = require("cookieparser");
 
 var opts = {};
 for (var key of process.argv.splice(2)) {
@@ -19,8 +21,14 @@ server.listen(opts.port || 8030, function () {
 
 app.use('/static', express.static('static'));
 
+app.use(cookieParser());
 //游戏地址
 app.get('/', function (req, res) {
+	var UUID = req.cookies.UUID;
+	if (!UUID || true) {
+		UUID = Math.floor(Math.random()*2322423432);
+		res.cookie('UUID',UUID, { maxAge: 90000000, httpOnly: true });
+	}
 	res.sendFile(__dirname + '/static/index.html');
 });
 //游戏地址
@@ -48,22 +56,30 @@ app.get('/roomsData', function (req, res) {
 });
 
 var adminCode = opts.code || 'admin';
+Room.setConfig(adminCode);
 for (var i = 0; i < (opts.room || 1); i++) {
 	Room.createRoom("大乱斗", true);
 }
 
 wss.on('connection', function (ws) {
+	var UUID = cookieparser.parse(ws.upgradeReq.headers.cookie).UUID;
 	var location = url.parse(ws.upgradeReq.url, true);
+
 	var roomID = location.query.roomID || 1;
 	var room = Room.findRoom(roomID);
+
 	if (!room) {
+		ws.close();
+		return;
+	}
+	if (room.game.clients.length > 3) {
 		ws.close();
 		return;
 	}
 	var socket = {
 		emit: function (name, data) {
 			try {
-				var c = name + "$" + JSON.stringify(data);
+				var c = name + "$" + JSON.stringify(data || {});
 				ws.send(c);
 			} catch (e) {
 				console.log(e);
@@ -75,7 +91,6 @@ wss.on('connection', function (ws) {
 		ip: ws.upgradeReq.connection.remoteAddress,
 		listeners: {}
 	}
-	room.game.addClient(socket);
 
 	ws.on('message', function (message) {
 		var $s = message.indexOf('$');
@@ -95,5 +110,7 @@ wss.on('connection', function (ws) {
 		ws = null;
 		room = null;
 	});
+
+	room.game.addClient(socket, UUID);
 });
 

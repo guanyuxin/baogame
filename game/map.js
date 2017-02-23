@@ -11,8 +11,8 @@ var Map = function (game, data) {
 	this.game = game;
 	this.structID = 1;
 	if (data) {
-		this.w = game.props.w;
-		this.h = game.props.h;
+		this.w = data.w;
+		this.h = data.h;
 		this.floor = data.floor;
 		this.pilla = data.pilla;
 		this.borns = data.borns;
@@ -27,20 +27,17 @@ var Map = function (game, data) {
 		}
 		if (data.npcs) {
 			for (let npcData of data.npcs) {
-				var npc = this.game.createNPC({name: npcData.name || "npc"});
+				var npc = this.game.createNPC({name: npcData.name || "npc", AI: npcData.AI, npc: true});
 				npc.x = (npcData.x + .5) * C.TW;
 				npc.y = (npcData.y + .5) * C.TH;
 				npc.carryCount = npcData.carryCount;
 				npc.carry = npcData.carry;
-				npc.AI = npcData.AI;
 			}
 		}
 	} else {
 		//random map
-		this.w = game.props.tw;
-		this.h = game.props.th;
-		var w = this.w;
-		var h = this.h;
+		var w = this.w = 28;
+		var h = this.h = 15;
 		this.floor = [];
 		this.pilla = [];
 		this.hooks = {};

@@ -66,6 +66,7 @@
 		background: rgba(0,0,0,.6);
 		border-radius: 20px;
 		-webkit-animation: popup .5s;
+		position: relative;
 	}
 	.center h4 {
 		margin-top: 0;
@@ -223,8 +224,8 @@
 	<div class="noticeFix">
 		<div class="noticeItem">W,A,S,D:移动  Q:使用物品</div>
 		<div class="noticeItem"><a target="blank" href="https://github.com/guanyuxin/baogame">https://github.com/guanyuxin/baogame</a> 查看帮助详情</div>
-		<div class="noticeItem">[2016-01-28]
-			增加了单人教学
+		<div class="noticeItem">[2017-03-01]
+			增加了萌萌的AI
 		</div>
 	</div>
 	<div class="notiveIn"></div>
@@ -278,7 +279,7 @@ var userName = localStorage.userName;
 if (userName) {
 	$('#name').val(userName);
 }
-function joing (p1) {
+function joing (team) {
 	if (!canJoin) {return}
 	userName = $('#name').val() || "无名小卒";
 	if ($('#name').val()) {
@@ -286,9 +287,10 @@ function joing (p1) {
 	} else {
 		localStorage.userName = '';
 	}
+	p1.team = team;
 	socket.emit('join', {
 		userName: userName,
-		p1: p1
+		team: team
 	});
 }
 function initDone () {
@@ -327,6 +329,7 @@ function initDone () {
 		for (var i = 0; i < data.map.structs.length; i++) {
 			game.structs[data.map.structs[i].id] = data.map.structs[i];
 		}
+		game.map = data.map;
 		var middle = document.getElementById('middle');
 		middle.innerHTML = '';
 		middle.appendChild(cdomBg);
@@ -336,7 +339,13 @@ function initDone () {
 			var user = Packs.userPack.decode(data.bodies[i]);
 			drawUser(ctxBody, user, {});
 		}
-		$('.joining').show();
+		p1.id = data.p1;
+		if (data.p1 === null) {
+			$('.joining').show();
+		}
+
+		//ai test 
+		game.path = new PathMap(game.map);
 	});
 	//加入
 	socket.on('joinSuccess', function (p1) {
@@ -477,9 +486,133 @@ for (var key in imgUrls) {
 		imgs[key] = arr;
 	}
 }
+var destY = 1, destX = 4;
+function ai (data) {
+	var node = game.path.lengthMap;
+}
+//get All possible dest in one move from location [i,j]
+// return [y,x,distance,method]
+function getDest (map, i, j) {
+	var res = [];
+	//move
+	if (map.floor[i][j + 1]) {
+		res.push([i, j + 1, 1, 'moveRight']);
+	}
+	if (map.floor[i][j - 1]) {
+		res.push([i, j - 1, 1, 'moveLeft']);
+	}
+	//climb
+	for (let pilla of map.pilla) {
+		if (pilla.x > j && pilla.x < j + 1 && i >= pilla.y1 && i <= pilla.y2) {
+			for (var k = pilla.y1; k <= pilla.y2; k++) {
+				if (map.floor[k][j]) {
+					if (k > i) {
+						res.push([k, j, k - i, 'climbUp']);
+					} else {
+						res.push([k, j, i - k, 'climbDown']);
+					}
+				}
+			}
+		}
+	}
+	//jump on floor
+	if (map.floor[i][j]) {
+		if (map.floor[i][j + 3]) {
+			res.push([i, j + 3, 4, 'jumpRight3']);
+		}
+		if (map.floor[i][j - 3]) {
+			res.push([i, j - 3, 4, 'jumpLeft3']);
+		}
+		if (map.floor[i][j + 4]) {
+			res.push([i, j + 4, 5, 'jumpRight4']);
+		}
+		if (map.floor[i][j - 4]) {
+			res.push([i, j - 4, 5, 'jumpLeft4']);
+		}
+		// if (map.floor[i][j + 5]) {
+		// 	res.push([i, j + 5, 6, 'jumpRight5']);
+		// }
+		// if (map.floor[i][j - 5]) {
+		// 	res.push([i, j - 5, 6, 'jumpLeft5']);
+		// }
+	}
+	return res;
+}
+
+function onPillar(map, i, j) {
+	for (let pilla of map.pilla) {
+		if (pilla.x > j && pilla.x < j + 1 && i >= pilla.y1 && i <= pilla.y2) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+function deepSearch (map, lengthMap, dirMap) {
+	var t = 0;
+	while (t < 1000) {
+		var find = false;
+		for (var i = 0; i < lengthMap.length; i++) {
+			for (var j = 0; j < lengthMap[i].length; j++) {
+				if (lengthMap[i][j] == -1) {
+					continue;
+				}
+				dest = getDest(map, i, j);
+				for (var k = 0; k < dest.length; k++) {
+					if (lengthMap[dest[k][0]][dest[k][1]] == -1 || lengthMap[dest[k][0]][dest[k][1]] > lengthMap[i][j] + dest[k][2]) {
+						lengthMap[dest[k][0]][dest[k][1]] = lengthMap[i][j] + dest[k][2];
+						dirMap[dest[k][0]][dest[k][1]] = dirMap[i][j] || dest[k][3];
+						find = true;
+					}
+				}
+			}
+		}
+		t++;
+		if (!find) {
+			break;
+		}
+	}
+}
+
+function PathMap (map) {
+	this.lengthMap = [];
+	this.dirMap = [];
+	//init
+	var wc = P.w/C.TW;	
+	var hc = P.h/C.TH;
+	for (var i = 0; i < hc; i++) {
+		this.lengthMap[i] = [];
+		this.dirMap[i] = [];
+		for (var j = 0; j < wc; j++) {
+			this.lengthMap[i][j] = [];
+			this.dirMap[i][j] = [];
+			if (!map.floor[i][j] && !onPillar(map, i, j)) {
+				continue;
+			}
+			var lengthMap = [];
+			var dirMap = [];
+			for (var ix = 0; ix < hc; ix++) {
+				lengthMap[ix] = [];
+				dirMap[ix] = [];
+				for (var jx = 0; jx < wc; jx++) {
+					if (ix == i && jx == j) {
+						lengthMap[ix][jx] = 0;
+					} else {
+						lengthMap[ix][jx] = -1;
+					}
+					dirMap[ix][jx] = '';
+				}
+			}
+			deepSearch(map, lengthMap, dirMap);
+			this.lengthMap[i][j] = lengthMap;
+			this.dirMap[i][j] = dirMap;
+		}
+	}
+}
 
 //绘制背景
-function drawBg (ctx, map) {
+function drawBg (ctx, map) { 
 	ctx.clearRect(0, 0, P.w, P.h);
 	//绘制柱子
 	map.pilla.forEach(function (pilla) {
@@ -528,6 +661,22 @@ function drawBg (ctx, map) {
 				ctx.beginPath();
 				ctx.fillRect(x + 1, y, C.TW - 2, 4);
 				ctx.fill();
+			}
+		}
+	}
+}
+
+//绘制背景
+function drawUI (ctx, map, dirMap) {
+	//绘制地板
+	for (var i = 0; i < map.length; i++) {
+		for (var j = 0; j < map[i].length; j++) {
+			var x = j * C.TW;
+			var y = P.h - (i) * C.TH
+			if (map[i][j] != -1) {
+				ctx.fillStyle = "#fff";
+				ctx.fillText(map[i][j],x + C.TW/2, y - C.TH/2);
+				//ctx.fillText(dirMap[i][j],x + C.TW/2, y - C.TH/2);
 			}
 		}
 	}
@@ -629,16 +778,16 @@ function drawUser (ctx, user, data) {
 
 	if (user.id == data.p1) {
 		ctx.fillStyle = "#ffa";
-	} else if (user.id == data.p2) {
+	} else if (user.team && user.team == p1.team) {
 		ctx.fillStyle = "#aaf";
 	} else {
 		ctx.fillStyle = "#f77";
 	}
 
 	//用户指示器
-	if (user.carry != Packs.items.hide.id || (user.id == p1.id && !p2.id)) {
+	if (user.carry != Packs.items.hide.id || user.id == p1.id) {
 		ctx.fillText(user.name, 0, -50);
-		if (user.nearPilla && (user.id == p1.id || user.id == p2.id)) {
+		if (user.nearPilla && user.id == p1.id) {
 			ctx.fillText("上", 0, -70);
 		}
 	}
@@ -791,7 +940,6 @@ function render (ctx, data) {
 	}
 
 	Effect.render(ctx);
-
 	ctx.restore();
 }
 

@@ -1,0 +1,729 @@
+<html>
+<head>
+<meta name="viewport" content="width=320, user-scalable=no">
+<style type="text/css">
+	@-webkit-keyframes sunrise {
+		0% {
+			left: 6rem;
+			top: 8rem;
+			background: #fca;
+			box-shadow: 0 0 .2rem .1rem red,0 0 .4rem .1rem rgb(247, 167, 88);
+		}
+		50% {
+			left: 3rem;
+			top: 2rem;
+			background: #fca;
+			box-shadow: 0 0 .2rem .1rem orange,0 0 .4rem .1rem rgb(247, 167, 88);
+		}
+		100% {
+			top: .5rem;
+			background: #fff;
+			box-shadow: 0 0 .2rem .1rem yellow,0 0 .4rem .1rem rgb(247, 167, 88);
+		}
+	}
+	@-webkit-keyframes land {
+		0% {
+			left: 50%;
+			right: 50%;
+		}
+		100% {
+			left: 0;
+			right: 0;
+		}
+	}
+	body {
+		margin: 0;
+	}
+	.stage {
+		position: relative;
+		width: 100%;
+	}
+	#mainStage {
+	}
+	#text {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+	}
+	#fall{
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		height: .1rem;
+		z-index: 10;
+	}
+	#fallsnow{
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		height: .1rem;
+		z-index: 10;
+		-webkit-transition: opacity 4s;
+	}
+	.sky {
+		background: #8ae;
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		-webkit-transition: background 4s;
+	}
+	.sky.dark {
+		background: #597CC2;
+	}
+	.sky.winter {
+		background: #D0E0FF;
+	}
+	.cloud {
+		position: absolute;
+		left: 4rem;
+		top: 2.5rem;
+		-webkit-transition: left 1s;
+	}
+	.cloud .c1 {
+		position: absolute;
+		background: white;
+		border-radius: 50%;
+		top: .4rem;
+		width: .8rem;
+		height: .8rem;
+	}
+	.cloud .c2 {
+		position: absolute;
+		left: .6rem;
+		background: white;
+		border-radius: 50%;
+		width: 1.2rem;
+		height: 1.2rem;
+	}
+	.cloud .c3 {
+		position: absolute;
+		background: white;
+		border-radius: 50%;
+		left: 1.6rem;
+		top: .4rem;
+		width: .8rem;
+		height: .8rem;
+	}
+	.cloud .b {
+		position: absolute;
+		background: white;
+		width: 1.4rem;
+		height: .7rem;
+		top: .5rem;
+		left: .5rem;
+	}
+	.sun {
+		position: absolute;
+		display: none;
+		width: 1rem;
+		height: 1rem;
+		left: 2rem;
+		top: .5rem;
+		border-radius: 50%;
+		background: #fff;
+		box-shadow: 0 0 .2rem .1rem yellow,0 0 .4rem .1rem rgb(247, 167, 88);
+		-webkit-animation: sunrise 6s 1 ease;
+	}
+	canvas {
+		width: 100%;
+	}
+</style>
+<script src="js/zepto.js"></script>
+</head>
+<body>
+
+<div class="sky dark">
+	<div class="sun"></div>
+	<div class="cloud" style="left:-3rem;">
+		<div class="c1"></div>
+		<div class="c2"></div>
+		<div class="c3"></div>
+		<div class="b"></div>
+	</div>
+</div>
+<div class="stage">
+	<canvas id="mainStage" width="640" height="900"></canvas>
+	<canvas id="text" width="640" height="900"></canvas>
+	<canvas id="fall" width="640" height="10"></canvas>
+	<canvas id="fallsnow" width="640" height="10"></canvas>
+</div>
+
+<script type="text/javascript">
+	var tree,seed,wind = 0.1,cold = false,snowsA=[],snowsB=[],snowing=0,zoom=4,drops=[],rainning=0,season="summer";
+	
+	var canvas = document.getElementById('mainStage');
+	var fallCan = document.getElementById('fall');
+	var snowCan = document.getElementById('fallsnow');
+	var textCan = document.getElementById('text');
+
+	var ctx = canvas.getContext('2d');
+	var fallCtx = fallCan.getContext('2d');
+	var snowCtx = snowCan.getContext('2d');
+	var textCtx = textCan.getContext('2d');
+
+	var texts = [];
+
+	textCtx.fillStyle = "#ffffff";
+	textCtx.font = "42px g";
+	var speedtext = 20;
+	var sp2 = 60;
+	function drawText(ctx, text) {
+		var txt = text.txt;
+		for (var i = 0; i < txt.length; i++) {
+			if (text.dead < 0 && text.dead > -50) {
+				textCtx.globalAlpha = -text.dead/50;
+				textCtx.fillText(txt.charAt(i), i*45+text.left, text.top - (50 + text.dead));
+			} else if (text.life > i * speedtext) {
+				if (text.life > i * speedtext + sp2) {
+					textCtx.globalAlpha = 1;
+					textCtx.fillText(txt.charAt(i), i*45+text.left, text.top);
+				} else {
+					var margin = (i * speedtext + sp2 - text.life);
+					textCtx.globalAlpha = 1 - margin/sp2;
+					textCtx.fillText(txt.charAt(i), i*45+text.left + margin*margin/50, text.top + margin*margin/50);
+				}
+			}
+		}
+	}
+	function showText(txt, left, top, life) {
+		texts.push({
+			txt: txt,
+			left: left,
+			top: top,
+			life: life || 0,
+			dead: 0
+		});
+	}
+	setInterval(function () {
+		textCtx.clearRect(0, 0, 640, 900);
+		for (var i = texts.length - 1; i>=0; i--) {
+			var text = texts[i];
+			//grow
+			text.life++;
+			//disappear
+			if (text.dead < 0) {
+				text.dead++;
+				if (text.dead == 0) {
+					texts.splice(i, 1);
+					continue;
+				}
+			}
+			drawText(ctx, texts[i]);
+		}
+	}, 17);
+
+	function draw () {
+		ctx.translate(320, 800);
+		ctx.rotate(3.14);
+		fallCtx.scale(1, .3)
+		fallCtx.translate(320, 5);
+		fallCtx.rotate(3.14);
+		snowCtx.scale(1, .3)
+		snowCtx.translate(320, 5);
+		snowCtx.rotate(3.14);
+		var t = 0;
+		setInterval(function () {
+			t++;
+			ctx.save();
+			ctx.scale(zoom, zoom);
+			if (season != "winter") {
+				snowing -= 1;
+			}
+			if (rainning) {
+				var rain = new Leaf(null, "rain");
+				rain.x = random(-50, 150);
+				rain.y = 450;
+				drops.push(rain);
+			}
+			if (snowing > 200) {
+				var snow = new Leaf(null, "snow");
+				if (Math.random() > .3) {
+					snow.x = random(-320, 320);
+					snow.y = 800;
+				} else if (wind < 0) {
+					snow.y = random(0, 600);
+					snow.x = -320;
+				} else {
+					snow.y = random(0, 600);
+					snow.x = 320;
+				}
+				
+				snow.life = random(0, 1000);
+				snow.size = random(4, 6);
+				if (Math.random() > .5) {
+					snowsA.push(snow);
+				} else {
+					snowsB.push(snow);
+				}
+			}
+			tree && tree.update();
+			ctx.clearRect(-320, -100, canvas.width, canvas.height);
+			if (snowing > 0) {
+				ctx.fillStyle = "#fff";
+				snowCtx.fillStyle = "#fff";
+				for (var i = 0; i < snowsA.length; i++) {
+					var f = snowsA[i];
+					if (!f) {continue;}
+				  
+					f.life++;
+					f.y += Math.sin(f.life*0.02) * wind - 5;
+					f.x -= wind*2 + Math.sin(f.life*.02);
+					f.r += wind*2;
+					if (f.y > 0 && f.x < 320) {
+						f.draw(ctx, 0);
+					} else if (f.y <= 0) {
+						f.draw(snowCtx);
+						snowsA[i] = null;
+					}
+				}
+			}
+			tree && tree.draw(ctx);
+			seed && drawSeed(ctx);
+			//rain
+				ctx.beginPath();
+				ctx.strokeStyle = "#fff";
+				for (var i = 0; i < drops.length; i++) {
+					var f = drops[i];
+					if (!f) {continue;}
+				  
+					f.life++;
+					f.y -= 8;
+					f.x -= .5
+					if (f.y > 0 && f.x < 320) {
+						f.draw(ctx, 0);
+					} else if (f.y <= 0) {
+						drops[i] = null;
+					}
+				}
+				ctx.stroke();
+			for (var i = 0; i < fall.length; i++) {
+				var f = fall[i];
+				if (!f) {continue;}
+			  
+				f.life++;
+				f.y += Math.sin(f.life*0.02) * wind - 1;
+				f.x -= wind*2 + Math.sin(f.life*.02);
+				f.r += wind*2;
+				if (f.y > 0 && f.x < 320) {
+					f.draw(ctx, 0);
+				} else if (f.y <= 0) {
+					f.draw(fallCtx, 0);
+					fall[i] = null;
+				}
+			}
+			if (snowing > 0) {
+				ctx.fillStyle = "#fff";
+				snowCtx.fillStyle = "#fff";
+				for (var i = 0; i < snowsB.length; i++) {
+					var f = snowsB[i];
+					if (!f) {continue;}
+				  
+					f.life++;
+					f.y += Math.sin(f.life*0.02) * wind - 5;
+					f.x -= wind*2 + Math.sin(f.life*.02);
+					f.r += wind*2;
+					if (f.y > 0 && f.x < 320) {
+						f.draw(ctx, 0);
+					} else if (f.y <= 0) {
+						f.draw(snowCtx);
+						snowsB[i] = null;
+					}
+				}
+			}
+			ctx.restore();
+			
+		}, 20);
+	}
+	draw();
+	function drawSeed (ctx) {
+		var size = 15;
+		ctx.fillStyle = "#ee4";
+		ctx.beginPath();
+		ctx.moveTo(0, -size);
+		ctx.bezierCurveTo(-size*.3, size*.1-size, -size*.3, size*.3-size, 0, 0);
+		ctx.closePath();
+		ctx.fill();
+	  
+		ctx.fillStyle = "#cc4";
+		ctx.beginPath();
+		ctx.moveTo(0, -size);
+		ctx.bezierCurveTo(size*.3, size*.1-size, size*.3, size*.3-size, 0, 0);
+		ctx.closePath();
+		ctx.fill();
+	}
+	function drawBranch (ctx, length, thickness) {  
+		ctx.beginPath();
+		ctx.moveTo(thickness*1.5, 0);
+		ctx.bezierCurveTo(thickness, length*.2, thickness, length*.5, thickness*1, length);
+		ctx.lineTo(0, length);
+		ctx.lineTo(-thickness*1, length);
+		ctx.bezierCurveTo(-thickness, length*.5, -thickness, length*.2, -thickness*1.5, 0);
+		ctx.bezierCurveTo(-thickness*1.5, -thickness*1.5, thickness*1.5, -thickness*1.5, thickness*1.5, 0);
+
+		ctx.closePath();
+		ctx.fill();
+	}
+	function drawLeaf (ctx, size, colorDepth, gray) {
+		var r = Math.floor(66+(239-66)*gray/100);
+		var g = Math.floor(255+(226-255)*gray/100);
+		var b = Math.floor(66+(102-66)*gray/100);
+		ctx.fillStyle = 'rgb('+(r+colorDepth)+','+(colorDepth + g)+', '+(b+colorDepth)+')'; //Brown    
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.bezierCurveTo(-size*.3, size*.5, -size*.3, size*.5, 0, size);
+		ctx.bezierCurveTo(size*.3, size*.5, size*.3, size*.5, 0, 0);
+		ctx.closePath();
+		ctx.fill();
+	}
+	function drawSnow (ctx, size, x, y) {
+		ctx.beginPath();
+		ctx.arc(x, y, size, 0, Math.PI * 2, true);
+		ctx.fill();
+	}
+	function drawRain (ctx, x, y) {
+		ctx.moveTo(x, y);
+		ctx.lineTo(x + 2, y + 20);
+	}
+
+	function random (min, max) {
+		return min + Math.floor(Math.random()*(max+1-min));
+	}
+
+	var fall = [];
+	function Leaf (parent, type) {
+		this.life = 0;
+		this.gray = 0;
+		this.parent = parent;
+		this.type = type;
+	}
+	Leaf.prototype.update = function () {
+		this.life++;
+		if (cold && this.gray < 100) {
+			this.gray++;
+		}
+	}
+	Leaf.prototype.draw = function (ctx, colorDepth) {
+		if (this.type == "snow") {
+			drawSnow(ctx, this.size, this.x, this.y);
+		} else if (this.type == "rain") {
+			drawRain(ctx, this.x, this.y);
+		} else {
+			var size = Math.min(20, this.life);
+			var r = Math.sin(this.life*(wind*wind))*5 + this.r
+			ctx.save();
+			ctx.translate(this.x, this.y);
+			ctx.rotate(r*3.14/180);
+			drawLeaf(ctx, size, colorDepth*2, this.gray);
+			ctx.restore();
+		}
+	}
+
+	function Seed (depth, height, colorDepth, parent) {
+		this.life = 0;
+		this.r = 0;
+		this.dx = 0;
+		this.arx = 0;
+		this.rx = 0;
+		this.x = 0;
+		this.y = 0;
+		this.thickness = 0;
+		this.colorDepth = random(-10, 10) + colorDepth || 0;
+		this.children = [];
+		this.leaves = [];
+		this.depth = (depth === undefined) ? 0 : depth;
+		this.length = 0;
+		this.height = height || 0;
+		if (!parent) {
+			this.destrP = 10;
+		} else {
+			this.destrP = random(0, 20);
+		}
+		this.destr = (this.depth+2) * this.destrP;
+		this.destth = (this.depth + 1);
+		this.parent = parent;
+	}
+	Seed.prototype.draw = function (ctx) {
+		ctx.save();
+		ctx.translate(this.x, this.y);
+		ctx.rotate(this.r*3.14/180);
+			
+			ctx.fillStyle = 'rgb('+(139+this.colorDepth)+','+(this.colorDepth + 126)+', '+(102+this.colorDepth)+')'; //Brown    
+			drawBranch(ctx, this.length, Math.pow(1.5, this.thickness));
+			if (this.children[0]) {
+				this.children[0].draw(ctx);
+			}
+			if (this.children[1]) {
+				this.children[1].draw(ctx);
+			}
+			if (this.depth < 4) {
+				for (var i = 0; i < this.leaves.length; i++) {
+					this.leaves[i].draw(ctx, this.colorDepth);
+				}
+			}
+		ctx.restore();
+	}
+	Leaf.prototype.position = function () {
+		var x = 0, y = 0, cc = this;
+		while(cc) {
+			if(cc.r != 0){
+				var sinB = Math.sin(cc.r*3.14/180);
+				var cosB = Math.cos(cc.r*3.14/180);
+
+				var tx = x * cosB - y * sinB;
+				var ty = x * sinB + y * cosB;
+				x = tx;
+				y = ty;
+			}
+			x += cc.x;
+			y += cc.y;
+			cc = cc.parent;
+		}
+		return {x: x, y: y};
+	}
+	Seed.prototype.grow = function () {
+		this.depth++;
+		this.destrP *= 1.04;
+		this.destr = (this.depth+2) * this.destrP;
+		this.destth = (this.depth + 1);
+		if (this.children[0]) {
+			this.children[0].grow();
+		}
+		if (this.children[1]) {
+			this.children[1].grow();
+		}
+	}
+	Seed.prototype.update = function () {
+		this.life++;
+		this.globalR = this.r;
+		this.dx += this.arx/12;
+		this.arx = this.arx + (dx - this.arx)/(this.depth*this.depth + 1) - this.dx/4;
+		if (this.parent) {
+			this.globalR += this.parent.globalR;
+		} else {
+			this.globalR = 0;
+		}
+		//摇动
+		if (this.globalR > 270 + this.height*4*wind) {
+			this.r = Math.sin(this.life/(this.depth+2)*wind*2)/2 + this.dx + this.rx - this.height*3*wind;
+		} else if (this.globalR < 270 - this.height*4*wind) {
+			this.r = Math.sin(this.life/(this.depth+2)*wind*2)/2 + this.dx + this.rx + this.height*3*wind;
+		} else {
+			this.r = this.rx;
+		}
+		//落叶
+		if (random(100, 3000) < Math.abs(this.arx) || (random(1, 4000) < wind * wind || this.leaves[0] && random(90, 1000) < this.leaves[0].gray) && this.leaves.length > 0) {
+			var l = this.leaves.pop();
+			var pos = l.position();
+			l.x = pos.x;
+			l.y = pos.y;
+			fall.push(l);
+		}
+		//长高
+		if (this.length < this.destr) {
+			this.length+= (this.depth+1)/10;
+			if (this.children[0]) {
+				this.children[0].y = this.length;
+			}
+			if (this.children[1]) {
+				this.children[1].y = this.length;
+			}
+		}
+		//长粗
+		if (this.thickness < this.destth) {
+			this.thickness += (this.depth+1)/75;
+		}
+		//长出分支
+		if (this.life > this.destr/this.depth && this.children.length == 0 && this.depth) {
+			this.children[0] = new Seed (this.depth - 1, this.height + 1, this.colorDepth, this);
+			this.children[0].rx = random(10, 20);
+			this.children[1] = new Seed (this.depth - 1, this.height + 1, this.colorDepth, this);
+			this.children[1].rx = -random(10, 20);
+			this.children[0].y = this.length;
+			this.children[1].y = this.length;
+		}
+		//长出叶子
+		if (wind < 1 && !cold && this.leaves.length < 2 && Math.random() > .97) {
+			var leaf = new Leaf(this);
+			leaf.x = 0;
+			leaf.by = Math.random()*0.25 + 0.75;
+			if (this.leaves.length == 0) {
+				leaf.r = random(-85, 0);
+			} else {
+				leaf.r = random(0, 85);
+			}
+			this.leaves.push(leaf);
+		}
+		if (this.children[0]) {
+			this.children[0].update();
+		}
+		if (this.children[1]) {
+			this.children[1].update();
+		}
+		for (var i = 0; i < this.leaves.length; i++) {
+			this.leaves[i].update();
+			this.leaves[i].y = this.leaves[i].by * this.length;
+		}
+	}
+	var winh,zoomh;
+	var environment = {
+		add: function (target) {
+			if (target == "seed") {
+				seed = {
+					birth: -50
+				}
+			} else if (target == "tree") {
+				tree = new Seed();
+				tree.y = -10;
+			} else if (target == "soil") {
+				$('.soil').show();
+				environment.zoom(1);
+			} else if (target == "sun") {
+				$('.sun').show();
+				$('.sky').removeClass('dark');
+			} else if (target == "rain") {
+				$('.cloud').css('left', '1.5rem');
+				
+				setTimeout(function () {
+					rainning = true;
+				}, 1000);
+				setTimeout(function () {
+					$('.cloud').css('left', '10rem');
+					rainning = false;
+				}, 5000);
+			}
+		},
+		zoom: function (size) {
+			clearTimeout(zoomh);
+			function change () {
+				if (zoom < size - 0.1) {
+					zoom += 0.05;
+					zoomh = setTimeout(change, 100);
+				} else if (zoom > size + 0.1) {
+					zoom -= 0.05;
+					zoomh = setTimeout(change, 100);
+				}
+			}
+			zoomh = setTimeout(change, 17);
+		},
+		wind: function (size) {
+			clearTimeout(winh);
+			function change () {
+				if (wind < size - 0.05) {
+					wind += 0.05;
+					winh = setTimeout(change, 100);
+				} else if (wind > size + 0.05) {
+					wind -= 0.05;
+					winh = setTimeout(change, 100);
+				}
+			}
+			winh = setTimeout(change, 100);
+		},
+		winter: function () {
+			$('.sky').addClass('winter');
+			season = "winter";
+			snowing = 202;
+			snowcount = 100;
+			setTimeout(function () {
+				environment.wind(1.1);
+			}, 1000)
+		},
+		autumn: function () {
+			cold = true;
+			environment.wind(.4);
+		},
+		spring: function () {
+			$('.sky').removeClass('winter');
+			season = "spring"
+			cold = false;
+			setTimeout(function () {
+				environment.wind(.1);
+			}, 1000);
+			$('#fallsnow').css('opacity', '0')
+		}
+	}
+	var codes = [function () {
+		showText("从前，", 20, 100);
+
+		showText("有一颗", 100, 240, -50);
+
+		showText("种子", 200, 380, -100);
+
+	}, function () {
+		texts[0].dead = -50;
+		texts[1].dead = -50;
+
+		texts[2].dead = -150;
+
+		environment.add("seed");
+	}, function () {
+		environment.add("soil");
+		showText('它来到了' ,200, 200);
+		showText('一片崭新的', 200 ,300);
+		showText('土地', 200, 400);
+	}, function () {
+		environment.add("sun");
+		showText('这里有<b>阳光</b>');
+	}, function () {
+		environment.add("rain");
+		showText('<b>雨露</b>');
+	}, function () {
+		tree.grow();
+		showText('它开始<b>抽枝</b>');
+	}, function () {
+		tree.grow();
+		showText('<b>发芽</b>');
+	}, function () {
+		tree.grow();
+		showText('<b>枝繁</b>');
+	}, function () {
+		tree.grow();
+		showText('<b>叶茂</b>');
+	}, function () {
+		environment.wind(2);
+		showText('这里也有<b>狂风</b>');
+	}, function () {
+		environment.autumn();
+		showText('<b>严寒</b>');
+	}, function () {
+		environment.winter();
+		showText('<b>暴雪</b>');
+	}, function () {
+		environment.spring();
+		showText('但它坚信的<b>春天</b>总会到来');
+	}, function () {
+		tree.grow();
+		showText('并在这里<b>成长</b>');
+	}, function () {
+		tree.grow();
+		showText('<b>繁荣</b>');
+	}, function () {
+		showText('这个故事告诉了我们一个道理');
+	}, function () {
+		showText('那就是---');
+	}, function () {
+		showText('老关的前端可牛逼了');
+	}];
+	
+	var codel = 0;
+	function shownext () {
+		var code = codes[codel++];
+		
+		if (code) {
+			code();
+		}
+	}
+	$('body').on("click", shownext);
+	
+	shownext(0);
+	window.dx = 0;
+	if (window.DeviceMotionEvent) {
+		window.addEventListener('devicemotion', function (e) {
+			var acceleration = e.acceleration;
+			dx = (-acceleration.x || 0)*5;
+		}, false);
+	} else {}
+</script>
+</body>
+</html>

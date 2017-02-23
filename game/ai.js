@@ -12,12 +12,29 @@ function userCanGoRight (user, map) {
 	var y = Math.floor(user.y / C.TH);
 	return user.game.map.floor[y][x];
 }
+function userCanJumpLeft (user) {
+	if (user.vx > -1) return false;
+	var x = Math.floor((user.x + 5) / C.TW);
+	var y = Math.floor(user.y / C.TH);
+	return user.game.map.floor[y][x - 3] || false;
+}
+function userCanJumpRight (user) {
+	if (user.vx < 1) return false;
+	var x = Math.floor((user.x + 5) / C.TW);
+	var y = Math.floor(user.y / C.TH);
+	return user.game.map.floor[y][x + 3] || false;
+}
 function playerAI (user) {
+	user.upDown = false;
+
 	if (user.status == "standing") {
-		if (user.carry == 1) {
+		if (user.carry == 1 || true) {
 			if (user.goleft || !user.goright) {
 				user.goleft = true;
 				if (userCanGoLeft(user)) {
+					user.leftDown = 200;
+				} else if (userCanJumpLeft(user)) {
+					user.upDown = 200;
 					user.leftDown = 200;
 				} else {
 					user.goleft = false;
@@ -27,6 +44,9 @@ function playerAI (user) {
 			}
 			if (user.goright) {
 				if (userCanGoRight(user)) {
+					user.rightDown = 200;
+				} else if (userCanJumpRight(user)) {
+					user.upDown = 200;
 					user.rightDown = 200;
 				} else {
 					user.goleft = true;

@@ -27,6 +27,8 @@ JPack.prototype.encode = function (data) {
 			}
 		} else if (b.type == "INT") {
 			res.push(Math.floor(v));
+		} else if (b.type == "JSON") {
+			res.push(v);
 		} else {
 			res.push(v);
 		}
@@ -100,24 +102,31 @@ var Packs = {
 		}
 	},
 	userPack: new JPack({
-		carry: "Str",
-		carryCount: "INT",
-		nearPilla: Boolean,
-		faceing: "INT",
-		fireing: "INT",
-		grenadeing: "INT",
-		danger: Boolean,
-		status: "Str",
-		name: "Str",
 		id: "INT",
+		name: "Str",
 		x: "INT",
 		y: "INT",
 		vy: "INT",
-		score: "INT",
+		faceing: "INT",
+
+		danger: Boolean,
+		status: "Str",
 		dead: Boolean,
-		npc: Boolean,
+
+		carry: "Str",
+		carryCount: "INT",
+
+		nearPilla: Boolean,
+		fireing: "INT",
+		grenadeing: "INT",
 		doubleJumping: Boolean,
-		flying: "INT"
+		flying: "INT",
+		
+		score: "INT",
+		npc: Boolean,
+		team: "INT",
+
+		watchData: "JSON"
 	}),
 	controlPack: new JPack({
 		leftDown: "INT",

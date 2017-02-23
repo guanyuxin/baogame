@@ -1,5 +1,6 @@
 "use strict"
 var Pack = require('../static/js/JPack.js');
+var C = require('../static/js/const.js');
 
 var Items = [];
 for (let key in Pack.items) {
@@ -21,11 +22,11 @@ var Item = function (game, type) {
 }
 Item.prototype.update = function () {
 	this.slowdown++;
-	if (this.x >= this.game.props.w - this.game.props.itemSize || this.x <= this.game.props.itemSize) {
+	if (this.x >= this.game.props.w - C.IS || this.x <= C.IS) {
 		this.vx *= -1
 	}
 
-	if (this.y >= this.game.props.h - this.game.props.itemSize || this.y <= this.game.props.itemSize) {
+	if (this.y >= this.game.props.h - C.IS || this.y <= C.IS) {
 		this.vy *= -1
 	}
 	this.lifetime--;

@@ -4,13 +4,14 @@ var heapdump = require('heapdump');
 var C = require('../static/js/const.js');
 
 var banedip = {};
+
 var concount = 0;
-var Client = function (socket, game) {
+var Client = function (socket, game, UUID) {
 	this.id = concount++;
 	this.p1 = null;
-	this.p2 = null;
 	this.socket = socket;
 	this.game = game;
+	this.UUID = UUID;
 	this.admin = false;
 	this.name = '无名小卒';
 	this.joinTime = new Date().getTime();
@@ -25,15 +26,13 @@ var Client = function (socket, game) {
 	} else {
 		this.banned = false;
 	}
-
-	//初始化数据
-	var bodiesData = [];
-	for (let body of this.game.bodies) {
-		bodiesData.push(body.getData());
-	}
-
+	this.connect();
+}
+Client.prototype.connect = function () {
+	var socket = this.socket;
 	//接收初始化数据
 	socket.on('init', data => {
+		//admin
 		if (data.code != undefined) {
 			if (data.code != this.game.adminCode) {
 				socket.emit('initFail');
@@ -41,7 +40,7 @@ var Client = function (socket, game) {
 			} else {
 				this.admin = true;
 				socket.on('createItem', type => {
-					var item = game.createItem(type);
+					var item = this.game.createItem(type);
 					item.x = Math.random()*C.TW;
 					item.y = Math.random()*C.TH;
 				});
@@ -63,10 +62,17 @@ var Client = function (socket, game) {
 		if (data.userName) {
 			this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
 		}
+
+		//初始化数据
+		var bodiesData = [];
+		for (let body of this.game.bodies) {
+			bodiesData.push(body.getData());
+		}
 		socket.emit("init", {
-			props: game.props,
-			map: game.map.getData(),
-			bodies: bodiesData
+			props: this.game.props,
+			map: this.game.map.getData(),
+			bodies: bodiesData,
+			p1: this.p1 && !this.p1.dead && this.p1.id
 		});
 	});
 
@@ -77,25 +83,21 @@ var Client = function (socket, game) {
 			return;
 		}
 		var u = 0;
-		for (let user of game.users) {
+		for (let user of this.game.users) {
 			if (!user.npc) {
 				u++;
 			}
 		}
-		if (u >= game.props.maxUser) {
+		if (u >= this.game.props.maxUser) {
 			socket.emit('joinFail', "加入失败，服务器已满");
 			return;
 		}
-		if (data.p1 && this.p1 && !this.p1.dieing && !this.p1.dead) {return}
-		if (data.p2 && this.p2 && !this.p2.dieing && !this.p2.dead) {return}
+		if (this.p1 && !this.p1.dieing && !this.p1.dead) {return}
+
 		this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
-		var u = game.createUser(this);
-		if (data.p1) {
-			this.p1 = u;
-		} else {
-			this.p2 = u;
-		}
-		socket.emit('joinSuccess', data.p1);
+		this.team = data.team;
+		this.p1 = this.game.createUser(this);
+		socket.emit('joinSuccess');
 	});
 	//接收控制
 	socket.on("control", data => {
@@ -118,7 +120,6 @@ var Client = function (socket, game) {
 Client.prototype.getData = function () {
 	return {
 		p1: this.p1 && this.p1.id,
-		p2: this.p2 && this.p2.id,
 		id: this.id,
 		admin: this.admin,
 		name: this.name,

@@ -1,0 +1,303 @@
+<!doctype>
+<html>
+<head>
+	<title>endlesstd</title>
+	<meta name="viewport" content="width=320, user-scalable=no">
+	<script src="/static/js/zepto.js"></script>
+	<style>
+		body {
+			margin: 0;
+			background: black;
+		}
+		#root {
+			height: 100%;
+			position: absolute;
+			display: -webkit-box;
+    		-webkit-box-orient: vertical;
+		}
+		.statusBarHolder {
+			height: 60px;
+		}
+		.statusBar {
+			height: 60px;
+			position: fixed;
+			width: 100%;
+			background: #fff;
+			z-index: 100;
+		}
+		.envArea {
+			height: 100px;
+			background: #fff;
+			display: -webkit-box;
+			box-shadow: 0 0 5px black;
+			z-index: 10;
+			position: relative;
+		}
+		.slotsArea {
+			overflow-y: scroll;
+			-webkit-box-flex: 1;
+			display: -webkit-box;
+			height: 100%;
+    		-webkit-box-align: start;
+    		background: #333;
+		}
+		.slots {
+			width: 130px;
+			margin: 0 3px;
+			background: #040;
+    		box-sizing: border-box;
+		}
+		.slots.evilStage {
+			background: #933;
+		}
+		.env {
+			height: 100%;
+			width: 130px;
+			margin: 0 3px;
+			background: #887;
+		}
+		.env.evilStage {
+			background: #933;
+		}
+		.cell {
+			height: 100px;
+			margin: 3px;
+			margin-bottom: 0;
+			background: rgba(0,0,0,.3);
+			text-align: center;
+			box-shadow: inset 0 0 20px #fff;
+			position: relative;
+		}
+		.cell.empty:hover {
+			background: rgba(0,0,0,0);
+		}
+		.cell.locked {
+			box-shadow: inset 0 0 20px black;
+		}
+		.cell.empty:after {
+			content: "+";
+			position: absolute;
+			font-size: 40px;
+			color:#666;
+			top: 30px;
+			left: 0;
+			width: 100%;
+		}
+		.cell.locked:after {
+			content: "locked";
+			position: absolute;
+			font-size: 20px;
+			color:#666;
+			top: 30px;
+			left: 0;
+			width: 100%;
+		}
+
+		/* toy */
+		.toy {
+			width: 50px;
+			height: 50px;
+			background: red;
+			color: #fff;
+		}
+	</style>
+</head>
+<body>
+	<div id="root">
+		<div class="statusBarHolder"><div class="statusBar">
+			<div class="line">
+				<span ></span>
+			</div>
+			<div class="line"></div>
+		</div></div>
+		<div class="slotsArea"></div>
+		<div class="envArea"></div>
+	</div>
+</body>
+</html>
+<script>
+	var map = [];
+	function Toy (config) {
+		config = Object.assign({
+			name: "喷火龙",
+		}, config);
+		this.$dom = $(`<div class="toy">${config.name}</div>`);
+	}
+	Toy.prototype = {
+		constructor: Toy,
+		update: function () {
+
+		}
+	}
+
+	function Evil (config) {
+
+	}
+	Evil.prototype = {
+		constructor: Evil,
+		update: function () {
+
+		}
+	}
+
+
+
+
+	function Cell (config) {
+		config = Object.assign({
+			empty: true,
+			locked: true,
+			evil: false
+		}, config);
+		this.enemy = [];
+		this.stage = config.stage;
+		this.locked = config.locked;
+		this.empty = config.empty;
+		this.env = config.env;
+		this.render();
+	}
+	Cell.prototype = {
+		constructor: Cell,
+		render: function () {
+			classes = [];
+			if (this.locked) {
+				classes.push('locked');
+			} else if (this.empty) {
+				classes.push('empty');
+			}
+			this.$dom = $(`<div class="cell ${classes.join(' ')}"></div>`);
+			if (this.empty && !this.locked) {
+				this.$dom.click(() => {
+					if (!this.toy && !this.stage.evil) {
+						this.build();
+					}
+				});
+			}
+		},
+		update: function () {
+			if (this.toy) {
+				this.toy.update();
+			}
+		},
+		build: function () {
+			if (this.locked == true) {
+				throw "err: slot is locked"
+			}
+			this.toy = new Toy();
+			this.$dom.append(this.toy.$dom).removeClass('empty');
+			this.empty = false;
+		}
+	}
+
+
+	//环境
+	function Stage (config) {
+		config = Object.assign({
+			cells: []
+		}, config);
+		
+		this.evil = config.evil;
+		this.cells = [];
+		this.env = new Cell({
+			env: true,
+			locked: false,
+			stage: this
+		});
+		this.render();
+
+		this.$env.append(this.env.$dom);
+
+		if (!this.evil) {
+			for (var i = 0; i < this.MaxCell; i++) {
+				if (i == 0) {
+					this.addCell({
+						locked: false
+					});
+				} else {
+					this.addCell({
+						locked: true
+					});
+				}
+			}
+		}
+		if (config.cells && config.cells.length) {
+			for (var i = 0; i < config.cells; i++) {
+				this.setCell();
+			}
+		}
+	}
+	Stage.prototype = {
+		constructor: Stage,
+		render: function () {
+			this.$env = $(`<div class="env ${this.evil? "evilStage" : "toyStage"}"></div>`);
+			this.$slots = $(`<div class="slots ${this.evil? "evilStage" : "toyStage"}"></div>`);
+		},
+		addCell: function (config) {
+			config.stage = this;
+			var cell = new Cell(config);
+			this.$slots.prepend(cell.$dom);
+			this.cells.push(cell);
+		},
+		setCell: function (i, config) {
+
+		},
+		update: function () {
+			this.env.update();
+			for (cell of this.cells) {
+				cell.update();
+			}
+		},
+		Name: "街道",
+		MaxCell: 6
+	}
+
+
+	var stageManager = {
+		$env: $('#root>.envArea'),
+		$slots: $('#root>.slotsArea'),
+		stages: [],
+		loadStages: function (data) {
+			for (var i = 0; i < data.length; i++) {
+				this.appendStage(data[i]);
+			}
+		},
+		saveStages: function (stages) {
+			var data = [];
+		},
+		appendStage: function (config) {
+			var stage = new Stage(config);
+			this.stages.push(stage);
+			this.$env.append(stage.$env);
+			this.$slots.append(stage.$slots);
+		},
+		update: function () {
+			for (stage of this.stages) {
+				stage.update();
+			}
+		}
+	}
+	var controller = function () {
+		
+	}
+	var game = {
+		stageManager: stageManager,
+		controller: controller(),
+		update: function () {
+			stageManager.update();
+		}
+	}
+	stageManager.loadStages([{
+	},{
+	},{
+	}, {
+		evil: true,
+		type: ""
+	}]);
+
+	setInterval(function () {
+		game.update();
+	}, 1000);
+	var element = $('.slotsArea')[0];
+	element.scrollTop = element.scrollHeight;
+
+</script>

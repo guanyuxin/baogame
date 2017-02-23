@@ -49,11 +49,7 @@ var socket = {
 		if (!this.open) {
 			this.queueData.push({name: name, data: data});
 		} else {
-			if (data == undefined) {
-				this.ws.send(name);
-			} else {
-				this.ws.send(name+"$"+JSON.stringify(data));
-			}
+			this.ws.send(name+"$"+JSON.stringify(data || {}));
 		}
 	},
 	on: function (name, callback) {

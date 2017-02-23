@@ -2,7 +2,6 @@
 var Pack = require('../static/js/JPack.js');
 var C = require('../static/js/const.js');
 var Grenade = require('./entity/grenade.js');
-var AI = require('./ai.js');
 
 var userCount = 0;
 var User = function (game, client) {
@@ -10,24 +9,33 @@ var User = function (game, client) {
 	this.game = game;
 	this.client = client;
 	this.name = client.name;
+	this.team = client.team;
+	
+	//状态
 	this.onFloor = false;
 	this.onPilla = false;
 	this.nearPilla = false;
-	this.dead = false;
+	//滚动
 	this.rolling = false;
+	//下蹲
 	this.crawl = false;
-	this.x = Math.random() * (game.props.w - 300) + 150;
-	this.y = 380;
-	this.vx = 0;
-	this.vy = 0;
-	this.dieing = false;
-	this.faceing = 1;
+	//僵直中
 	this.danger = false;
+	//已死亡，尸体下落中
+	this.dieing = false;
+	//已死亡，躺尸
+	this.dead = false;
+	this.faceing = 1;
+
+	//刚刚碰撞过哪些用户
 	this.ignore = [];
+
+	//携带物品
 	this.carry = '';
 	this.carryCount = 0;
 	this.onStruct = 0;
 
+	//施法动作（倒计时时间）
 	this.fireing = 0;
 	this.mining = 0;
 	this.grenadeing = 0;
@@ -35,6 +43,29 @@ var User = function (game, client) {
 	this.score = 0;
 	this.canDoubleJump = false;
 	this.lastTouch = null;
+
+	this.npc = client.npc;
+	this.AIConfig = client.AI;
+
+	if (this.npc && this.AIConfig) {
+		this.AI = game.AIController.userAI(this, this.AI);
+	}
+
+	//坐标
+	this.x = 0;
+	this.y = 0;
+	//栅格坐标
+	this.tx = 0;
+	this.ty = 0;
+	//栅格偏移坐标
+	this.tox = 0;
+	this.toy = 0;
+	//速度
+	this.vx = 0;
+	this.vy = 0;
+	
+	//管理员下的监控指标
+	this.watchData = {}
 }
 User.prototype.throwGrenade = function () {
 	var g = new Grenade(this);
@@ -126,6 +157,11 @@ User.prototype.getStatus = function () {
 	}
 }
 User.prototype.update = function () {
+
+	if (this.AI) {
+		this.AI.update();
+	}
+	
 	this.doubleJumping = false;
 	this.flying = 0;
 
@@ -152,10 +188,7 @@ User.prototype.update = function () {
 	} else {
 		this.onStruct = 0;
 	}
-	
-	if (this.npc && this.AI) {
-		AI(this);
-	}
+
 	if (this.status == "falling" || this.status == "standing" || this.status == "climbing") {
 		//开枪	
 		if (this.fireing > 0) {
@@ -237,7 +270,7 @@ User.prototype.update = function () {
 				}
 			}
 			this.faceing = -1;
-			this.vx = Math.max(this.vx, -4, -this.leftDown/20);
+			this.vx = Math.max(this.vx, -4);
 		} else if (!this.leftDown && this.rightDown) {
 			if (this.vx < 0) {
 				if (this.carry == Pack.items.power.id) {
@@ -253,11 +286,11 @@ User.prototype.update = function () {
 				}
 			}
 			this.faceing = 1;
-			this.vx = Math.min(this.vx, 4, this.rightDown/20);
+			this.vx = Math.min(this.vx, 4);
 		} else {
 			this.vx = 0;
 		}
-		if (this.upDown > 60 && !this.downDown) {
+		if (this.upDown && !this.downDown) {
 			this.vy = 5;
 			this.flypackActive = false;
 		} else  {
@@ -331,7 +364,20 @@ User.prototype.update = function () {
 			}
 		}
 	}
+
+	this.updateCommon();
+	if (this.AI) {
+		this.watchData.dir = this.AI.dir;
+	}
 }
+
+User.prototype.updateCommon = function () {
+	this.tx = Math.floor(this.x / C.TW);
+	this.ty = Math.floor(this.y / C.TH);
+	this.tox = this.x % C.TW;
+	this.toy = this.y % C.TH;
+}
+
 User.prototype.scoreing = function () {
 	this.score++;
 	this.client.kill++;

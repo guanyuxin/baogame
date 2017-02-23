@@ -35,6 +35,13 @@ var Room = {
 		rooms.push(room);
 		return room;
 	},
+	userCount: function () {
+		var c = 0;
+		for (var i = 0; i < rooms.length; i++) {
+			c += rooms.game.clients.length;
+		}
+		return c;
+	},
 	removeRoom: function (game) {
 		for (var i = 0; i < rooms.length; i++) {
 			if (rooms[i].game == game) {

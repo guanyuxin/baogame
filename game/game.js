@@ -2,187 +2,77 @@
 var Pack = require('../static/js/JPack.js');
 var C = require('../static/js/const.js');
 
-
 var Map = require('./map.js');
 var User = require('./user.js');
 var Item = require('./item.js');
 var Client = require('./client.js');
+var Collide = require('./collide.js');
 
 var map1 = require('./maps/lesson1.js');
 var map2 = require('./maps/lesson2.js');
+var AIController = require('./ai/AIController.js');
 
-
-function userCollide(a, b, game) {
-	//不碰撞情况
-	if (a.dead || b.dead) {return}
-	if((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) > game.props.userWidth*game.props.userWidth) {return;}
-
-	//带电情况
-	if (a.carry == Pack.items.power.id && b.carry != Pack.items.power.id) {
-		b.killed('power', a);
-		b.vx = (b.x - a.x)/2;
-		if (b.carry == Pack.items.bomb.id) {
-			a.carry = b.carry;
-			a.carryCount = b.carryCount;
-			b.carry = '';
-		}
-		return;
-	} else if (a.carry != Pack.items.power.id && b.carry == Pack.items.power.id) {
-		a.killed('power', b);
-		a.vx = (a.x - b.x)/2;
-		if (a.carry == Pack.items.bomb.id) {
-			b.carry = a.carry;
-			b.carryCount = a.carryCount;
-			a.carry = '';
-		}
-		return;
-	} else if (a.carry == Pack.items.power.id && b.carry == Pack.items.power.id) {
-		a.carry = '';
-		b.carry = '';
-	}
-	//排除刚刚碰撞
-	if (a.ignore[b.id] > 0 || b.ignore[a.id] > 0) {return}
-	
-	if (b.carry == Pack.items.bomb.id && a.carry != Pack.items.bomb.id) {
-		a.carry = b.carry;
-		a.carryCount = b.carryCount;
-		b.carry = '';
-	} else if (a.carry == Pack.items.bomb.id && b.carry != Pack.items.bomb.id) {
-		b.carry = a.carry;
-		b.carryCount = a.carryCount;
-		a.carry = '';
-	}
-	//正常情况
-	if (a.onFloor && b.onFloor) {
-		if (a.crawl && !b.crawl) {
-			b.vy = 5;
-			b.danger = true;
-		} else if (!a.crawl && b.crawl) {
-			a.vy = 5;
-			a.danger = true;
-		} else {
-			if (a.crawl && b.crawl) {
-				a.crawl = false;
-				b.crawl = false;
-			}
-			var tmp = a.vx;
-			a.vx = b.vx;
-			b.vx = tmp;
-			
-			a.vy = 2.5;
-			b.vy = 2.5;
-		}
-	} else if (a.onFloor && !b.onFloor) {
-		if (a.crawl) {
-			a.vx = b.vx / 2;
-			b.vx = -b.vx / 2;
-			a.vy = 2.5;
-			b.vy = 2.5;
-		} else {
-			a.vx = b.vx;
-			b.vx /= 2;
-			a.vy = 2.5;
-			a.danger = true;
-		}
-	} else if (!a.onFloor && b.onFloor) {
-		if (b.crawl) {
-			b.vx = a.vx / 2;
-			a.vx = -a.vx / 2;
-			b.vy = 2.5;
-			a.vy = 2.5;
-		} else {
-			b.vx = a.vx;
-			a.vx /= 2;
-			b.vy = 2.5;
-			b.danger = true;
-		}
-	} else {
-		var tmp = a.vx;
-		a.vx = b.vx;
-		b.vx = tmp;
-		a.danger = true;
-		b.danger = true;
-	}
-	//自然抗拒
-	if (a.x < b.x) {
-		if (!a.crawl) {
-			a.vx -= 1;
-		}
-		if (!b.crawl) {
-			b.vx += 1;
-		}
-	} else {
-		if (!a.crawl) {
-			a.vx += 1;
-		}
-		if (!b.crawl) {
-			b.vx -= 1;
-		}
-	}
-	//阻止近期碰撞
-	a.ignore[b.id] = 40;
-	b.ignore[a.id] = 40;
-	a.fireing = false;
-	b.fireing = false;
-	a.mining = false;
-	b.mining = false;
-	a.onPilla = false;
-	b.onPilla = false;
-	a.lastTouch = b.id;
-	b.lastTouch = a.id;
-}
-
-function eatItem (a, b, game) {
-	if (a.dead || b.dead) {return}
-	if (a.carry == Pack.items.bomb.id) {return}
-	if((a.x-b.x)*(a.x-b.x) + (a.y+game.props.userHeight/2-b.y)*(a.y+game.props.userHeight/2-b.y) >
-			(game.props.userWidth+C.IS)*(game.props.userWidth+C.IS)/4) {
-		return;
-	}
-	b.touchUser(a);
-}
-
-var Game = function (adminCode, maxUser, type, remove) {
+var Game = function (adminCode, maxUser, map, remove) {
+	this.status = C.GAME_STATUS_INIT;
 	this.adminCode = adminCode;
+	//其他人
 	this.users = [];
+	//A方面
+	this.team1 = {
+		users: [],
+		score: 0
+	};
+	//B方面
+	this.team2 = {
+		users: [],
+		score: 0
+	};
+	//所有连接，包括ob
 	this.clients = [];
+	this.deadClients = [];
+	//物品
 	this.items = [];
+	//尸体
 	this.bodies = [];
+	//地雷
 	this.mines = [];
+	//投掷物
 	this.entitys = [];
 	this.tick = 0;
 	this.remove = remove;
-	this.props = {
-		userHeight: 40,
-		userWidth: 40,
-		itemSize: 15,
-		tw: 28,
-		th: 15,
-		maxUser: maxUser,
-	}
-	if (type == "lesson1") {
-		this.props.th = map1.h;
-		this.props.tw = map1.w;
-	} else if (type == "lesson2") {
-		this.props.th = map2.h;
-		this.props.tw = map2.w;
-	}
-	this.props.w = this.props.tw * C.TW;
-	this.props.h = this.props.th * C.TH;
-	
-	if (type == "lesson1") {
+
+	if (map == "lesson1") {
 		this.map = new Map(this, map1);
-	} else if (type == "lesson2") {
+	} else if (map == "lesson2") {
 		this.map = new Map(this, map2);
 	} else {
 		this.map = new Map(this);
 	}
+
+	this.props = {
+		userHeight: 40,
+		userWidth: 40,
+		maxUser: maxUser,
+		mode: "",
+		team1Max: 3,
+		team2Max: 3,
+		scoreMax: 3,
+		w: C.TW * this.map.w,
+		h: C.TH * this.map.h
+	}
+
+	this.AIController = new AIController(this);
+
 	this.runningTimer = setInterval(() => {
 		this.update();
 	}, 17);
 }
 Game.prototype.createNPC = function (data) {
+	data = data || {name: "萌萌的AI", npc: true, AI: "auto"};
 	var u = new User(this, data);
+	var p = this.map.born();
+	u.x = p.x;
+	u.y = p.y;
 	u.npc = true;
 	this.users.push(u);
 	return u;
@@ -206,14 +96,6 @@ Game.prototype.getUser = function (uid) {
 	for (let user of this.bodies) {
 		if (user.id == uid) {
 			return user;
-		}
-	}
-}
-//获得链接
-Game.prototype.getClient = function (cid) {
-	for (let client of this.clients) {
-		if (client.id == cid) {
-			return client;
 		}
 	}
 }
@@ -289,9 +171,21 @@ Game.prototype.checkMine = function (user) {
 	}
 	return false;
 }
+
 //链接
-Game.prototype.addClient = function (socket) {
-	this.clients.push(new Client(socket, this));
+Game.prototype.addClient = function (socket, UUID) {
+	for (var i = 0; i < this.deadClients.length; i++) {
+		if (this.deadClients[i].UUID == UUID) {
+			var client = this.deadClients[i];
+			client.socket = socket;
+			this.deadClients.splice(i, 1);
+			client.connect();
+		}
+	}
+	if (!client) {
+		client = new Client(socket, this, UUID);
+	}
+	this.clients.push(client);
 }
 //链接关闭
 Game.prototype.removeClient = function (socket) {
@@ -303,10 +197,20 @@ Game.prototype.removeClient = function (socket) {
 				 + ' ['+client.joinTime+':'+client.leaveTime+':'+Math.floor((client.joinTime-client.leaveTime)/60)+']'
 				 + ' ['+client.kill+','+client.death+','+client.highestKill+']');
 			this.clients.splice(i, 1);
+			this.deadClients.push(client);
 			return;
 		}
 	}
 }
+//获得链接
+Game.prototype.getClient = function (cid) {
+	for (let client of this.clients) {
+		if (client.id == cid) {
+			return client;
+		}
+	}
+}
+
 //分发事件
 Game.prototype.announce = function (type, data) {
 	for (let client of this.clients) {
@@ -337,16 +241,27 @@ Game.prototype.update = function () {
 	//碰撞检测
 	for (var i = 0; i < this.users.length; i++) {
 		for (var j = i + 1; j < this.users.length; j++) {
-			userCollide(this.users[i], this.users[j], this);
+			Collide.userCollide(this.users[i], this.users[j], this);
 		}
 		for (var j = 0; j < this.items.length; j++) {
-			eatItem(this.users[i], this.items[j], this);
+			Collide.eatItem(this.users[i], this.items[j], this);
 		}
 	}
 	//user更新
+	
+	var npcCount = 0;
 	for(let user of this.users) {
 		user.update();
+		if (user.npc) {
+			npcCount++;
+		}
 	};
+
+	if (npcCount < 2 && this.users.length < 4) {
+		var npc = this.createNPC();
+		npc.carryCount = 0;
+		npc.carry = 0;
+	}
 	//分发状态
 	this.sendTick();
 	//清理死亡的人物/物品
@@ -403,34 +318,39 @@ Game.prototype.sendTick = function () {
 	for (let entity of this.entitys) {
 		entitydata.push(Pack.entityPack.encode(entity));
 	}
+	var team1 = {
+		users: [],
+		score: this.team1.score
+	}
+	var team2 = {
+		users: [],
+		score: this.team2.score
+	}
 	for (let client of this.clients) {
 		var p1 = client.p1 && client.p1.id;
-		var p2 = client.p2 && client.p2.id;
 		var onStruct = client.p1 && client.p1.onStruct;
 		var minedata = [];
 		for (let mine of this.mines) {
-			if ((mine.creater.id == p1 && !p2) || mine.dead) {
+			if (mine.creater.id == p1 || mine.dead) {
 				minedata.push(Pack.minePack.encode(mine));
 			}
 		};
+
 		if (client.admin) {
-			if (this.tick % 60 == 0) {
-				client.socket.emit('tick', {
-					users: userdata,
-					items: itemdata,
-					mines: minedata,
-					clients: clientsdata
-				});
-			}
+			client.socket.emit('tick', {
+				users: userdata,
+				items: itemdata,
+				mines: minedata,
+				clients: clientsdata
+			});
 		} else {
 			client.socket.emit('tick', {
 				users: userdata,
 				items: itemdata,
 				mines: minedata,
 				entitys: entitydata,
-				p1: p1,
 				onStruct: onStruct,
-				p2: p2
+				p1: p1,
 			});
 		}
 	}
