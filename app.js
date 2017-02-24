@@ -71,7 +71,7 @@ wss.on('connection', function (ws) {
 		ws.close();
 		return;
 	}
-	if (room.game.clients.length > 3) {
+	if (room.game.clients.length > 30) {
 		ws.close();
 		return;
 	}
