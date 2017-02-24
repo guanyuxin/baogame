@@ -21,14 +21,14 @@ server.listen(opts.port || 8030, function () {
 
 app.use('/static', express.static('static'));
 
-app.use(cookieParser());
+//app.use(cookieParser());
 //游戏地址
 app.get('/', function (req, res) {
-	var UUID = req.cookies.UUID;
-	if (!UUID || true) {
-		UUID = Math.floor(Math.random()*2322423432);
-		res.cookie('UUID',UUID, { maxAge: 90000000, httpOnly: true });
-	}
+	// var UUID = req.cookies.UUID;
+	// if (!UUID || true) {
+	// 	UUID = Math.floor(Math.random()*2322423432);
+	// 	res.cookie('UUID',UUID, { maxAge: 90000000, httpOnly: true });
+	// }
 	res.sendFile(__dirname + '/static/index.html');
 });
 //游戏地址
@@ -62,7 +62,7 @@ for (var i = 0; i < (opts.room || 1); i++) {
 }
 
 wss.on('connection', function (ws) {
-	var UUID = cookieparser.parse(ws.upgradeReq.headers.cookie).UUID;
+	//var UUID = cookieparser.parse(ws.upgradeReq.headers.cookie).UUID;
 	var location = url.parse(ws.upgradeReq.url, true);
 
 	var roomID = location.query.roomID || 1;
@@ -111,6 +111,6 @@ wss.on('connection', function (ws) {
 		room = null;
 	});
 
-	room.game.addClient(socket, UUID);
+	room.game.addClient(socket, Math.random());
 });
 
