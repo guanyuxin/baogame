@@ -1,6 +1,5 @@
 "use strict"
 var Pack = require('../static/js/JPack.js');
-var heapdump = require('heapdump');
 var C = require('../static/js/const.js');
 
 var banedip = {};
@@ -53,9 +52,6 @@ Client.prototype.connect = function () {
 					var client = this.game.getClient(cliID);
 					client.banned = false;
 					banedip[client.ip] = false;
-				});
-				socket.on('heapdump', data => {
-					heapdump.writeSnapshot('./logs/' + Date.now() + '.heapsnapshot');
 				});
 			}
 		}

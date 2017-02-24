@@ -3,7 +3,6 @@ var url = require('url');
 var express = require('express');
 var app = express();
 var server = require('http').Server(app);
-var cookieParser = require('cookie-parser')
 var WebSocketServer = require('ws').Server;
 var wss = new WebSocketServer({server: server});
 var Room = require('./game/room.js');
