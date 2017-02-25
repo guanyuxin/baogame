@@ -39,13 +39,14 @@
 		top: 0;
 	}
 	.frame {
-		position: relative;
+		position: fixed;
+		width: 100%;
+		top: 0;
+		background: black;
 	}
 	.middle {
-		position: relative;
 		margin: auto;
-		width: 1100;
-		height: 600;
+		position: relative;
 	}
 	.joining {
 		position: absolute;
@@ -59,7 +60,6 @@
 		display: -webkit-box;
 		-webkit-box-align: center;
 		-webkit-box-pack: center;
-		z-index: 100;
 	}
 	.joining .center {
 		padding: 40px 80px;
@@ -113,27 +113,89 @@
 	input::-webkit-input-placeholder {
 		color: #f00 !important;
 	}
+
+	/*** notice GUI ***/
 	.notice {
-		background: #eee;
+		background: rgba(255,255,255,.5);
+		position: relative;
+		z-index: 10;
 	}
 	.noticeItem {
 	    padding: 3px 10px;
 	    border-bottom: 1px solid #ccc;
-	    color: #aaa;
+	    color: #333;
 	}
 	.noticeItem b {
 		font-weight: bolder;
 		color: #f00;
 	}
-	.noticeFix {
-		box-shadow: 0 0 2px white;
-	    background: rgb(255, 255, 255);
-	    font-size: 30;
+	/*** help GUI ***/
+	.help {
+		position: absolute;
+		right: 20px;
+		top: 20px;
 	}
-	.noticeFix .noticeItem {
+	.help-icon {
+		color: #fff;
+		border: 2px solid #fff;
+		border-radius: 50%;
+		width: 20px;
+		height: 20px;
+		text-align: center;
+		line-height: 20px;
+		font-weight: bold;
+	}
+	.help-content {
+		pointer-events: none;
+		display: none;
+		position: absolute;
+		top: 30px;
+		right: 0px;
+		padding: 20px;
+		background: rgba(255,255,255,.6);
+		border-radius: 10px;
+		width: 200px;
+	}
+	.help-content b {
+		color: #ffff33;
+	}
+	.help:hover .help-content {
+		display: block;
+	}
+	/*** leave GUI ***/
+	.leave {
+		position: absolute;
+		left: 0px;
+		top: 0px;
+	}
+	.leave-icon {
+		color: #fff;
+		width: 100px;
+		height: 40px;
+		background: rgba(255,255,255,.1);
+		transform: rotate(-45deg) translate(-22px, -30px);
+		text-align: center;
+		line-height: 40px;
+		font-weight: bold;
+	}
+	.leave-content {
+		pointer-events: none;
+		display: none;
+		position: absolute;
+		top: 30px;
+		left: 30px;
 		padding: 10px;
-		color: #333;
+		background: rgba(255,255,255,.6);
+		border-radius: 10px;
+		width: 100px;
 	}
+	.leave:hover .leave-icon {
+		background: rgba(255,255,255,.4);
+	}
+	.leave:hover .leave-content {
+		display: block;
+	}
+
 	.win {
 		display: none;
 		position: absolute;
@@ -185,50 +247,59 @@
 	}
 
 	a {
-		color: #2be;
+		color: inherit;
+		text-decoration: none;
 	}
 </style>
 </head>
 <body>
 <div class="frame">
-	<div class="middle" id="middle">
-		<canvas id="Bg"></canvas>
-		<canvas id="Fg"></canvas>
-	</div>
+	<div class="middle" id="middle"></div>
 	<div class="win">
 		<div class="popup">任务完成</div>
 		<a class="btn btn-block" href="./rooms">返回</a>
 	</div>
-</div>
-<div class="joining" style="display:none"><div class="center">
-	<h4 class="message">加入游戏</h4>
-	你的名字：<input id="name" class="txt-input" placeholder="无名小卒"/>
-	<div>
-		<a href="javascript:void(0)" class="btn joinBtn">加入</a>
-		<a href="/rooms" class="btn">其他房间</a>
-		<a href="javascript:void(0)" class="btn btn-weak dismissBtn">观战</a>
-	</div>
-</div></div>
-<div class="mobileController" style="display:none">
-	<div class="left">
-		<div data-act="l" class="moreBtn l">左</div>
-		<div data-act="r" class="moreBtn r">右</div>
-	</div>
-	<div class="right">
-		<div data-act="a" class="moreBtn item">act</div>
-		<div data-act="u" class="moreBtn up">上</div>
-		<div data-act="d" class="moreBtn down">下</div>
-	</div>
-</div>
-<div class="notice">
-	<div class="noticeFix">
-		<div class="noticeItem">W,A,S,D:移动  Q:使用物品</div>
-		<div class="noticeItem"><a target="blank" href="https://github.com/guanyuxin/baogame">https://github.com/guanyuxin/baogame</a> 查看帮助详情</div>
-		<div class="noticeItem">[2017-03-01]
-			增加了萌萌的AI
+	<div class="joining" style="display:none"><div class="center">
+		<h4 class="message">加入游戏</h4>
+		你的名字：<input id="name" class="txt-input" placeholder="无名小卒"/>
+		<div>
+			<a href="javascript:void(0)" class="btn joinBtn">加入</a>
+			<a href="/rooms" class="btn">其他房间</a>
+			<a href="javascript:void(0)" class="btn btn-weak dismissBtn">观战</a>
+		</div>
+	</div></div>
+	<div class="mobileController" style="display:none">
+		<div class="left">
+			<div data-act="l" class="moreBtn l">左</div>
+			<div data-act="r" class="moreBtn r">右</div>
+		</div>
+		<div class="right">
+			<div data-act="a" class="moreBtn item">act</div>
+			<div data-act="u" class="moreBtn up">上</div>
+			<div data-act="d" class="moreBtn down">下</div>
 		</div>
 	</div>
-	<div class="notiveIn"></div>
+	<div class="help">
+		<div class="help-icon"><a target="blank" href="https://github.com/guanyuxin/baogame">?</a></div>
+		<div class="help-content">
+			<div><b>W,A,S,D</b>:移动  <b>Q</b>:使用物品</div>
+			<div>点击查看帮助详情</div>
+			<div>------------------</div>
+			<div>[2017-02-25] 优化了展示</div>
+		</div>
+	</div>
+	<div class="leave">
+		<div class="leave-icon"><a href="./rooms">⇪</a></div>
+		<div class="leave-content">
+			返回房间列表
+		</div>
+	</div>
+</div>
+<div class="clients">
+	<div class="users"></div>
+	<div class="watcher"></div>
+</div>
+<div class="notice">
 </div>
 </body>
 </html>
@@ -270,15 +341,20 @@ var scoreText = [
 ]
 
 function notice (str) {
-	$('.notice .notiveIn').prepend('<div class="noticeItem">'+str+'</div>');
+	$('.notice').prepend('<div class="noticeItem">'+str+'</div>');
+	if ($('.notice>.noticeItem').length > 20) {
+		$($('.notice>.noticeItem')[20]).remove();
+	}
 }
 
-var cdomBody,ctxBody,ctx,ctxBg,P,t = 0,cdx = 0,cdy = 0, canJoin = null, game = {};
+var cdomBody,cdomBg,cdom,ctxBody,ctxFg,ctxBg,P,t = 0,cdx = 0,cdy = 0, canJoin = null, game = {};
+var wh = window.innerHeight, ww = window.innerWidth,scale=1;
 
 var userName = localStorage.userName;
 if (userName) {
 	$('#name').val(userName);
 }
+
 function joing (team) {
 	if (!canJoin) {return}
 	userName = $('#name').val() || "无名小卒";
@@ -292,7 +368,55 @@ function joing (team) {
 		userName: userName,
 		team: team
 	});
+
 }
+
+function resizeWindow () {
+	if (!P) {return}
+	wh = window.innerHeight, ww = window.innerWidth;
+	if (P.w / ww > P.h / wh) {
+		scale = ww / P.w;
+	} else {
+		scale = wh / P.h;
+	}
+
+	cdom.width = P.w*scale;
+	cdom.height = P.h*scale;
+	cdomBg.width = P.w*scale;
+	cdomBg.height = P.h*scale;
+	cdomBody.width = P.w*scale;
+	cdomBody.height = P.h*scale;
+
+	ctxFg = cdom.getContext("2d");
+	ctxFg.font="14px 宋体";
+	ctxFg.textBaseline = 'middle';//设置文本的垂直对齐方式
+	ctxFg.textAlign = 'center'; //设置文本的水平对对齐方式
+	
+	ctxBody = cdomBody.getContext("2d");
+	ctxBody.font="14px 宋体";
+	ctxBody.textBaseline = 'middle';//设置文本的垂直对齐方式
+	ctxBody.textAlign = 'center'; //设置文本的水平对对齐方式
+
+	$('#middle').width(P.w*scale).height(P.h*scale);
+	$('body').css('padding-top', P.h*scale)
+	ctxBg = cdomBg.getContext("2d");
+	drawBg(ctxBg, game.map);
+}
+$(window).on('resize', resizeWindow);
+
+
+var currentWatcher = 0;
+var currentUsers = [];
+var watcherDom = $('.watcher')[0];
+function showUser (data) {
+	var watcher = 0;
+	for (var i = 0; i < data.users.length; i++) {
+		if (!data.users[i].npc) {
+
+		}
+	}
+}
+
 function initDone () {
 	socket.emit('init', {
 		userName: userName
@@ -301,35 +425,22 @@ function initDone () {
 	socket.on('init', function (data) {
 		Effect.clean();
 		P = data.props	//常量
-		var cdom = document.createElement('canvas');	//玩家层
-		var cdomBg = document.createElement('canvas');	//背景层（只绘制一次）
-		cdomBody = document.createElement('canvas');	//标记层（只添加，不修改，尸体）
-		cdom.width = P.w;
-		cdom.height = P.h;
+		cdom = document.createElement('canvas');	//玩家层
 		cdom.id = "fg";
-		cdomBg.width = P.w;
-		cdomBg.height = P.h;
+		cdomBody = document.createElement('canvas');	//标记层（只添加，不修改，尸体）
+		cdomBg = document.createElement('canvas');	//背景层（只绘制一次）
 		cdomBg.id = "bg";
-		cdomBody.width = P.w;
-		cdomBody.height = P.h;
-		ctx = cdom.getContext("2d");
-		ctx.font="14px 宋体";
-		ctx.textBaseline = 'middle';//设置文本的垂直对齐方式
-		ctx.textAlign = 'center'; //设置文本的水平对对齐方式
+		
 
 
-		ctxBg = cdomBg.getContext("2d");
-		ctxBody = cdomBody.getContext("2d");
-		ctxBody.font="14px 宋体";
-		ctxBody.textBaseline = 'middle';//设置文本的垂直对齐方式
-		ctxBody.textAlign = 'center'; //设置文本的水平对对齐方式
-
-		drawBg(ctxBg, data.map);
 		game.structs = [];
 		for (var i = 0; i < data.map.structs.length; i++) {
 			game.structs[data.map.structs[i].id] = data.map.structs[i];
 		}
 		game.map = data.map;
+
+		resizeWindow();
+		
 		var middle = document.getElementById('middle');
 		middle.innerHTML = '';
 		middle.appendChild(cdomBg);
@@ -343,9 +454,6 @@ function initDone () {
 		if (data.p1 === null) {
 			$('.joining').show();
 		}
-
-		//ai test 
-		game.path = new PathMap(game.map);
 	});
 	//加入
 	socket.on('joinSuccess', function (p1) {
@@ -375,9 +483,10 @@ function initDone () {
 		for (var i = 0; i < data.entitys.length; i++) {
 			data.entitys[i] = Packs.entityPack.decode(data.entitys[i]);
 		}
-
-		render(ctx, data);
-
+		//更新游戏渲染
+		render(ctxFg, data);
+		//更新GUI 用户数据
+		showUser(data);
 		//发送控制
 		var control = JSON.stringify(Packs.controlPack.encode(p1));
 		if (controlCache != control) {
@@ -486,134 +595,11 @@ for (var key in imgUrls) {
 		imgs[key] = arr;
 	}
 }
-var destY = 1, destX = 4;
-function ai (data) {
-	var node = game.path.lengthMap;
-}
-//get All possible dest in one move from location [i,j]
-// return [y,x,distance,method]
-function getDest (map, i, j) {
-	var res = [];
-	//move
-	if (map.floor[i][j + 1]) {
-		res.push([i, j + 1, 1, 'moveRight']);
-	}
-	if (map.floor[i][j - 1]) {
-		res.push([i, j - 1, 1, 'moveLeft']);
-	}
-	//climb
-	for (let pilla of map.pilla) {
-		if (pilla.x > j && pilla.x < j + 1 && i >= pilla.y1 && i <= pilla.y2) {
-			for (var k = pilla.y1; k <= pilla.y2; k++) {
-				if (map.floor[k][j]) {
-					if (k > i) {
-						res.push([k, j, k - i, 'climbUp']);
-					} else {
-						res.push([k, j, i - k, 'climbDown']);
-					}
-				}
-			}
-		}
-	}
-	//jump on floor
-	if (map.floor[i][j]) {
-		if (map.floor[i][j + 3]) {
-			res.push([i, j + 3, 4, 'jumpRight3']);
-		}
-		if (map.floor[i][j - 3]) {
-			res.push([i, j - 3, 4, 'jumpLeft3']);
-		}
-		if (map.floor[i][j + 4]) {
-			res.push([i, j + 4, 5, 'jumpRight4']);
-		}
-		if (map.floor[i][j - 4]) {
-			res.push([i, j - 4, 5, 'jumpLeft4']);
-		}
-		// if (map.floor[i][j + 5]) {
-		// 	res.push([i, j + 5, 6, 'jumpRight5']);
-		// }
-		// if (map.floor[i][j - 5]) {
-		// 	res.push([i, j - 5, 6, 'jumpLeft5']);
-		// }
-	}
-	return res;
-}
-
-function onPillar(map, i, j) {
-	for (let pilla of map.pilla) {
-		if (pilla.x > j && pilla.x < j + 1 && i >= pilla.y1 && i <= pilla.y2) {
-			return true;
-		}
-	}
-	return false;
-}
-
-
-function deepSearch (map, lengthMap, dirMap) {
-	var t = 0;
-	while (t < 1000) {
-		var find = false;
-		for (var i = 0; i < lengthMap.length; i++) {
-			for (var j = 0; j < lengthMap[i].length; j++) {
-				if (lengthMap[i][j] == -1) {
-					continue;
-				}
-				dest = getDest(map, i, j);
-				for (var k = 0; k < dest.length; k++) {
-					if (lengthMap[dest[k][0]][dest[k][1]] == -1 || lengthMap[dest[k][0]][dest[k][1]] > lengthMap[i][j] + dest[k][2]) {
-						lengthMap[dest[k][0]][dest[k][1]] = lengthMap[i][j] + dest[k][2];
-						dirMap[dest[k][0]][dest[k][1]] = dirMap[i][j] || dest[k][3];
-						find = true;
-					}
-				}
-			}
-		}
-		t++;
-		if (!find) {
-			break;
-		}
-	}
-}
-
-function PathMap (map) {
-	this.lengthMap = [];
-	this.dirMap = [];
-	//init
-	var wc = P.w/C.TW;	
-	var hc = P.h/C.TH;
-	for (var i = 0; i < hc; i++) {
-		this.lengthMap[i] = [];
-		this.dirMap[i] = [];
-		for (var j = 0; j < wc; j++) {
-			this.lengthMap[i][j] = [];
-			this.dirMap[i][j] = [];
-			if (!map.floor[i][j] && !onPillar(map, i, j)) {
-				continue;
-			}
-			var lengthMap = [];
-			var dirMap = [];
-			for (var ix = 0; ix < hc; ix++) {
-				lengthMap[ix] = [];
-				dirMap[ix] = [];
-				for (var jx = 0; jx < wc; jx++) {
-					if (ix == i && jx == j) {
-						lengthMap[ix][jx] = 0;
-					} else {
-						lengthMap[ix][jx] = -1;
-					}
-					dirMap[ix][jx] = '';
-				}
-			}
-			deepSearch(map, lengthMap, dirMap);
-			this.lengthMap[i][j] = lengthMap;
-			this.dirMap[i][j] = dirMap;
-		}
-	}
-}
 
 //绘制背景
 function drawBg (ctx, map) { 
-	ctx.clearRect(0, 0, P.w, P.h);
+	ctx.clearRect(0, 0, P.w*scale, P.h*scale);
+	ctx.scale(scale, scale);
 	//绘制柱子
 	map.pilla.forEach(function (pilla) {
 		ctx.fillStyle = "#888";
@@ -666,23 +652,7 @@ function drawBg (ctx, map) {
 	}
 }
 
-//绘制背景
-function drawUI (ctx, map, dirMap) {
-	//绘制地板
-	for (var i = 0; i < map.length; i++) {
-		for (var j = 0; j < map[i].length; j++) {
-			var x = j * C.TW;
-			var y = P.h - (i) * C.TH
-			if (map[i][j] != -1) {
-				ctx.fillStyle = "#fff";
-				ctx.fillText(map[i][j],x + C.TW/2, y - C.TH/2);
-				//ctx.fillText(dirMap[i][j],x + C.TW/2, y - C.TH/2);
-			}
-		}
-	}
-}
-
-function drawStructs (structs) {
+function drawStructs (ctx, structs) {
 	ctx.fillStyle = "#fff";
 	ctx.font = "20px 宋体";
 	for (var i = 1; i < structs.length; i++) {
@@ -880,8 +850,9 @@ function drawEntity (ctx, entity) {
 }
 
 function render (ctx, data) {
-	ctx.clearRect(0, 0, P.w, P.h);
+	ctx.clearRect(0, 0, P.w*scale, P.h*scale);
 	ctx.save();
+	ctx.scale(scale, scale);
 	ctx.translate(cdx, cdy);
 	if (cdx > .5) {
 		cdx *= -.98;
@@ -897,7 +868,7 @@ function render (ctx, data) {
 	
 	ctx.drawImage(cdomBody, 0, 0);
 	
-	drawStructs(game.structs);
+	drawStructs(ctx, game.structs);
 
 	data.mines.forEach(function (mine) {
 		ctx.drawImage(imgs.minePlaced, mine.x - 12, P.h - mine.y - 3, 23, 5);

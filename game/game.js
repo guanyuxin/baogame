@@ -70,9 +70,14 @@ var Game = function (adminCode, maxUser, map, remove) {
 Game.prototype.createNPC = function (data) {
 	data = data || {name: "萌萌的AI", npc: true, AI: "auto"};
 	var u = new User(this, data);
-	var p = this.map.born();
-	u.x = p.x;
-	u.y = p.y;
+	if (!this.map) {
+		u.x = data.x;
+		u.y = data.y;
+	} else {
+		var p = this.map.born();
+		u.x = p.x;
+		u.y = p.y;
+	}
 	u.npc = true;
 	this.users.push(u);
 	return u;
@@ -257,7 +262,7 @@ Game.prototype.update = function () {
 		}
 	};
 
-	if (npcCount < 2 && this.users.length < 4) {
+	if (npcCount < this.map.npcMAX && this.users.length < 4) {
 		var npc = this.createNPC();
 		npc.carryCount = 0;
 		npc.carry = 0;

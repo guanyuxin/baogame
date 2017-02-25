@@ -71,6 +71,8 @@ wss.on('connection', function (ws) {
 		ws.close();
 		return;
 	}
+
+	//房间最多30个链接
 	if (room.game.clients.length > 30) {
 		ws.close();
 		return;

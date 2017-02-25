@@ -47,9 +47,6 @@ var User = function (game, client) {
 	this.npc = client.npc;
 	this.AIConfig = client.AI;
 
-	if (this.npc && this.AIConfig) {
-		this.AI = game.AIController.userAI(this, this.AI);
-	}
 
 	//坐标
 	this.x = 0;
@@ -158,6 +155,9 @@ User.prototype.getStatus = function () {
 }
 User.prototype.update = function () {
 
+	if (this.npc && this.AIConfig && !this.AI) {
+		this.AI = this.game.AIController.userAI(this, this.AI);
+	}
 	if (this.AI) {
 		this.AI.update();
 	}

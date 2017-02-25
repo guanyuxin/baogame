@@ -18,6 +18,7 @@ var Map = function (game, data) {
 		this.borns = data.borns;
 		this.hooks = data.hooks || {};
 		this.structs = [];
+		this.npcMAX = data.npcMAX;
 		for(let struct of data.structs) {
 			var s = new structs[struct.type](this.game, struct);
 			this.structs.push(s);
@@ -42,6 +43,7 @@ var Map = function (game, data) {
 		this.pilla = [];
 		this.hooks = {};
 		this.structs = [];
+		this.npcMAX = 2;
 
 		for (var i = 0; i < h; i++) {
 			this.floor[i] = [];
