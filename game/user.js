@@ -405,6 +405,8 @@ User.prototype.killed = function (action, byUser) {
 	} else if (action == 'mine') {
 		this.vy = 10;
 	} else if (action == 'bomb') {
+	} else  if (action == 'system') {
+		this.killer = null;
 	} else {
 		this.killer = this.lastTouch;
 	}
@@ -440,6 +442,8 @@ User.prototype.killed = function (action, byUser) {
 	} else {
 		if (action == 'drug') {
 			var message = "<b>" + this.name + "</b>尝了一口毒药";
+		} else if (action == 'system') {
+			var message = "<b>" + this.name + "</b>被时空管理局消灭";
 		} else {
 			var message = "<b>" + this.name + "</b>完成了华丽的一跃";
 		}

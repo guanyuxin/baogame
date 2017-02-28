@@ -27,6 +27,16 @@ var Client = function (socket, game, UUID) {
 	}
 	this.connect();
 }
+Client.prototype.sendMap = function () {
+	this.socket.emit("init", {
+		props: this.game.props,
+		map: this.game.map.getData(),
+		bodies: [],
+		p1: this.p1 && !this.p1.dead && this.p1.id,
+		userCount: this.game.clients.length,
+		npcMAX: this.game.npcMAX
+	});
+}
 Client.prototype.connect = function () {
 	var socket = this.socket;
 	//接收初始化数据
@@ -68,7 +78,9 @@ Client.prototype.connect = function () {
 			props: this.game.props,
 			map: this.game.map.getData(),
 			bodies: bodiesData,
-			p1: this.p1 && !this.p1.dead && this.p1.id
+			p1: this.p1 && !this.p1.dead && this.p1.id,
+			userCount: this.game.clients.length,
+			npcMAX: this.game.npcMAX
 		});
 	});
 
@@ -112,6 +124,36 @@ Client.prototype.connect = function () {
 			this.p1.itemPress = p1.itemPress;
 		}
 	});
+
+	socket.on("addAI", data => {
+		if (this.game.clients[0] == this) {
+			if (this.game.npcMAX < 4) {
+				this.game.npcMAX++;
+				this.game.announce('userJoin', {AI:true});
+			}
+		} else {
+			this.game.announce('message', this.name+"希望增加AI");
+		}
+	})
+
+	socket.on("removeAI", data => {
+		if (this.game.clients[0] == this) {
+			if (this.game.npcMAX > 0) {
+				this.game.npcMAX--;
+				this.game.announce('userLeave', {AI:true});
+			}
+		} else {
+			this.game.announce('message', this.name+"希望减少AI");
+		}
+	})
+
+	socket.on("changeMap", data => {
+		if (this.game.clients[0] == this) {
+			this.game.createMap();
+		} else {
+			this.game.announce('message', this.name+"希望更换地图");
+		}
+	})
 }
 Client.prototype.getData = function () {
 	return {

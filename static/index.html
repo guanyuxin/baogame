@@ -7,6 +7,7 @@
 <script src="/static/js/const.js"></script>
 <script src="/static/js/socket.js"></script>
 <script src="/static/js/zepto.js"></script>
+<script src="/static/js/vue.js"></script>
 <style>
 	@-webkit-keyframes popup {
 		0% {
@@ -34,6 +35,11 @@
 		background: -webkit-radial-gradient(#444, #444, #222)
 	}
 	#fg {
+		position: absolute;
+		left: 0;
+		top: 0;
+	}
+	#mark {
 		position: absolute;
 		left: 0;
 		top: 0;
@@ -81,6 +87,7 @@
 		margin-top: 20px;
 		text-align: center;
 		color: #ff0;
+		cursor: pointer;
 		text-decoration: none;
 	}
 	.btn.btn-weak {
@@ -128,6 +135,24 @@
 	.noticeItem b {
 		font-weight: bolder;
 		color: #f00;
+	}
+	/*** user GUI ***/
+	.clients {
+		position: relative;
+		background: rgba(255,255,255,.8);
+		display: flex;
+		align-items: center;
+	}
+	.clients .btn {
+		padding: 3px 5px;
+		margin: 10px;
+	}
+	.clients .counter {
+		border: 1px solid #999;
+		color: #999;
+		border-radius: 4px;
+		padding: 3px 5px;
+		margin: 10px;
 	}
 	/*** help GUI ***/
 	.help {
@@ -254,15 +279,20 @@
 </style>
 </head>
 <body>
+<div id="gameView"  :style="{paddingTop: viewport.h + 'px'}">
 <div class="frame">
-	<div class="middle" id="middle"></div>
+	<div class="middle" id="middle" :style="{width: viewport.w + 'px',height: viewport.h + 'px'}">
+		<canvas id="bg" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
+		<canvas id="mark" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
+		<canvas id="fg" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
+	</div>
 	<div class="win">
 		<div class="popup">任务完成</div>
 		<a class="btn btn-block" href="./rooms">返回</a>
 	</div>
 	<div class="joining" style="display:none"><div class="center">
 		<h4 class="message">加入游戏</h4>
-		你的名字：<input id="name" class="txt-input" placeholder="无名小卒"/>
+		你的名字：<input id="name" class="txt-input" placeholder="无名小卒" v-model="me.name" v-bind:value="me.name"/>
 		<div>
 			<a href="javascript:void(0)" class="btn joinBtn">加入</a>
 			<a href="/rooms" class="btn">其他房间</a>
@@ -286,7 +316,9 @@
 			<div><b>W,A,S,D</b>:移动  <b>Q</b>:使用物品</div>
 			<div>点击查看帮助详情</div>
 			<div>------------------</div>
-			<div>[2017-02-25] 优化了展示</div>
+			<div>[2017-02-28]<br>
+				增加了地图控制，游戏时间最长的玩家可以修改地图配置<br>
+				AI看不到隐形单位</div>
 		</div>
 	</div>
 	<div class="leave">
@@ -297,15 +329,52 @@
 	</div>
 </div>
 <div class="clients">
-	<div class="users"></div>
-	<div class="watcher"></div>
+	<a class="btn" v-on:click="changeMap" title="1#玩家可以更换地图">更换地图</a>
+	<a class="btn" v-on:click="addAI" title="1#玩家可以增加AI">增加AI</a>
+	<a class="btn" v-on:click="removeAI" title="1#玩家可以减少AI">减少AI</a>
+	<div class="userCount counter">玩家数：{{users.userCount}}</div>
+	<div class="AICount counter">AI数量：{{users.AICount}}</div>
 </div>
 <div class="notice">
+	<div v-for="log in logs" class="noticeItem" v-html="log"></div>
+</div>
 </div>
 </body>
 </html>
 <script src="/static/js/effect.js"></script>
 <script>
+var app = new Vue({
+	el: '#gameView',
+	methods: {
+		addAI: function () {
+			socket.emit('addAI');
+		},
+		removeAI: function () {
+			socket.emit('removeAI');
+		},
+		changeMap: function () {
+			socket.emit('changeMap');
+		}
+	},
+	data: {
+		message: 'INIT DONE',
+		me: {
+			name: localStorage.userName || "无名小卒",
+			canJoin: false
+		},
+		users: {
+			AICount: 0,
+			userCount: 0,
+		},
+		logs: [],
+		viewport: {
+			scale: 1,
+			w: 1,
+			h: 1
+		}
+	}
+})
+
 function parseParam () {
     var query = location.search;
     if (query.indexOf('?') == 0) {
@@ -342,97 +411,98 @@ var scoreText = [
 ]
 
 function notice (str) {
-	$('.notice').prepend('<div class="noticeItem">'+str+'</div>');
-	if ($('.notice>.noticeItem').length > 20) {
-		$($('.notice>.noticeItem')[20]).remove();
+	app.logs.unshift(str);
+	if (app.logs.length > 20) {
+		app.logs.pop();
 	}
 }
 
-var cdomBody,cdomBg,cdom,ctxBody,ctxFg,ctxBg,P,t = 0,cdx = 0,cdy = 0, canJoin = null, game = {};
-var wh = window.innerHeight, ww = window.innerWidth,scale=1;
+var P;
+var game = {
+	t: 0,
+	users: {
+		AICount: 0,
+		userCount: 0,
+	},
+	env: {
+		cdx: 0,
+		cdy: 0,
+	},
+	display: {
+		ctx: {
+			fg: document.getElementById('fg').getContext("2d"),
+			bg: document.getElementById('bg').getContext("2d"),
+			mark: document.getElementById('mark').getContext("2d"),
+		},
+		scale: 1
+	}
+};
 
-var userName = localStorage.userName;
-if (userName) {
-	$('#name').val(userName);
-}
 
 function joing (team) {
-	if (!canJoin) {return}
-	userName = $('#name').val() || "无名小卒";
-	if ($('#name').val()) {
-		localStorage.userName = userName;
-	} else {
-		localStorage.userName = '';
-	}
+	if (!app.me.canJoin) {return}
+	localStorage.userName = app.me.name;
 	p1.team = team;
 	socket.emit('join', {
-		userName: userName,
+		userName: app.me.name,
 		team: team
 	});
 
 }
 
-function resizeWindow () {
+function initViewPort () {
 	if (!P) {return}
-	wh = window.innerHeight, ww = window.innerWidth;
+	var wh = window.innerHeight;
+	var ww = window.innerWidth;
 	if (P.w / ww > P.h / wh) {
-		scale = ww / P.w;
+		var s = ww / P.w;
 	} else {
-		scale = wh / P.h;
+		var s = wh / P.h;
+	}
+	app.viewport = {
+		scale: s,
+		w: P.w*s,
+		h: P.h*s
 	}
 
-	cdom.width = P.w*scale;
-	cdom.height = P.h*scale;
-	cdomBg.width = P.w*scale;
-	cdomBg.height = P.h*scale;
-	cdomBody.width = P.w*scale;
-	cdomBody.height = P.h*scale;
-
-	ctxFg = cdom.getContext("2d");
-	ctxFg.font="14px 宋体";
-	ctxFg.textBaseline = 'middle';//设置文本的垂直对齐方式
-	ctxFg.textAlign = 'center'; //设置文本的水平对对齐方式
+	game.display.ctx.fg.font="14px 宋体";
+	game.display.ctx.fg.textBaseline = 'middle';//设置文本的垂直对齐方式
+	game.display.ctx.fg.textAlign = 'center'; //设置文本的水平对对齐方式
 	
-	ctxBody = cdomBody.getContext("2d");
-	ctxBody.font="14px 宋体";
-	ctxBody.textBaseline = 'middle';//设置文本的垂直对齐方式
-	ctxBody.textAlign = 'center'; //设置文本的水平对对齐方式
+	game.display.ctx.mark.font="14px 宋体";
+	game.display.ctx.mark.textBaseline = 'middle';//设置文本的垂直对齐方式
+	game.display.ctx.mark.textAlign = 'center'; //设置文本的水平对对齐方式
 
-	$('#middle').width(P.w*scale).height(P.h*scale);
-	$('body').css('padding-top', P.h*scale)
-	ctxBg = cdomBg.getContext("2d");
-	drawBg(ctxBg, game.map);
-}
-$(window).on('resize', resizeWindow);
-
-
-var currentWatcher = 0;
-var currentUsers = [];
-var watcherDom = $('.watcher')[0];
-function showUser (data) {
-	var watcher = 0;
-	for (var i = 0; i < data.users.length; i++) {
-		if (!data.users[i].npc) {
-
+	setTimeout(function () {
+		game.display.ctx.fg.setTransform(1, 0, 0, 1, 0, 0);
+		game.display.ctx.mark.setTransform(1, 0, 0, 1, 0, 0);
+		game.display.ctx.bg.setTransform(1, 0, 0, 1, 0, 0);
+		game.display.ctx.fg.scale(s, s);
+		game.display.ctx.mark.scale(s, s);
+		game.display.ctx.bg.scale(s, s);
+		//绘制背景
+		drawBg(game.display.ctx.bg, game.map);
+		//初始化尸体
+		for (var i = 0; i < game.bodies.length; i++) {
+			var user = Packs.userPack.decode(game.bodies[i]);
+			drawUser(game.display.ctx.mark, user, {});
 		}
-	}
+	}, 1);
 }
+$(window).on('resize', initViewPort);
+
+
 
 function initDone () {
 	socket.emit('init', {
-		userName: userName
+		userName: app.me.name
 	});
-	//初始化链接，监听事件（肯能由打开或刷新页面触发，也可能由后台重启触发）
+	//初始化链接，监听事件（打开或刷新页面触发，也可能由后台重启触发）
 	socket.on('init', function (data) {
 		Effect.clean();
 		P = data.props	//常量
-		cdom = document.createElement('canvas');	//玩家层
-		cdom.id = "fg";
-		cdomBody = document.createElement('canvas');	//标记层（只添加，不修改，尸体）
-		cdomBg = document.createElement('canvas');	//背景层（只绘制一次）
-		cdomBg.id = "bg";
-		
-
+		app.users.userCount = data.userCount;
+		app.users.AICount = data.npcMAX;
 
 		game.structs = [];
 		for (var i = 0; i < data.map.structs.length; i++) {
@@ -440,22 +510,17 @@ function initDone () {
 		}
 		game.map = data.map;
 
-		resizeWindow();
+		initViewPort();
+		game.bodies = data.bodies
 		
-		var middle = document.getElementById('middle');
-		middle.innerHTML = '';
-		middle.appendChild(cdomBg);
-		middle.appendChild(cdom);
-		//初始化尸体
-		for (var i = 0; i < data.bodies.length; i++) {
-			var user = Packs.userPack.decode(data.bodies[i]);
-			drawUser(ctxBody, user, {});
-		}
 		p1.id = data.p1;
 		if (data.p1 === null) {
 			$('.joining').show();
 		}
 	});
+	socket.on('message', function (data) {
+		notice(data);
+	})
 	//加入
 	socket.on('joinSuccess', function (p1) {
 		$('.joining').hide();
@@ -466,7 +531,7 @@ function initDone () {
 	//主流程
 	var controlCache = '';
 	socket.on('tick', function (data) {
-		t++;
+		game.t++;
 		p1.id = data.p1;
 		p1.onStruct = data.onStruct;
 		for (var i = 0; i < data.users.length; i++) {
@@ -485,9 +550,7 @@ function initDone () {
 			data.entitys[i] = Packs.entityPack.decode(data.entitys[i]);
 		}
 		//更新游戏渲染
-		render(ctxFg, data);
-		//更新GUI 用户数据
-		showUser(data);
+		render(game.display.ctx.fg, data);
 		//发送控制
 		var control = JSON.stringify(Packs.controlPack.encode(p1));
 		if (controlCache != control) {
@@ -500,12 +563,12 @@ function initDone () {
 				userCount++;
 			}
 		}
-		if (userCount < P.maxUser && canJoin !== true) {
-			canJoin = true;
+		if (userCount < P.maxUser && app.me.canJoin !== true) {
+			app.me.canJoin = true;
 			$('.joining .joinBtn').removeAttr('disabled');
 			$('.joining .joinBtn').removeAttr('disabledText');
-		} else if (userCount >= P.maxUser && canJoin !== false) {
-			canJoin = false;
+		} else if (userCount >= P.maxUser && app.me.canJoin !== false) {
+			app.me.canJoin = false;
 			$('.joining .joinBtn').attr('disabled', 'disabled');
 			$('.joining .joinBtn').attr('disabledText', '：房间已满');
 		}
@@ -517,8 +580,8 @@ function initDone () {
 	});
 
 	socket.on('explode', function (data) {
-		cdx = 8;
-		cdy = 9;
+		game.env.cdx = 8;
+		game.env.cdy = 9;
 		Effect.trigger(new Flare(data, true));
 	});
 
@@ -543,6 +606,23 @@ function initDone () {
 			}
 		}
 	});
+
+	socket.on('userJoin', function (data) {
+		if (data.AI) {
+			app.users.AICount++;
+		} else {
+			app.users.userCount++;
+		}
+	});
+
+	socket.on('userLeave', function (data) {
+		if (data.AI) {
+			app.users.AICount--;
+		} else {
+			app.users.userCount--;
+		}
+	});
+
 	socket.on('win', function () {
 		$('.win').css('display', '-webkit-box');
 	})
@@ -598,9 +678,8 @@ for (var key in imgUrls) {
 }
 
 //绘制背景
-function drawBg (ctx, map) { 
-	ctx.clearRect(0, 0, P.w*scale, P.h*scale);
-	ctx.scale(scale, scale);
+function drawBg (ctx, map) {
+	ctx.clearRect(0, 0, P.w, P.h);
 	//绘制柱子
 	map.pilla.forEach(function (pilla) {
 		ctx.fillStyle = "#888";
@@ -678,7 +757,7 @@ function drawWater (ctx, height, color) {
 	var waveHeight = height/5;
 	var c = waveLen / 2;
 	var b = P.h - height;
-	var offset = Math.sin(t/50 + height) * 10;
+	var offset = Math.sin(game.t/50 + height) * 10;
 	start = offset - 10
 	ctx.fillStyle = color;
 	ctx.beginPath();
@@ -827,7 +906,7 @@ function drawUser (ctx, user, data) {
 
 function drawItem (ctx, item) {
 	var s = C.IS;
-	ctx.strokeStyle = "rgba(255,255,255,"+Math.abs((t%300)/150 - 1)+")";
+	ctx.strokeStyle = "rgba(255,255,255,"+Math.abs((game.t%300)/150 - 1)+")";
 	ctx.lineWidth = 3;
 	ctx.save();
 	ctx.translate(item.x, P.h - item.y);
@@ -851,31 +930,30 @@ function drawEntity (ctx, entity) {
 }
 
 function render (ctx, data) {
-	ctx.clearRect(0, 0, P.w*scale, P.h*scale);
+	ctx.clearRect(0, 0, P.w, P.h);
 	ctx.save();
-	ctx.scale(scale, scale);
-	ctx.translate(cdx, cdy);
-	if (cdx > .5) {
-		cdx *= -.98;
+	ctx.translate(game.env.cdx, game.env.cdy);
+	if (game.env.cdx > .5) {
+		game.env.cdx *= -.98;
 	} else {
-		cdx = 0;
+		game.env.cdx = 0;
 	}
-	if (cdy > .5) {
-		cdy *= -.97;
+	if (game.env.cdy > .5) {
+		game.env.cdy *= -.97;
 	} else {
-		cdy = 0;
+		game.env.cdy = 0;
 	}
 	drawWater(ctx, 20, "#758");
 	
-	ctx.drawImage(cdomBody, 0, 0);
+	//ctx.drawImage(game.display.dom.mark, 0, 0);
 	
 	drawStructs(ctx, game.structs);
 
 	data.mines.forEach(function (mine) {
 		ctx.drawImage(imgs.minePlaced, mine.x - 12, P.h - mine.y - 3, 23, 5);
 		if (mine.dead) {
-			cdx = 3;
-			cdy = 11;
+			game.env.cdx = 3;
+			game.env.cdy = 11;
 			Effect.trigger(new Flare(mine));
 		}
 	});
@@ -884,7 +962,7 @@ function render (ctx, data) {
 		var user = data.users[i];
 		if (user.dead == true) {
 			Effect.trigger(new WaterDrops(user));
-			drawUser(ctxBody, user, {});
+			drawUser(game.display.ctx.mark, user, {});
 		} else {
 			drawUser(ctx, user, data);
 		}

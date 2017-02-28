@@ -1,5 +1,6 @@
 
 var C = require('../../static/js/const.js');
+var Pack = require('../../static/js/JPack.js');
 
 
 function userCanGoLeft (user) {
@@ -35,7 +36,7 @@ var AI = function (AIController, user, config) {
 AI.prototype.findUser = function () {
 	var users = this.AIController.game.users;
 	for (var user of users) {
-		if (!user.npc) {
+		if (!user.npc && user.carry !== Pack.items.hide.id) {
 			this.targetUser = user;
 			return user;
 		}

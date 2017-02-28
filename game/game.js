@@ -15,6 +15,8 @@ var AIController = require('./ai/AIController.js');
 var Game = function (adminCode, maxUser, map, remove) {
 	this.status = C.GAME_STATUS_INIT;
 	this.adminCode = adminCode;
+	this.mapConfig = map;
+	this.maxUser = maxUser;
 	//其他人
 	this.users = [];
 	//A方面
@@ -41,9 +43,19 @@ var Game = function (adminCode, maxUser, map, remove) {
 	this.tick = 0;
 	this.remove = remove;
 
-	if (map == "lesson1") {
+	this.createMap();
+
+	this.npcMAX = 1;
+
+	this.runningTimer = setInterval(() => {
+		this.update();
+	}, 17);
+}
+
+Game.prototype.createMap = function () {
+	if (this.mapConfig == "lesson1") {
 		this.map = new Map(this, map1);
-	} else if (map == "lesson2") {
+	} else if (this.mapConfig == "lesson2") {
 		this.map = new Map(this, map2);
 	} else {
 		this.map = new Map(this);
@@ -52,7 +64,7 @@ var Game = function (adminCode, maxUser, map, remove) {
 	this.props = {
 		userHeight: 40,
 		userWidth: 40,
-		maxUser: maxUser,
+		maxUser: this.maxUser,
 		mode: "",
 		team1Max: 3,
 		team2Max: 3,
@@ -63,10 +75,14 @@ var Game = function (adminCode, maxUser, map, remove) {
 
 	this.AIController = new AIController(this);
 
-	this.runningTimer = setInterval(() => {
-		this.update();
-	}, 17);
+	for (var i = 0; i < this.clients.length; i++) {
+		this.clients[i].sendMap();
+	}
+	for (var i = 0; i < this.users.length; i++) {
+		this.users[i].killed('system')
+	}
 }
+
 Game.prototype.createNPC = function (data) {
 	data = data || {name: "萌萌的AI", npc: true, AI: "auto"};
 	var u = new User(this, data);
@@ -191,6 +207,8 @@ Game.prototype.addClient = function (socket, UUID) {
 		client = new Client(socket, this, UUID);
 	}
 	this.clients.push(client);
+
+	this.announce('userJoin', {AI:false});
 }
 //链接关闭
 Game.prototype.removeClient = function (socket) {
@@ -203,6 +221,8 @@ Game.prototype.removeClient = function (socket) {
 				 + ' ['+client.kill+','+client.death+','+client.highestKill+']');
 			this.clients.splice(i, 1);
 			this.deadClients.push(client);
+
+			this.announce('userLeave', {AI:false});
 			return;
 		}
 	}
@@ -262,7 +282,7 @@ Game.prototype.update = function () {
 		}
 	};
 
-	if (npcCount < this.map.npcMAX && this.users.length < 4) {
+	if (npcCount < this.npcMAX) {
 		var npc = this.createNPC();
 		npc.carryCount = 0;
 		npc.carry = 0;
@@ -323,6 +343,8 @@ Game.prototype.sendTick = function () {
 	for (let entity of this.entitys) {
 		entitydata.push(Pack.entityPack.encode(entity));
 	}
+
+	//team info
 	var team1 = {
 		users: [],
 		score: this.team1.score
@@ -331,6 +353,8 @@ Game.prototype.sendTick = function () {
 		users: [],
 		score: this.team2.score
 	}
+
+
 	for (let client of this.clients) {
 		var p1 = client.p1 && client.p1.id;
 		var onStruct = client.p1 && client.p1.onStruct;
