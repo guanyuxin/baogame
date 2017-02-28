@@ -12,6 +12,8 @@ var map1 = require('./maps/lesson1.js');
 var map2 = require('./maps/lesson2.js');
 var AIController = require('./ai/AIController.js');
 
+var DataSync = require('./lib/DataSync.js');
+
 var Game = function (adminCode, maxUser, map, remove) {
 	this.status = C.GAME_STATUS_INIT;
 	this.adminCode = adminCode;
@@ -44,8 +46,12 @@ var Game = function (adminCode, maxUser, map, remove) {
 	this.remove = remove;
 
 	this.createMap();
-
-	this.npcMAX = 1;
+	//会与客户端同步的数据
+	this.sync = new DataSync({
+		npcMAX: 0,
+		userCount: 0,
+		type: this.map.type
+	}, this);
 
 	this.runningTimer = setInterval(() => {
 		this.update();
@@ -53,6 +59,12 @@ var Game = function (adminCode, maxUser, map, remove) {
 }
 
 Game.prototype.createMap = function () {
+	this.mines = [];
+	this.entitys = [];
+	for (var i = 0; i < this.users.length; i++) {
+		this.users[i].killed('system')
+	}
+
 	if (this.mapConfig == "lesson1") {
 		this.map = new Map(this, map1);
 	} else if (this.mapConfig == "lesson2") {
@@ -60,6 +72,7 @@ Game.prototype.createMap = function () {
 	} else {
 		this.map = new Map(this);
 	}
+
 
 	this.props = {
 		userHeight: 40,
@@ -78,9 +91,7 @@ Game.prototype.createMap = function () {
 	for (var i = 0; i < this.clients.length; i++) {
 		this.clients[i].sendMap();
 	}
-	for (var i = 0; i < this.users.length; i++) {
-		this.users[i].killed('system')
-	}
+
 }
 
 Game.prototype.createNPC = function (data) {
@@ -120,6 +131,7 @@ Game.prototype.getUser = function (uid) {
 		}
 	}
 }
+//增加物品
 Game.prototype.createItem = function (type) {
 	var item = new Item(this, type);
 	this.items.push(item);
@@ -207,8 +219,7 @@ Game.prototype.addClient = function (socket, UUID) {
 		client = new Client(socket, this, UUID);
 	}
 	this.clients.push(client);
-
-	this.announce('userJoin', {AI:false});
+	this.userCount++;
 }
 //链接关闭
 Game.prototype.removeClient = function (socket) {
@@ -222,7 +233,7 @@ Game.prototype.removeClient = function (socket) {
 			this.clients.splice(i, 1);
 			this.deadClients.push(client);
 
-			this.announce('userLeave', {AI:false});
+			this.userCount--;
 			return;
 		}
 	}
@@ -381,6 +392,13 @@ Game.prototype.sendTick = function () {
 				onStruct: onStruct,
 				p1: p1,
 			});
+		}
+	}
+
+	var sync = this.sync.flush();
+	if (sync) {
+		for (let client of this.clients) {
+			client.socket.emit('globalSync', sync);
 		}
 	}
 }

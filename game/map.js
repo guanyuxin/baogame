@@ -11,6 +11,7 @@ var Map = function (game, data) {
 	this.game = game;
 	this.structID = 1;
 	if (data) {
+		this.type = data.type;
 		this.w = data.w;
 		this.h = data.h;
 		this.floor = data.floor;
@@ -36,6 +37,7 @@ var Map = function (game, data) {
 			}
 		}
 	} else {
+		this.type = "world";
 		//random map
 		var w = this.w = 28;
 		var h = this.h = 15;

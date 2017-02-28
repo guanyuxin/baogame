@@ -33,7 +33,6 @@ Client.prototype.sendMap = function () {
 		map: this.game.map.getData(),
 		bodies: [],
 		p1: this.p1 && !this.p1.dead && this.p1.id,
-		userCount: this.game.clients.length,
 		npcMAX: this.game.npcMAX
 	});
 }
@@ -89,9 +88,9 @@ Client.prototype.connect = function () {
 			map: this.game.map.getData(),
 			bodies: bodiesData,
 			p1: this.p1 && !this.p1.dead && this.p1.id,
-			userCount: this.game.clients.length,
 			npcMAX: this.game.npcMAX
 		});
+		socket.emit("globalSync", this.game.sync.all());
 	});
 
 	//加入
@@ -139,10 +138,10 @@ Client.prototype.connect = function () {
 		if (this.isAdmin()) {
 			if (this.game.npcMAX < 4) {
 				this.game.npcMAX++;
-				this.game.announce('userJoin', {AI:true});
+				//this.game.announce('userJoin', {AI:true});
 			}
 		} else {
-			this.game.announce('message', this.name+"希望增加AI");
+			this.game.announce('message', [this.p1.id,"希望增加AI"]);
 		}
 	})
 
@@ -150,10 +149,10 @@ Client.prototype.connect = function () {
 		if (this.isAdmin()) {
 			if (this.game.npcMAX > 0) {
 				this.game.npcMAX--;
-				this.game.announce('userLeave', {AI:true});
+				//this.game.announce('userLeave', {AI:true});
 			}
 		} else {
-			this.game.announce('message', this.name+"希望减少AI");
+			this.game.announce('message', [this.p1.id,"希望减少AI"]);
 		}
 	})
 
@@ -161,7 +160,7 @@ Client.prototype.connect = function () {
 		if (this.isAdmin()) {
 			this.game.createMap();
 		} else {
-			this.game.announce('message', this.name+"希望更换地图");
+			this.game.announce('message', [this.p1.id,"希望更换地图"]);
 		}
 	})
 }

@@ -1,5 +1,6 @@
 "use strict"
 var map = {
+	type: "rpg",
 	w: 28,
 	h: 13,
 	npcMAX: 0,
