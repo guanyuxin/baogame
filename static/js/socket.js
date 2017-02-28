@@ -1,5 +1,6 @@
 var socket = {
 	open: false,
+	error: null,
 	queueData: [],
 	ws: null,
 	begin: function (roomID) {
@@ -19,6 +20,11 @@ var socket = {
 				} else {
 					var name = str.substring(0, $s);
 					var data = JSON.parse(str.substring($s + 1));
+				}
+				//被服务器主动关闭
+				if (name == "close") {
+					this.open = false;
+					this.error = data;
 				}
 				_this.listeners[name] && _this.listeners[name](data);
 			}

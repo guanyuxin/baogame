@@ -67,16 +67,7 @@ wss.on('connection', function (ws) {
 	var roomID = location.query.roomID || 1;
 	var room = Room.findRoom(roomID);
 
-	if (!room) {
-		ws.close();
-		return;
-	}
 
-	//房间最多30个链接
-	if (room.game.clients.length > 30) {
-		ws.close();
-		return;
-	}
 	var socket = {
 		emit: function (name, data) {
 			try {
@@ -93,6 +84,18 @@ wss.on('connection', function (ws) {
 		listeners: {}
 	}
 
+	if (!room) {
+		socket.emit('close', '未找到房间');
+		ws.close();
+		return;
+	}
+
+	//房间最多30个链接
+	if (room.game.clients.length > 30) {
+		socket.emit('close', '房间链接已满');
+		ws.close();
+		return;
+	}
 	ws.on('message', function (message) {
 		var $s = message.indexOf('$');
 		if ($s == -1) {

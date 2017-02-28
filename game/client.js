@@ -37,6 +37,16 @@ Client.prototype.sendMap = function () {
 		npcMAX: this.game.npcMAX
 	});
 }
+Client.prototype.isAdmin = function () {
+	var admin = null;
+	for (let client of this.game.clients) {
+		if (client.p1 && !client.p1.dieing && !client.p1.dead) {
+			admin = client;
+			break;
+		}
+	}
+	return this == admin;
+}
 Client.prototype.connect = function () {
 	var socket = this.socket;
 	//接收初始化数据
@@ -126,7 +136,7 @@ Client.prototype.connect = function () {
 	});
 
 	socket.on("addAI", data => {
-		if (this.game.clients[0] == this) {
+		if (this.isAdmin()) {
 			if (this.game.npcMAX < 4) {
 				this.game.npcMAX++;
 				this.game.announce('userJoin', {AI:true});
@@ -137,7 +147,7 @@ Client.prototype.connect = function () {
 	})
 
 	socket.on("removeAI", data => {
-		if (this.game.clients[0] == this) {
+		if (this.isAdmin()) {
 			if (this.game.npcMAX > 0) {
 				this.game.npcMAX--;
 				this.game.announce('userLeave', {AI:true});
@@ -148,7 +158,7 @@ Client.prototype.connect = function () {
 	})
 
 	socket.on("changeMap", data => {
-		if (this.game.clients[0] == this) {
+		if (this.isAdmin()) {
 			this.game.createMap();
 		} else {
 			this.game.announce('message', this.name+"希望更换地图");
