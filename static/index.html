@@ -143,6 +143,9 @@
 		display: flex;
 		align-items: center;
 	}
+	.clients .controls {
+		display: flex;
+	}
 	.clients .btn {
 		padding: 3px 5px;
 		margin: 10px;
@@ -329,9 +332,11 @@
 	</div>
 </div>
 <div class="clients">
-	<a class="btn" v-on:click="changeMap" title="1#玩家可以更换地图">更换地图</a>
-	<a class="btn" v-on:click="addAI" title="1#玩家可以增加AI">增加AI</a>
-	<a class="btn" v-on:click="removeAI" title="1#玩家可以减少AI">减少AI</a>
+	<div v-if="playing" class="controls">
+		<a class="btn" v-on:click="changeMap" title="1#玩家可以更换地图">更换地图</a>
+		<a class="btn" v-on:click="addAI" title="1#玩家可以增加AI">增加AI</a>
+		<a class="btn" v-on:click="removeAI" title="1#玩家可以减少AI">减少AI</a>
+	</div>
 	<div class="userCount counter">玩家数：{{users.userCount}}</div>
 	<div class="AICount counter">AI数量：{{users.AICount}}</div>
 </div>
@@ -358,6 +363,7 @@ var app = new Vue({
 	},
 	data: {
 		message: 'INIT DONE',
+		playing: false,
 		me: {
 			name: localStorage.userName || "无名小卒",
 			canJoin: false
@@ -523,6 +529,7 @@ function initDone () {
 	})
 	//加入
 	socket.on('joinSuccess', function (p1) {
+		app.playing = true;
 		$('.joining').hide();
 	});
 	socket.on('joinFail', function (message) {
@@ -590,6 +597,7 @@ function initDone () {
 		notice(data.message);
 		//p1 dead
 		if (user.id == p1.id) {
+			app.playing = false;
 			setTimeout(function () {
 				$('.joining').show().find('h4').html('你挂了')
 			}, 500);	
