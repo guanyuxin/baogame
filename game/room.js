@@ -68,7 +68,7 @@ var Room = {
 			}
 			rdata.push({
 				id: room.id,
-				maxUser: room.game.props.maxUser,
+				maxUser: room.game.maxUser,
 				users: users,
 				name: room.name
 			})

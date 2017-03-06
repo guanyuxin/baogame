@@ -1,0 +1,259 @@
+@-webkit-keyframes popup {
+	0% {
+		opacity: 0;
+		-webkit-transform: scale(1.4)
+	}
+	70% {
+		opacity: 1;
+		-webkit-transform: scale(.9)
+	}
+	100% {
+		-webkit-transform: scale(1)
+	}
+}
+body {
+	background: #000;
+	-webkit-user-select: none;
+	margin: 0;
+}
+canvas {
+	width: 100%;
+	position: absolute;
+}
+.frame {
+	position: fixed;
+	width: 100%;
+	top: 0;
+	background: black;
+}
+.middle {
+	margin: auto;
+	position: relative;
+	background: #333;
+	background: -webkit-radial-gradient(#444, #444, #222)
+}
+.joining {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	background: rgba(0,0,0,.5);
+	background: -webkit-radial-gradient(rgba(0,0,0,.3), rgba(0,0,0,.3), rgba(0,0,0,.7));
+	color: #ff0;
+	display: -webkit-box;
+	-webkit-box-align: center;
+	-webkit-box-pack: center;
+}
+.joining .center {
+	padding: 40px 80px;
+	background: rgba(0,0,0,.6);
+	border-radius: 20px;
+	-webkit-animation: popup .5s;
+	position: relative;
+}
+.center h4 {
+	margin-top: 0;
+	text-align: center;
+	font-size: 30px;
+}
+.btn {
+	display: block;
+	border: 1px solid #ff0;
+	padding: 10px 20px;
+	border-radius: 5px;
+	margin-top: 20px;
+	text-align: center;
+	color: #ff0;
+	cursor: pointer;
+	text-decoration: none;
+}
+.btn.btn-weak {
+	padding: 5px;
+	font-size: 12px;
+	background: rgba(200,200,200,.1)
+}
+.btn-block {
+	display: block;
+	width: 400px;
+}
+.btn:active {
+	background: #ff0;
+	color: black;
+}
+
+.btn[disabled] {
+	background: rgba(100, 100, 100, .5);
+	border: 1px solid rgba(190, 190, 190, .5);
+	color: rgba(190, 190, 190, .5);
+}
+.btn[disabled]:after {
+	content: attr(disabledText)
+}
+.txt-input {
+	background: rgba(255, 255, 255, .8);
+	border: 1px solid #ff0;
+	padding: 10px;
+}
+input::-webkit-input-placeholder {
+	color: #f00 !important;
+}
+
+/*** notice GUI ***/
+.notice {
+	background: rgba(255,255,255,.5);
+	position: relative;
+	z-index: 10;
+}
+.noticeItem {
+    padding: 3px 10px;
+    border-bottom: 1px solid #ccc;
+    color: #333;
+}
+.noticeItem b {
+	font-weight: bolder;
+	color: #f00;
+}
+/*** user GUI ***/
+.clients {
+	position: relative;
+	background: rgba(255,255,255,.8);
+	display: flex;
+	align-items: center;
+}
+.clients .controls {
+	display: flex;
+}
+.clients .btn {
+	padding: 3px 5px;
+	margin: 10px;
+}
+.clients .counter {
+	border: 1px solid #999;
+	color: #999;
+	border-radius: 4px;
+	padding: 3px 5px;
+	margin: 10px;
+}
+/*** help GUI ***/
+.help {
+	position: absolute;
+	right: 20px;
+	top: 20px;
+}
+.help-icon {
+	color: #fff;
+	border: 2px solid #fff;
+	border-radius: 50%;
+	width: 20px;
+	height: 20px;
+	text-align: center;
+	line-height: 20px;
+	font-weight: bold;
+}
+.help-content {
+	pointer-events: none;
+	display: none;
+	position: absolute;
+	top: 30px;
+	right: 0px;
+	padding: 20px;
+	background: rgba(255,255,255,.6);
+	border-radius: 10px;
+	width: 200px;
+}
+.help-content b {
+	color: #ffff33;
+}
+.help:hover .help-content {
+	display: block;
+}
+/*** leave GUI ***/
+.leave {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+}
+.leave-icon {
+	display: block;
+	color: #fff;
+	width: 100px;
+	height: 40px;
+	background: rgba(255,255,255,.1);
+	transform: rotate(-45deg) translate(-22px, -30px);
+	text-align: center;
+	line-height: 40px;
+	font-weight: bold;
+}
+.leave-content {
+	pointer-events: none;
+	display: none;
+	position: absolute;
+	top: 30px;
+	left: 30px;
+	padding: 10px;
+	background: rgba(255,255,255,.6);
+	border-radius: 10px;
+	width: 100px;
+}
+.leave:hover .leave-icon {
+	background: rgba(255,255,255,.4);
+}
+.leave:hover .leave-content {
+	display: block;
+}
+
+.win {
+	display: none;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	background: rgba(0,0,0,.5);
+	-webkit-box-align: center;
+	-webkit-box-pack: center;
+	-webkit-box-orient: vertical;
+}
+.win .popup {
+	color: #fa0;
+	font-size: 100;
+	font-weight: bolder;
+	-webkit-text-stroke: 3px #fff;
+	-webkit-animation: popup 1s;
+}
+.mobileController {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+}
+.mobileController .left {
+	position: absolute;
+	left: 20px;
+	bottom: 20px;
+	display: -webkit-box;
+}
+.mobileController .right {
+	position: absolute;
+	right: 20px;
+	bottom: 20px;
+}
+.mobileController .moreBtn {
+	padding: 45px;
+	color: #fff;
+	border: 1px solid #fff;
+	background: rgba(255,255,255,.3);
+	text-align: center;
+	margin-top: -1px;
+	margin-left: -1px;
+}
+.mobileController .moreBtn:active {
+	background: rgba(255,255,255,.6);
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}

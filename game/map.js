@@ -18,13 +18,12 @@ var Map = function (game, data) {
 		this.pilla = data.pilla;
 		this.borns = data.borns;
 		this.hooks = data.hooks || {};
-		this.structs = [];
 		this.npcMAX = data.npcMAX;
 		for(let struct of data.structs) {
 			var s = new structs[struct.type](this.game, struct);
-			this.structs.push(s);
+			this.game.structs.push(s);
 		}
-		for (let struct of this.structs) {
+		for (let struct of this.game.structs) {
 			struct.id = this.structID++;
 		}
 		if (data.npcs) {
@@ -44,7 +43,6 @@ var Map = function (game, data) {
 		this.floor = [];
 		this.pilla = [];
 		this.hooks = {};
-		this.structs = [];
 		this.npcMAX = 2;
 
 		for (var i = 0; i < h; i++) {
@@ -127,27 +125,32 @@ var Map = function (game, data) {
 		this.floor[h - 2][w - 5] = 1;
 
 		this.borns = [];
-		for (var i = 0; i < 20; i++) {
+		var count = 0;
+		for (var i = 0; i < 80; i++) {
 			var x = Math.floor(Math.random()*(this.w - 2)) + 1;
 			var y = Math.floor(Math.random()*(this.h - 2)) + 1;
 			if (this.floor[y][x]) {
-				this.borns.push({x: x, y: y});
+				this.borns.push({id: this.structID, x: x, y: y});
+				this.game.structs.push(new structs.door(this.game, {id: this.structID++, x: x, y: y,opening:false}));
+				count++;
+				if (count > 4) {
+					break;
+				}
 			}
 		}
 
-		this.structs.push(new structs.itemGate(this.game, {id: 1, x: 0, y: this.h/2}));
-		this.structs.push(new structs.itemGate(this.game, {id: 2, x: this.w - 1, y: this.h/2}));
-		this.structs.push(new structs.itemGate(this.game, {id: 3, x: this.w/2, y: this.h - 1}));
+		this.game.structs.push(new structs.itemGate(this.game, {id: this.structID++, x: 0, y: this.h/2}));
+		this.game.structs.push(new structs.itemGate(this.game, {id: this.structID++, x: this.w - 1, y: this.h/2}));
+		this.game.structs.push(new structs.itemGate(this.game, {id: this.structID++, x: this.w/2, y: this.h - 1}));
 	}
 }
 Map.prototype.onStruct = function (u) {
-	var ux = Math.floor(u.x/C.TW);
-	var uy = Math.floor(u.y/C.TH);
-	for (let struct of this.structs) {
-		if (ux == struct.x && uy == struct.y) {
-			return struct.id;
+	for (let struct of this.game.structs) {
+		if (u.tx == struct.x && u.ty == struct.y) {
+			return struct;
 		}
 	}
+	return null;
 }
 Map.prototype.born = function () {
 	var i = Math.floor(Math.random()*this.borns.length);
@@ -182,19 +185,14 @@ Map.prototype.onPilla = function (x, y) {
 	return false;
 }
 Map.prototype.update = function () {
-	for (let struct of this.structs) {
+	for (let struct of this.game.structs) {
 		struct.update();
 	}
 }
 Map.prototype.getData = function () {
-	var structdata = [];
-	for (let struct of this.structs) {
-		structdata.push(struct.getData());
-	}
 	return {
 		floor: this.floor,
 		pilla: this.pilla,
-		structs: structdata,
 	}
 }
 

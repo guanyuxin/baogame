@@ -42,29 +42,41 @@ function getDest (map, i, j) {
 	}
 	//jump down
 	if (!f[i][j - 1]) {
-		for (var k = 1; k <= 4; k++) {
+		for (var k = 1; k <= 2; k++) {
 			if (f[i - k] && f[i - k][j - 1]) {
 				res.push([i - k, j - 1, k + 1, 'jumpDownLeft']);
 				break;
 			}
 		}
-		for (var k = 5; k <= 10; k++) {
+		for (var k = 3; k <= 4; k++) {
 			if (f[i - k] && f[i - k][j - 2]) {
 				res.push([i - k, j - 2, k + 1, 'jumpDownLeft']);
 				break;
 			}
 		}
+		for (var k = 5; k <= 7; k++) {
+			if (f[i - k] && f[i - k][j - 3]) {
+				res.push([i - k, j - 3, k + 1, 'jumpDownLeft']);
+				break;
+			}
+		}
 	}
 	if (!f[i][j + 1]) {
-		for (var k = 1; k < 4; k++) {
+		for (var k = 1; k < 2; k++) {
 			if (f[i - k] && f[i - k][j + 1]) {
 				res.push([i - k, j + 1, k + 1, 'jumpDownRight']);
 				break;
 			}
 		}
-		for (var k = 5; k <= 10; k++) {
+		for (var k = 3; k <= 4; k++) {
 			if (f[i - k] && f[i - k][j + 2]) {
 				res.push([i - k, j + 2, k + 1, 'jumpDownRight']);
+				break;
+			}
+		}
+		for (var k = 5; k <= 7; k++) {
+			if (f[i - k] && f[i - k][j + 3]) {
+				res.push([i - k, j + 3, k + 1, 'jumpDownRight']);
 				break;
 			}
 		}

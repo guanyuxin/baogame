@@ -33,7 +33,9 @@ var User = function (game, client) {
 	//携带物品
 	this.carry = '';
 	this.carryCount = 0;
-	this.onStruct = 0;
+
+	//所在的设施
+	this.onStruct = null;
 
 	//施法动作（倒计时时间）
 	this.fireing = 0;
@@ -92,6 +94,7 @@ User.prototype.getStatus = function () {
 		var onFloor = this.game.map.onFloor(this.x, this.y);
 		this.onFloor = onFloor;
 		this.nearPilla = this.game.map.nearPilla(this);
+		this.client.canClimb = this.nearPilla ? true : false;
 		if (onFloor && this.vy <= 0) {
 			if (this.rolling) {
 				this.rollPoint--;
@@ -179,16 +182,26 @@ User.prototype.update = function () {
 			this.carryCount = 0;
 		}
 	}
+
+	this.onStruct = this.game.map.onStruct(this);
+	if (this.onStruct) {
+		this.client.onStruct = this.onStruct.id;
+	} else {
+		this.client.onStruct = 0;
+	}
+	
+	if (this.spacePress && this.onStruct) {
+		this.onStruct.act && this.onStruct.act(this);
+	}
+	if (this.spaceDown && this.onStruct) {
+		this.onStruct.acting && this.onStruct.acting(this);
+	}
+
 	this.status = this.getStatus();
 	
 
 	
-	if (this.status == "standing" || this.status == "crawling") {
-		this.onStruct = this.game.map.onStruct(this);
-	} else {
-		this.onStruct = 0;
-	}
-
+	
 	if (this.status == "falling" || this.status == "standing" || this.status == "climbing") {
 		//开枪	
 		if (this.fireing > 0) {
@@ -364,6 +377,7 @@ User.prototype.update = function () {
 			}
 		}
 	}
+
 
 	this.updateCommon();
 	if (this.AI) {

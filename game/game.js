@@ -18,19 +18,10 @@ var Game = function (adminCode, maxUser, map, remove) {
 	this.status = C.GAME_STATUS_INIT;
 	this.adminCode = adminCode;
 	this.mapConfig = map;
-	this.maxUser = maxUser;
 	//其他人
 	this.users = [];
 	//A方面
-	this.team1 = {
-		users: [],
-		score: 0
-	};
-	//B方面
-	this.team2 = {
-		users: [],
-		score: 0
-	};
+	this.teams = [];
 	//所有连接，包括ob
 	this.clients = [];
 	this.deadClients = [];
@@ -44,13 +35,14 @@ var Game = function (adminCode, maxUser, map, remove) {
 	this.entitys = [];
 	this.tick = 0;
 	this.remove = remove;
-
+	this.structs = []; //预先建筑列表，map使用
 	this.createMap();
 	//会与客户端同步的数据
 	this.sync = new DataSync({
-		npcMAX: 0,
-		userCount: 0,
-		type: this.map.type
+		clientCount: 0,  // 当前玩家数量
+		type: this.map.type,
+		structs: this.structs, // 建筑列表
+		maxUser: maxUser //最多玩家数量
 	}, this);
 
 	this.runningTimer = setInterval(() => {
@@ -61,6 +53,7 @@ var Game = function (adminCode, maxUser, map, remove) {
 Game.prototype.createMap = function () {
 	this.mines = [];
 	this.entitys = [];
+	this.structs = [];
 	for (var i = 0; i < this.users.length; i++) {
 		this.users[i].killed('system')
 	}
@@ -73,15 +66,10 @@ Game.prototype.createMap = function () {
 		this.map = new Map(this);
 	}
 
-
 	this.props = {
 		userHeight: 40,
 		userWidth: 40,
-		maxUser: this.maxUser,
 		mode: "",
-		team1Max: 3,
-		team2Max: 3,
-		scoreMax: 3,
 		w: C.TW * this.map.w,
 		h: C.TH * this.map.h
 	}
@@ -93,7 +81,7 @@ Game.prototype.createMap = function () {
 	}
 
 }
-
+// todo remove
 Game.prototype.createNPC = function (data) {
 	data = data || {name: "萌萌的AI", npc: true, AI: "auto"};
 	var u = new User(this, data);
@@ -105,7 +93,6 @@ Game.prototype.createNPC = function (data) {
 		u.x = p.x;
 		u.y = p.y;
 	}
-	u.npc = true;
 	this.users.push(u);
 	return u;
 }
@@ -219,7 +206,7 @@ Game.prototype.addClient = function (socket, UUID) {
 		client = new Client(socket, this, UUID);
 	}
 	this.clients.push(client);
-	this.userCount++;
+	this.clientCount++;
 }
 //链接关闭
 Game.prototype.removeClient = function (socket) {
@@ -233,7 +220,7 @@ Game.prototype.removeClient = function (socket) {
 			this.clients.splice(i, 1);
 			this.deadClients.push(client);
 
-			this.userCount--;
+			this.clientCount--;
 			return;
 		}
 	}
@@ -293,11 +280,6 @@ Game.prototype.update = function () {
 		}
 	};
 
-	if (npcCount < this.npcMAX) {
-		var npc = this.createNPC();
-		npc.carryCount = 0;
-		npc.carry = 0;
-	}
 	//分发状态
 	this.sendTick();
 	//清理死亡的人物/物品
@@ -356,19 +338,18 @@ Game.prototype.sendTick = function () {
 	}
 
 	//team info
-	var team1 = {
-		users: [],
-		score: this.team1.score
-	}
-	var team2 = {
-		users: [],
-		score: this.team2.score
-	}
+	// var team1 = {
+	// 	users: [],
+	// 	score: this.team1.score
+	// }
+	// var team2 = {
+	// 	users: [],
+	// 	score: this.team2.score
+	// }
 
 
 	for (let client of this.clients) {
 		var p1 = client.p1 && client.p1.id;
-		var onStruct = client.p1 && client.p1.onStruct;
 		var minedata = [];
 		for (let mine of this.mines) {
 			if (mine.creater.id == p1 || mine.dead) {
@@ -388,18 +369,23 @@ Game.prototype.sendTick = function () {
 				users: userdata,
 				items: itemdata,
 				mines: minedata,
-				entitys: entitydata,
-				onStruct: onStruct,
-				p1: p1,
+				entitys: entitydata
 			});
 		}
 	}
 
+
 	var sync = this.sync.flush();
-	if (sync) {
-		for (let client of this.clients) {
+	for (let client of this.clients) {
+		if (sync) {
 			client.socket.emit('globalSync', sync);
+		}
+		var userSync = client.sync.flush();
+		if (userSync) {
+			client.socket.emit('userSync', userSync);
 		}
 	}
 }
+
+
 module.exports = Game;

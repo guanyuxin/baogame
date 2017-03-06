@@ -16,5 +16,12 @@
     "express": ">=4.0",
     "serve-static": ">=0.0.0",
     "ws": "^1.0.1"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-csso": "^2.0.0",
+    "gulp-uglify": "^2.0.1",
+    "pump": "^1.0.2"
   }
 }

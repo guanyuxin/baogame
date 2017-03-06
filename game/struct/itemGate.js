@@ -1,12 +1,24 @@
 "use strict"
 
 var C = require('../../static/js/const.js');
+var DataSync = require('../lib/DataSync.js');
 
 var ItemGate = function (game, data) {
-	this.id = data.id;
-	this.x = data.x;
-	this.y = data.y;
 	this.itemType = data.itemType;
+
+	this.sync = new DataSync({
+		id: data.id,
+		type: "itemGate",
+		x: data.x,
+		y: data.y,
+		working: 0, //运行
+		workingTime: data.workingTime || 20, //工作耗时
+		coolingTime: data.coolingTime || 200, //冷却耗时
+		cooling: 0, //冷却
+		openMax: data.openMax || 200,
+		opening: data.opening || data.openMax || 200, //开启状态
+	}, this);
+
 	this.game = game;
 }
 ItemGate.prototype.update = function () {
@@ -26,14 +38,6 @@ ItemGate.prototype.update = function () {
 			item.x = (this.x + .5) * C.TW;
 			item.y = (this.y + .5) * C.TH;
 		}
-	}
-}
-ItemGate.prototype.getData = function () {
-	return {
-		id: this.id,
-		type: "itemGate",
-		x: this.x,
-		y: this.y
 	}
 }
 module.exports = ItemGate;

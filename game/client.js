@@ -1,6 +1,7 @@
 "use strict"
 var Pack = require('../static/js/JPack.js');
 var C = require('../static/js/const.js');
+var DataSync = require('./lib/DataSync.js');
 
 var banedip = {};
 
@@ -20,6 +21,13 @@ var Client = function (socket, game, UUID) {
 	this.death = 0;
 	this.highestKill = 0;
 
+	//会与客户端同步的数据
+	this.sync = new DataSync({
+		me: null,
+		onStruct: null,
+		canClimb: false
+	}, this);
+
 	if (banedip[this.ip]) {
 		this.banned = true;
 	} else {
@@ -28,13 +36,14 @@ var Client = function (socket, game, UUID) {
 	this.connect();
 }
 Client.prototype.sendMap = function () {
+
 	this.socket.emit("init", {
 		props: this.game.props,
 		map: this.game.map.getData(),
 		bodies: [],
-		p1: this.p1 && !this.p1.dead && this.p1.id,
-		npcMAX: this.game.npcMAX
 	});
+
+	this.socket.emit("globalSync", this.game.sync.all());
 }
 Client.prototype.isAdmin = function () {
 	var admin = null;
@@ -83,14 +92,7 @@ Client.prototype.connect = function () {
 		for (let body of this.game.bodies) {
 			bodiesData.push(body.getData());
 		}
-		socket.emit("init", {
-			props: this.game.props,
-			map: this.game.map.getData(),
-			bodies: bodiesData,
-			p1: this.p1 && !this.p1.dead && this.p1.id,
-			npcMAX: this.game.npcMAX
-		});
-		socket.emit("globalSync", this.game.sync.all());
+		this.sendMap();
 	});
 
 	//加入
@@ -99,13 +101,13 @@ Client.prototype.connect = function () {
 			socket.emit('joinFail', "you are banned");
 			return;
 		}
-		var u = 0;
+		var playerCount = 0;
 		for (let user of this.game.users) {
 			if (!user.npc) {
-				u++;
+				playerCount++;
 			}
 		}
-		if (u >= this.game.props.maxUser) {
+		if (playerCount >= this.game.maxUser) {
 			socket.emit('joinFail', "加入失败，服务器已满");
 			return;
 		}
@@ -114,6 +116,7 @@ Client.prototype.connect = function () {
 		this.name = data.userName.replace(/[<>]/g, '').substring(0, 8);
 		this.team = data.team;
 		this.p1 = this.game.createUser(this);
+		this.me = this.p1.id;
 		socket.emit('joinSuccess');
 	});
 	//接收控制
@@ -125,36 +128,16 @@ Client.prototype.connect = function () {
 			this.p1.upDown = p1.upDown;
 			this.p1.downDown = p1.downDown;
 			this.p1.itemDown = p1.itemDown;
+			this.p1.spaceDown = p1.spaceDown;
 
 			this.p1.leftPress = p1.leftPress;
 			this.p1.rightPress = p1.rightPress;
 			this.p1.upPress = p1.upPress;
 			this.p1.downPress = p1.downPress;
 			this.p1.itemPress = p1.itemPress;
+			this.p1.spacePress = p1.spacePress;
 		}
 	});
-
-	socket.on("addAI", data => {
-		if (this.isAdmin()) {
-			if (this.game.npcMAX < 4) {
-				this.game.npcMAX++;
-				//this.game.announce('userJoin', {AI:true});
-			}
-		} else {
-			this.game.announce('message', [this.p1.id,"希望增加AI"]);
-		}
-	})
-
-	socket.on("removeAI", data => {
-		if (this.isAdmin()) {
-			if (this.game.npcMAX > 0) {
-				this.game.npcMAX--;
-				//this.game.announce('userLeave', {AI:true});
-			}
-		} else {
-			this.game.announce('message', [this.p1.id,"希望减少AI"]);
-		}
-	})
 
 	socket.on("changeMap", data => {
 		if (this.isAdmin()) {

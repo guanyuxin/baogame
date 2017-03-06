@@ -116,7 +116,6 @@ var Packs = {
 		carry: "Str",
 		carryCount: "INT",
 
-		nearPilla: Boolean,
 		fireing: "INT",
 		grenadeing: "INT",
 		doubleJumping: Boolean,
@@ -129,17 +128,19 @@ var Packs = {
 		watchData: "JSON"
 	}),
 	controlPack: new JPack({
-		leftDown: "INT",
-		rightDown: "INT",
-		upDown: "INT",
-		downDown: "INT",
+		leftDown: Boolean,
+		rightDown: Boolean,
+		upDown: Boolean,
+		downDown: Boolean,
 		itemDown: Boolean,
+		spaceDown: Boolean,
 
 		leftPress: Boolean,
 		rightPress: Boolean,
 		upPress: Boolean,
 		downPress: Boolean,
 		itemPress: Boolean,
+		spacePress: Boolean,
 	}),
 	itemPack: new JPack({
 		x: "INT",

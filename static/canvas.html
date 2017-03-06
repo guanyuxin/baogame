@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>Obj design</title>
+<script src="/static/js/vue.js"></script>
+<style>
+body {
+	margin: 0;
+}
+#app {
+	display: flex;
+	height: 100%;
+}
+.canvasCon {
+	background: #ccc;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+#can {
+	background: #fff;
+	border: 1px solid #000;
+}
+.content {
+	flex: 1;
+	background: #eee;
+	border-left: 1px solid #000;
+}
+.mod {
+	border-bottom: 1px solid #ccc;
+}
+</style>
+</head>
+<body><div id="app">
+	<div class="canvasCon"><canvas id="can" width="500" height="500"></canvas></div>
+	<div class="content">
+		<div class="mod" v-for="mod in mods">
+			[<input type="number" v-model="mod.x"/>.<input type="number" v-model="mod.y"/>,<input type="number" v-model="mod.r"/>]
+		</div>
+	</div>
+</div></body>
+<script>
+	var app = new Vue({
+		el: '#app',
+		data: {
+			w: 500,
+			h: 500,
+			mods: [{
+				r: 10,
+				x: 10,
+				y: 0,
+				type: "rect",
+				w: 100,
+				h: 40
+			}, {
+				r: 10,
+				x: 10,
+				y: 30,
+				type: "rect",
+				w: 100,
+				h: 40
+			}, {
+				r: 10,
+				x: 10,
+				y: 30,
+				type: "line",
+				points: [
+					[0,0],
+					[200,10],
+					[20,10],
+					[0,-40]
+				],
+				closed: true,
+			}]
+		},
+	});
+	document.addEventListener('input',update)
+	var ctx;
+
+	setTimeout(function () {
+		var can = document.getElementById("can");
+		ctx = can.getContext('2d');
+		update(ctx);
+	},10);
+
+	function drawRect (ctx, m) {
+		ctx.strokeStyle = "red";
+		ctx.lineWidth = 2;
+		ctx.fillStyle="blue";
+		ctx.fillRect(-m.w/2,-m.h/2,m.w,m.h);
+	}
+	function drawLine (ctx, m) {
+		ctx.strokeStyle = "red";
+		ctx.lineWidth = 2;
+
+		ctx.beginPath();
+		ctx.moveTo(m.points[0][0], m.points[0][1])
+		for (var i = 1; i < m.points.length; i++) {
+			ctx.lineTo(m.points[i][0], m.points[i][1]);
+		}
+		if (m.closed) {
+			ctx.closePath();
+		}
+		ctx.stroke();
+	}
+	function update() {
+		ctx.clearRect(0,0,app.w,app.h);
+		ctx.save();
+		ctx.translate(app.w/2, app.h/2);
+		for (var i = 0; i < app.mods.length; i++) {
+			ctx.save();
+			var modItem = app.mods[i];
+			ctx.translate(modItem.x, modItem.y);
+			ctx.rotate(modItem.r/180*Math.PI);
+			if (modItem.type == "rect") {
+				drawRect(ctx, modItem);
+			} else if (modItem.type == "line"){
+				drawLine(ctx, modItem);
+			}
+			ctx.restore();
+		}
+		ctx.restore();
+	}
+</script>
+</html>

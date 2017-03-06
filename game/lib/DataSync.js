@@ -3,35 +3,63 @@
 function DataSync (schema, obj) {
 	this.schema = schema;
 	this.obj = obj || this;
-	var store = {};
+	this.store = {};
 	this.dist = {};
 	this.clean = true;
 	
 	var shce = {};
 	for (var key in schema) {((key) => {
-		store[key] = schema[key];
+		this.store[key] = schema[key];
 		shce[key] = {
 			get: () => {
-				return store[key];
+				return this.store[key];
 			},
 			set: (value) => {
+				if (typeof value == "number" || typeof value == "string" || typeof value == "boolean") {
+					if (this.store[key] === value) {
+						return;
+					}
+					this.store[key] = value;
+				} else {
+					//throw "DataSync not support direct update obj"
+					this.store[key] = value;
+				}
 				this.dist[key] = value;
 				this.clean = false;
-				if (typeof value == "number" || typeof value == "string") {
-					store[key] = value;
-				} else {
-					//obj[key] = PX(value, dis[key])
-				}
 			}
 		}
 	})(key)}
 	Object.defineProperties(obj || this, shce);
 }
 
+DataSync.prototype.isClean = function () {
+	if (!this.clean) {
+		return false;
+	}
+	for (var key in this.schema) {
+		if (Array.isArray(this.store[key])) {
+			for (var i = 0; i < this.store[key].length; i++) {
+				if (this.store[key][i].sync && !this.store[key][i].sync.isClean()) {
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
 DataSync.prototype.flush = function () {
-	if (this.clean == false) {
+	if (this.isClean() == false) {
 		this.clean = true;
 		var res = this.dist;
+		for (var key in this.schema) {
+			if (Array.isArray(this.store[key])) {
+				for (var i = 0; i < this.store[key].length; i++) {
+					if (this.store[key][i].sync && !this.store[key][i].sync.isClean()) {
+						res[key+":"+i] = this.store[key][i].sync.flush();
+					}
+				}
+			}
+		}
 		this.dist = {};
 		return res;
 	} else {
@@ -42,7 +70,14 @@ DataSync.prototype.flush = function () {
 DataSync.prototype.all = function () {
 	var data = {};
 	for (var key in this.schema) {
-		data[key] = this.obj[key];
+		if (Array.isArray(this.store[key])) {
+			data[key] = [];
+			for (var i = 0; i < this.store[key].length; i++) {
+				data[key].push(this.store[key][i].sync.all());
+			}
+		} else {
+			data[key] = this.store[key];
+		}
 	}
 	return data;
 }
