@@ -19,6 +19,7 @@ server.listen(opts.port || 8030, function () {
 });
 
 app.use('/static', express.static('static'));
+app.use('/invite', express.static('invite'));
 app.use('/build', express.static('build'));
 
 //app.use(cookieParser());

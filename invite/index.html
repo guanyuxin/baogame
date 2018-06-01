@@ -1,0 +1,852 @@
+<html>
+<head>
+
+<meta name="viewport" content="width=750, user-scalable=no">
+<style>
+
+@-webkit-keyframes flipInX {
+  from {
+    -webkit-transform: perspective(400px) rotate3d(1, 0, 0, 90deg);
+    transform: perspective(400px) rotate3d(1, 0, 0, 90deg);
+    -webkit-animation-timing-function: ease-in;
+    animation-timing-function: ease-in;
+    opacity: 0;
+  }
+
+  40% {
+    -webkit-transform: perspective(400px) rotate3d(1, 0, 0, -20deg);
+    transform: perspective(400px) rotate3d(1, 0, 0, -20deg);
+    -webkit-animation-timing-function: ease-in;
+    animation-timing-function: ease-in;
+  }
+
+  60% {
+    -webkit-transform: perspective(400px) rotate3d(1, 0, 0, 10deg);
+    transform: perspective(400px) rotate3d(1, 0, 0, 10deg);
+    opacity: 1;
+  }
+
+  80% {
+    -webkit-transform: perspective(400px) rotate3d(1, 0, 0, -5deg);
+    transform: perspective(400px) rotate3d(1, 0, 0, -5deg);
+  }
+
+  to {
+    -webkit-transform: perspective(400px);
+    transform: perspective(400px);
+  }
+}
+
+.flipInX {
+  -webkit-backface-visibility: visible !important;
+  backface-visibility: visible !important;
+  -webkit-animation-name: flipInX;
+  animation-name: flipInX;
+}
+@-webkit-keyframes fadeInRight {
+  from {
+	opacity: 0;
+	-webkit-transform: translate3d(20%, 0, 0);
+	transform: translate3d(20%, 0, 0);
+  }
+
+  to {
+	opacity: 1;
+	-webkit-transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);
+  }
+}
+@-webkit-keyframes fadeInLeft {
+  from {
+	opacity: 0;
+	-webkit-transform: translate3d(-20%, 0, 0);
+	transform: translate3d(-20%, 0, 0);
+  }
+
+  to {
+	opacity: 1;
+	-webkit-transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);
+  }
+}
+
+@-webkit-keyframes fadeInTop {
+  0% {
+	opacity: 0;
+	-webkit-filter: blur(40px);
+	-webkit-transform: translate3d(0, 20%, 0);
+	transform: translate3d(0, 20%, 0);
+  }
+
+  70% {
+	opacity: .8;
+	-webkit-filter: blur(0px);
+  }
+
+  100% {
+	opacity: 1;
+	-webkit-transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);
+  }
+}
+@-webkit-keyframes fadeInTop2 {
+  0% {
+	opacity: 0;
+	-webkit-filter: blur(30px);
+	-webkit-transform: translate3d(0, 20%, 0);
+	transform: translate3d(40%, 0%, 0);
+  }
+
+  70% {
+	opacity: .8;
+	-webkit-filter: blur(0px);
+  }
+
+  100% {
+	opacity: 1;
+	-webkit-transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);
+  }
+}
+.animated {
+  -webkit-animation-duration: .5s;
+  animation-duration: .5s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+.d1 {
+	animation-delay: .7s;
+}
+.d2 {
+	animation-delay: 1.4s;
+}
+.d3 {
+	animation-delay: 2.1s;
+}
+.d4 {
+	animation-delay: 2.8s;
+}
+.d5 {
+	animation-delay: 3.5s;
+}
+.d6 {
+	animation-delay: 4.2s;
+}
+
+.fadeInRight {
+  -webkit-animation-name: fadeInRight;
+}
+.jackInTheBox {
+  -webkit-animation-name: jackInTheBox;
+}
+.fadeInLeft {
+  -webkit-animation-name: fadeInLeft;
+}
+.fadeInTop {
+  -webkit-animation-name: fadeInTop;
+  animation-duration: 1.7s;
+}
+.fadeInTop2 {
+  -webkit-animation-name: fadeInTop2;
+  animation-duration: 2s;
+}
+
+@-webkit-keyframes jackInTheBox {
+  from {
+	opacity: 0;
+	-webkit-transform: scale(0.1) rotate(30deg);
+	transform: scale(0.1) rotate(30deg);
+	-webkit-transform-origin: center bottom;
+	transform-origin: center bottom;
+  }
+
+  50% {
+	-webkit-transform: rotate(-10deg);
+	transform: rotate(-10deg);
+  }
+
+  70% {
+	-webkit-transform: rotate(3deg);
+	transform: rotate(3deg);
+  }
+
+  to {
+	opacity: 1;
+	-webkit-transform: scale(1);
+	transform: scale(1);
+  }
+}
+
+body {
+  font-family: PingFangTC-Ultralight, 'Source Sans Pro', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #34495e;
+  margin: 0;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+a {
+	text-decoration: none;
+	color: inherit;
+}
+.bg {
+	position: fixed;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	overflow: hidden;
+	background: #eee;
+	box-shadow: inset 0 0 50px rgba(0,0,0,.2);
+}
+.tblock {
+	position: absolute;
+	bottom: 20px;
+	left: 20px;
+	font-family: PingFangTC-Thin;
+}
+
+.titleF {
+	color: #ceab2f;
+	font-size: 40px;
+	background-image: -webkit-linear-gradient(92deg,#3e0000,#c34306);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+.titleS {
+	top: 40px;
+	color: #d0c599;
+	font-size: 50px;
+}
+.titles2 {
+	font-size: 60px;
+	color: #ceab2f;
+	text-shadow: 0 1px;
+}
+
+
+.pageBg {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.btn {
+	display: block;
+	background: #c2b6ea;
+	text-align: center;
+	margin: 20px auto;
+	width: 560px;
+	border-radius: 20px;
+	height: 60px;
+	line-height: 60px;
+	font-size: 40px;
+	border: 10px solid transparent
+}
+.btn.current {
+	border: 10px solid #f3640c;
+	color: #f3640c;
+}
+.btn:active {
+	background: #a2a6ca;
+}
+.slider {
+	position: absolute;
+	left: -375px;
+	transition: left .5s;
+}
+.sliderl {
+	left: 0
+}
+.sliderr {
+	left: -750px
+}
+.leftIntro {
+	position: absolute;
+	left: 110px;
+	top: 50px;
+	width: 400px;
+	display: none;
+}
+.rightIntro {
+	position: absolute;
+	right: 70px;
+	top: 50px;
+	display: none;
+}
+.dis {
+	display: block;
+}
+.Vblock {
+	display: flex;
+	padding-top: 32px;
+	letter-spacing: 8px;
+}
+.Vblock .titles {
+	writing-mode: tb;
+	width: 65px;
+}
+.line {
+	font-size: 30px;
+	padding: 10px;
+	border-bottom: 1px solid #ccc;
+}
+.album {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	perspective: 5000px;
+	transform-style: preserve-3d;
+}
+
+.apage {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	transition: transform .5s;
+	overflow: hidden;
+}
+.apage.type1 {
+	box-shadow: 0 0 0px 5px rgb(255, 255, 255), 0 0 10px 5px rgba(0,0,0,.8);
+}
+.apage.type2 {
+	top: 50%;
+	bottom: auto;
+}
+.type2.prevAPage {
+	transform: translate3d(-120%, -100%, 339px) rotate3d(-19 ,100, 7, -87deg)
+}
+.type2.currentAPage {
+	transform: translate(0%, -50%);
+}
+.type2.nextAPage {
+	transition: transform .2s;
+	transform: translate(100%, -50%) scale(.5) rotate(15deg);
+}
+.prevAPage {
+	transform: translate(-140%, 0)  scale(.6, 1.3);
+}
+.currentAPage {
+	transform: translate(0%, 0);
+}
+.nextAPage {
+	transform: translate(110%, 0) scale(.8)
+}
+
+.arrow {
+  background: url(./imgs/arrow.png);
+  background-size: 100%;
+  display: block;
+  width: 16px;
+  right: 0px;
+  height: 20px;
+  opacity: 1;
+}
+.arrowCon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  display: flex;
+  width: 60px;
+  justify-content: flex-end;
+  align-items: center;
+}
+.arrowright {
+	right: 0;
+	transform: rotate(180deg);
+	display: none;
+}
+.arrowleft {
+	left: 0;
+	display: none;
+}
+
+.arrow:before {
+  content:"";
+  background: url(./imgs/arrow.png);
+  background-size: 100%;
+  display: block;
+  width: 16px;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  right: 20px;
+  height: 20px;
+  position: absolute;
+  opacity: 0.5;
+}
+
+.arrow:after {
+  content:"";
+  background: url(./imgs/arrow.png);
+  background-size: 100%;
+  display: block;
+  width: 16px;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  right: 40px;
+  height: 20px;
+  position: absolute;
+  opacity: 0.3;
+}
+
+.arrow:before {
+  animation: animate-arrow-2 1s ease-in-out infinite 0.1s;
+}
+
+.arrow:after {
+  animation: animate-arrow-3 1s ease-in-out infinite 0.2s;
+}
+
+.arrow {
+  animation: animate-arrow-1 1s ease-in-out infinite;
+}
+
+@keyframes animate-arrow-1 {
+  0%{transform:translateX(-40px);opacity: 0;}
+  70%,100%{transform:translateX(0px);opacity: 1;}
+}
+@keyframes animate-arrow-2 {
+  0%{transform:translateX(-20px);opacity: 0;}
+  70%,100%{transform:translateX(0px);opacity: 0.5;}
+}
+@keyframes animate-arrow-3 {
+  0%{transform:translateX(-10px);opacity: 0;}
+  70%,100%{transform:translateX(0px);opacity: 0.3;}
+}
+.cardCenter {
+  background: #352f31;
+  color: #ceab2f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 34px;
+  line-height: 1.4;
+  font-weight: bold;
+}
+.deep {
+  overflow: hidden;
+}
+.deepin {
+  transform: scale(1.1);
+}
+.deepin2 {
+  transform: scale(1.03);
+}
+</style>
+<title>请柬-婚礼</title>
+</head>
+<body>
+	<div class="bg">
+		<div class="pg1 apage type1 currentAPage">
+			<div class="tblock" >
+				<div style="font-size: 60px;display:none" class="titleF animated fadeInRight">我们结婚啦!</div>
+				<div class="titleF animated fadeInRight d2" style="display:none">2018年6月16日</div>
+				<div class="titleF animated fadeInRight d3" style="display:none">承德市盛华大酒店</div>
+				<div class="titleF animated jackInTheBox d4" style="display:none">邀请您来见证</div>
+			</div>
+			<div class="pageBg" style="align-items: flex-end;">
+				<img src="./imgs/bg.jpg"/>
+			</div>
+		</div>
+		<div class="pg2 apage type1 nextAPage">
+			<div class="slider">
+				<div class="leftIntro">
+					<div class="titles2 animated fadeInLeft">新娘：李丽雪</div>
+					<div class="Vblock">
+						<div class="titles animated fadeInTop d1">宜言饮酒</div>
+						<div style="margin-top: 20px" class="titles animated fadeInTop d2">与子偕老</div>
+						<div style="margin-top: 60px" class="titles animated fadeInTop d3">琴瑟在御</div>
+						<div style="margin-top: 80px" class="titles animated fadeInTop d4">莫不静好</div>
+					</div>
+				</div>
+				<div class="rightIntro">
+					<div class="titles2 animated fadeInRight">新郎：关育新</div>
+					<div class="Vblock" style="justify-content: flex-end;">
+						<div style="margin-top: 80px" class="titles animated fadeInTop d1">死生契阔</div>
+						<div style="margin-top: 60px" class="titles animated fadeInTop d2">与子成说</div>
+						<div style="margin-top: 20px" class="titles animated fadeInTop d3">执子之手</div>
+						<div class="titles animated fadeInTop d4">与子偕老</div>
+					</div>
+				</div>
+				<div class="pageBg">
+					<img p-src="./imgs/intro.jpg"/>
+				</div>
+			</div>
+		</div>
+
+		<div class="pg3 apage type1 nextAPage">
+			<div class="album">
+				<div class="apage type2 currentAPage" style="
+					    height: 100%;
+					    display: flex;
+					    flex-direction: column;">
+					<div class="cardUpper deep" style="height: 500px">
+						<img class="deepin" p-src="./imgs/album/a1_1.jpg"/>
+					</div>
+					<div class="cardCenter animstart" style="flex:1">
+						<div class="animated fadeInRight">幸福的样子</div>
+						<div class="animated fadeInRight d1">便是有你在</div>
+						<div class="animated fadeInRight d2">每天都可以满面笑容</div>
+						<div class="animated fadeInRight d3">无惧前途</div>
+					</div>
+					<div class="cardBottom deep" style="height: 500px">
+						<img class="deepin" p-src="./imgs/album/a1_2.jpg"/>
+					</div>
+				</div>
+				<div class="apage type2 nextAPage" style="
+				  background: #413b41;
+				  height: 100%;"
+				>
+					<div class="cardUpper" style="
+					    height: 100%;
+					    display: flex;
+					    align-items: flex-end;
+					    background: #373133;">
+						<div class="deep ablpg2" style="padding-top: 55px;">
+							<img class="deepin deepin2" p-src="./imgs/album/a2_1.jpg" style="width: 1700px;"/>
+						</div>
+					</div>
+					<div class="cardBottom ablpg2f" style="
+					    height: 1000px;
+					    width: 2000px;
+					    transform: rotateZ(-70deg);
+					    position: absolute;
+					    top: 200px;
+					    overflow: hidden;
+					    background: rgb(47, 43, 44);
+					    border: 27px solid #a2a2a2;
+					    transition: left 1s;
+					    left: -42px;
+					    box-shadow: 0 0 31px rgba(0,0,0,.5);">
+					  <div class="deep" style="transform: rotateZ(70deg) translate(190px, 178px);">
+							<img class="deepin deepin2" p-src="./imgs/album/a2_2.jpg" style="
+							    width: 1250px;"/>
+						  </div>
+					</div>
+
+				</div>
+				<div class="apage type2 nextAPage" style="display:flex;flex-direction: column;
+     height: 100%;background: #413b41;">
+					<div class="upper deep" style="height: 509px"><img class="animated flipInX deepin" p-src="./imgs/album/a3_1.jpg"/></div>
+					<div class="bottom" style="display:flex;">
+						<img class="animated flipInX d1 deepin" p-src="./imgs/album/a3_2.jpg" style="width:360px;height:500px;margin:10px"/>
+						<img class="animated flipInX d1 deepin" p-src="./imgs/album/a3_3.jpg" style="width:360px;height:500px;margin:10px;margin-left:0"/>
+					</div>
+					<div class="cardCenter" style="flex:1">
+						<div class="animated fadeInRight d2">奋斗在北京城中</div>
+						<div class="animated fadeInRight d3">你是自强不息的女子</div>
+						<div class="animated fadeInRight d4">穿上鲜艳的礼服</div>
+						<div class="animated fadeInRight d5">你是世上最美的新娘</div>
+					</div>
+				</div>
+				<div class="apage type2 nextAPage deep" style="display: flex;
+			    height: 100%;
+			    flex-direction: column;">
+					<div class="cardCenter" style="flex:1">
+						<div class="animated fadeInTop2">曾经</div>
+						<div class="animated fadeInTop2 d2">青春有很多的遗憾</div>
+						<div class="animated fadeInTop2 d4">现在我在庆幸</div>
+						<div class="animated fadeInTop2 d6">是多少幸运能最终与你相遇</div>
+					</div>
+					<img class="deepin"  p-src="./imgs/album/a5.jpg"/>
+					<div class="cardCenter" style="flex:1">
+						<div class="animated fadeInTop2">命运的红绳</div>
+						<div class="animated fadeInTop2 d2">让我们不早不晚</div>
+						<div class="animated fadeInTop2 d4">刚好在最好的年华</div>
+						<div class="animated fadeInTop2 d6">遇见彼此</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="pg4 apage type1 nextAPage">
+			<a href=""><img style="width: 750px;height: 540px;" p-src="./imgs/map.png"/></a>
+			<div class="line">承德盛华大酒店 3楼</div>
+			<div class="line">位置：承德 双桥区 武烈路22号 ，承德大桥对面</div>
+			<div class="line">10点半 ~ 11点半 嘉宾入场</div>
+			<div class="line">欢迎您的光临</div>
+		</div>
+	</div>
+	<div class="arrowright arrowCon">
+		<span class="arrow"></span>
+	</div>
+	<div class="arrowleft arrowCon">
+		<span class="arrow"></span>
+	</div>
+	<style>
+	.loading {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0,0,0,.8);
+	}
+	.loading .innerPanel {
+		width: 200px;
+		height: 200px;
+		background: #ccc;
+		color: #333;
+		border-radius: 50%;
+		font-size: 30px;
+		font-weight: bold;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	</style>
+	<div class="loading">
+		<div class="innerPanel">加载中</div>
+	</div>
+</body>
+<script src="./zepto.js"></script>
+<script src="./fastclick.js"></script>
+<script>
+
+	function prepare(callback, progress) {
+		var imgs = $('[p-src]');
+		var t = imgs.length;
+		var finished = 0;
+		imgs.each(function (i, img) {
+			img = $(img);
+			img.on('load', function () {
+				finished++;
+				progress && progress(finished + "/" + t);
+				if (t == finished) {
+					callback();
+				}
+			});
+			img.attr('src', img.attr('p-src'));
+		})
+	}
+	function animatePage2() {
+		var x = 0;
+		var ax = 0;
+		var dom = $('.ablpg2')[0];
+		var domf = $('.ablpg2f');
+		domf.css('transition', '');
+		domf.css('left', 800)
+		dom.scrollLeft = 0;
+		setTimeout(function () {
+			domf.css('transition', 'left 1s');
+			function step2() {
+				setTimeout(function () {
+					domf.css('left', -42)
+				});
+				ax = 0;
+				var anim2 = setInterval(function () {
+					dom.scrollLeft = x;
+					x += ax;
+					console.log(x);
+					if (x < 750) {
+						ax+=.5;
+					} else {
+						ax*=.85;
+						if (ax< .08) {
+							clearInterval(anim2);
+						};
+					}
+				}, 17);
+			}
+			var anim1 = setInterval(function () {
+				dom.scrollLeft = x;
+				x += ax;
+				console.log(x);
+				if (x < 500) {
+					ax++;
+				} else {
+					ax*=.85;
+					if (ax < .08) {
+						clearInterval(anim1);
+						setTimeout(function () {
+							step2();
+						}, 500);
+					};
+				}
+			}, 17);
+			
+		}, 500);
+	}
+
+	$(function() {
+		FastClick.attach(document.body);
+	});
+
+	var currentP2Page = 0
+	$('.pg2').swipeRight(function (e) {
+		if (currentP2Page == 1) {
+			showl();
+			e.stopPropagation()
+		}
+	})
+	$('.pg2').swipeLeft(function (e) {
+		if (currentP2Page == 0) {
+			showr();
+			e.stopPropagation()
+		}
+	})
+	function showl() {
+		currentP2Page = 0;
+		$('.slider').removeClass('sliderr').addClass('sliderl')
+
+		$('.leftBtn').addClass('end');
+		$('.rightBtn').removeClass('end');
+		$('.rightIntro').removeClass('dis');
+		$('.leftIntro').removeClass('dis');
+		setTimeout(function () {
+			$('.leftIntro').addClass('dis');
+		},300)
+	}
+	function showr() {
+		currentP2Page = 1;
+		$('.slider').removeClass('sliderl').addClass('sliderr')
+		
+		$('.leftBtn').removeClass('end');
+		$('.rightBtn').addClass('end');
+		$('.rightIntro').removeClass('dis');
+		$('.leftIntro').removeClass('dis');
+		setTimeout(function () {
+			$('.rightIntro').addClass('dis');
+		},300)
+	}
+
+	function showCurrentPage() {
+		$('.currentAPage .animated').css('display', 'none');
+		setTimeout(function () {
+			$('.currentAPage .animated').css('display', '');
+			$('.nextAPage .animated').css('display', 'none');
+		}, 100)
+	}
+	function hideCurrentPage() {
+		$('.currentAPage .animated').css('display', 'none');
+	}
+
+	function Album(dom, pause) {
+		this.dom = dom;
+		this.pages = dom.children('.apage');
+
+		this.currentPage = 0;
+		this.playing = false;
+		this.pause = pause;
+		var _this = this;
+		this.pages.forEach(function (page, i) {
+			$(page).css('z-index', _this.pages.length + 10 - i)
+		})
+		dom.swipeLeft(function (e) {
+			if (_this.currentPage < _this.pages.length - 1) {
+				nextAPage(_this);
+				e.stopPropagation()
+			}
+		})
+		dom.swipeRight(function (e) {
+			if (_this.currentPage > 0) {
+				prevAPage(_this);
+				e.stopPropagation()
+			}
+		})
+	}
+	function nextAPage(a) {
+		if (a.currentPage < a.pages.length - 1 && !a.playing) {
+			var cp = a.dom.children('.currentAPage')
+			var np = cp.next();
+			hideCurrentPage();
+			cp.removeClass('currentAPage').addClass('prevAPage')
+			setTimeout(function () {
+				np.removeClass('nextAPage').addClass('currentAPage')
+				showCurrentPage();
+			}, a.pause || 0)
+			a.playing = true;
+			a.currentPage++;
+			a.onPage && a.onPage(a.currentPage);
+			setTimeout(function () {
+				a.playing = false;
+			}, 500)
+		}
+	}
+
+	function prevAPage(a) {
+		if (a.currentPage > 0 && !a.playing) {
+			var cp = a.dom.children('.currentAPage')
+			var pp = cp.prev();
+			cp.removeClass('currentAPage').addClass('nextAPage')
+			setTimeout(function () {
+				pp.removeClass('prevAPage').addClass('currentAPage')
+				showCurrentPage();
+			}, a.pause || 0)
+			a.playing = true;
+			a.currentPage--;
+			a.onPage && a.onPage(a.currentPage);
+			setTimeout(function () {
+				a.playing = false;
+			}, 500)
+		}
+	}
+
+	function start() {
+		$('.loading').remove();
+		$('.arrowright').css('display', 'flex')
+		audio.play();
+		showCurrentPage();
+		var out = new Album($(".bg"));
+		var pics = new Album($('.album'), 300);
+		pics.onPage = function (i) {
+			if (i == 1) {
+				animatePage2();
+			}
+		}
+		out.onPage = function (i) {
+			if (i < out.pages.length - 1) {
+				$('.arrowright').css('display', 'flex');
+			} else {
+				$('.arrowright').css('display', 'none');
+
+			}
+			if (i > 0) {
+				$('.arrowleft').css('display', 'flex');
+			} else {
+				$('.arrowleft').css('display', 'none');
+			}
+			if (i == 1) {
+				setTimeout(function () {
+					showl();
+				}, 500)
+			}
+		}
+	}
+	prepare(function () {
+		$('.loading .innerPanel').html('点击开始')
+		$('.loading').click(start)
+	}, function (prec) {
+		$('.loading .innerPanel').html('加载中' + prec)
+	});
+	var audio = new Audio();
+	audio.src = "./imgs/bg.aac";
+	// 视差
+	(function() {
+		var dpins = $('.deepin')
+		window.addEventListener('deviceorientation',function (e) {
+
+			var y = Math.min(50, Math.max(-50, e.beta*2 - 120)) + 50
+			var x = Math.min(50, Math.max(-50, e.gamma*2)) + 50
+			console.log(x, y, e.alpha);
+			dpins.css('-webkit-transform-origin-x', x + '%')
+			dpins.css('-webkit-transform-origin-y', y + '%')
+		},false);
+	})()
+</script>
+</html>
