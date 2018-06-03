@@ -434,6 +434,9 @@ a {
   font-size: 34px;
   line-height: 1.4;
   font-weight: bold;
+  z-index: 2;
+  -webkit-filter: drop-shadow(0 0 4px rgba(0,0,0,.7));
+  filter: drop-shadow(0 0 4px rgba(0,0,0,.7));
 }
 .deep {
   overflow: hidden;
@@ -492,16 +495,17 @@ a {
 					    height: 100%;
 					    display: flex;
 					    flex-direction: column;">
-					<div class="cardUpper deep" style="height: 500px">
+					<div class="cardUpper deep" style="height: 480px">
 						<img class="deepin" p-src="http://p0.meituan.net/codeman/93197f09624536b83fca5af91a971bb834802.jpg"/>
 					</div>
-					<div class="cardCenter animstart" style="flex:1">
+					<div class="cardCenter animstart" style="flex:1;
+     min-height: 200px;">
 						<div class="animated fadeInRight">幸福的样子</div>
 						<div class="animated fadeInRight d1">便是有你在</div>
 						<div class="animated fadeInRight d2">每天都可以满面笑容</div>
 						<div class="animated fadeInRight d3">无惧前途</div>
 					</div>
-					<div class="cardBottom deep" style="height: 500px">
+					<div class="cardBottom deep" style="height: 480px">
 						<img class="deepin" p-src="http://p1.meituan.net/codeman/08fa7a336bd946bac10654c47772ad6c49066.jpg"/>
 					</div>
 				</div>
@@ -544,7 +548,7 @@ a {
 						<img class="animated flipInX d1 deepin" p-src="http://p1.meituan.net/codeman/134eaec3b8621074a46b67d09b1ce04a207686.jpg" style="width:360px;height:500px;margin:10px"/>
 						<img class="animated flipInX d1 deepin" p-src="http://p1.meituan.net/codeman/d268d81872c6b9a13881cfda0ca82b75213409.jpg" style="width:360px;height:500px;margin:10px;margin-left:0"/>
 					</div>
-					<div class="cardCenter" style="flex:1">
+					<div class="cardCenter" style="flex:1;justify-content: flex-end;min-height: 200px;">
 						<div class="animated fadeInRight d2">奋斗在北京城中</div>
 						<div class="animated fadeInRight d3">你是自强不息的女子</div>
 						<div class="animated fadeInRight d4">穿上鲜艳的礼服</div>
