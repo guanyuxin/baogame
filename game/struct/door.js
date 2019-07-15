@@ -15,7 +15,7 @@ var Door = function (game, data) {
 		message: "AI传送门，使用空格键开启/关闭",
 		working: 0, //运行
 		workingTime: data.workingTime || 80, //工作耗时
-		coolingTime: data.coolingTime || 200, //冷却耗时
+		coolingTime: data.coolingTime || 2000, //冷却耗时
 		cooling: 0, //冷却
 		opening: data.opening == undefined ? true : data.opening, //开启状态
 	}, this);
