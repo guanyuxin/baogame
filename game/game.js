@@ -375,16 +375,16 @@ Game.prototype.sendTick = function () {
 	}
 
 
-	// var sync = this.sync.flush();
-	// for (let client of this.clients) {
-	// 	if (sync) {
-	// 		client.socket.emit('globalSync', sync);
-	// 	}
-	// 	var userSync = client.sync.flush();
-	// 	if (userSync) {
-	// 		client.socket.emit('userSync', userSync);
-	// 	}
-	// }
+	var sync = this.sync.flush();
+	for (let client of this.clients) {
+		if (sync) {
+			client.socket.emit('globalSync', sync);
+		}
+		var userSync = client.sync.flush();
+		if (userSync) {
+			client.socket.emit('userSync', userSync);
+		}
+	}
 }
 
 
