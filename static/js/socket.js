@@ -12,6 +12,8 @@ var socket = {
 				_this.emit(_this.queueData[i].name, _this.queueData[i].data);
 			}
 		};
+
+		// 消息处理
 		_this.ws.onmessage = function (evt) {
 			function processData (str) {
 				var $s = str.indexOf('$');
@@ -28,7 +30,10 @@ var socket = {
 				}
 				_this.listeners[name] && _this.listeners[name](data);
 			}
+
+			// 接收处理的数据
 			if (evt.data instanceof Blob) {
+				// 二进制
 				var reader = new FileReader();
 				reader.addEventListener("loadend", function () {
 					var x = new Uint8Array(reader.result);
@@ -37,9 +42,11 @@ var socket = {
 				});
 				reader.readAsArrayBuffer(evt.data);
 			} else {
+				// 文本数据
 				processData(evt.data);
 			}
 		};
+		// 断线重连，1.5s
 		_this.ws.onclose = function (evt) {
 			if (_this.open) {
 				setTimeout(function () {
@@ -47,10 +54,13 @@ var socket = {
 				}, 1500);
 			}
 		};
+		// 打印异常
 		_this.ws.onerror = function (evt) {
 			console.log("WebSocketError");
 		};
 	},
+
+	// 发送消息
 	emit: function (name, data) {
 		if (!this.open) {
 			this.queueData.push({name: name, data: data});
@@ -58,6 +68,8 @@ var socket = {
 			this.ws.send(name+"$"+JSON.stringify(data || {}));
 		}
 	},
+
+	// 回调功能
 	on: function (name, callback) {
 		this.listeners[name] = callback;
 	},
