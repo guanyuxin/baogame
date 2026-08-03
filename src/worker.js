@@ -65,6 +65,26 @@ export default {
 
 		// ---- 静态资源 / 页面 ----
 		// 交给 Workers Assets 处理（已配置 assets.directory）
-		return env.ASSETS.fetch(request);
+		// 与 Node 端 app.js 的 noCache.setHeaders 保持行为一致：
+		// 强制 no-store，并为 .js/.css/.html 补上 charset=utf-8，
+		// 否则在 Windows 中文系统上浏览器按 GBK 解码会导致中文乱码。
+		const assetResp = await env.ASSETS.fetch(request);
+		const ext = pathname.match(/\.(js|css|html)$/);
+		if (ext) {
+			const ctMap = {
+				js: "text/javascript; charset=utf-8",
+				css: "text/css; charset=utf-8",
+				html: "text/html; charset=utf-8",
+			};
+			const headers = new Headers(assetResp.headers);
+			headers.set("Content-Type", ctMap[ext[1]]);
+			headers.set("Cache-Control", "no-store");
+			return new Response(assetResp.body, {
+				status: assetResp.status,
+				statusText: assetResp.statusText,
+				headers,
+			});
+		}
+		return assetResp;
 	},
 };
