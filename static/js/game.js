@@ -1,7 +1,84 @@
 p1.onJoin = joining;
 
-var app = new Vue({
-	el: '#gameView',
+var app = Vue.createApp({
+	template: `
+<div class="frame">
+	<div class="topbar">
+		<div class="topbar-left">
+			<a href="./rooms" class="tb-btn tb-leave" title="返回房间列表">⇪ 返回</a>
+			<a v-if="playing && type=='world'" class="tb-btn tb-changemap" v-on:click="changeMap" title="1#玩家可以更换地图">更换地图</a>
+		</div>
+		<div class="topbar-center">
+			<span class="tb-counter">玩家数：{{clientCount}}</span>
+		</div>
+		<div class="topbar-right">
+			<div class="tb-notice-wrap">
+				<a href="javascript:void(0)" class="tb-btn tb-notice-btn" v-on:click.stop="toggleNotice" title="查看消息">
+					消息<span v-if="logs.length" class="tb-notice-badge">{{logs.length}}</span>
+				</a>
+				<!-- 新消息：仅显示最新一条，3秒后自动消失（带动画） -->
+				<div class="tb-notice-toast" v-if="noticeVisible && !noticeExpanded" :key="noticeKey" v-on:click.stop="toggleNotice">
+					<span class="notice-toast-text" v-html="logs[0]"></span>
+					<span class="notice-toast-hint" v-if="logs.length > 1">▾ 共{{logs.length}}条</span>
+				</div>
+				<!-- 点击展开：显示全部消息 -->
+				<div class="tb-notice-popup" v-if="noticeExpanded" v-on:click.stop>
+					<div class="notice-popup-head" v-on:click.stop="toggleNotice">
+						<span>全部消息（{{logs.length}}）</span>
+						<span class="notice-popup-close">✕</span>
+					</div>
+					<div v-for="log in logs" class="noticeItem" v-html="log"></div>
+					<div v-if="!logs.length" class="noticeItem noticeEmpty">暂无消息</div>
+				</div>
+			</div>
+			<div class="tb-help">
+				<div class="tb-help-icon" v-on:click.stop="toggleHelp">?</div>
+				<div class="tb-help-content" v-if="helpExpanded" v-on:click.stop>
+					<div><b>W,A,S,D</b>:移动  <b>Q</b>:使用物品</div>
+					<div>点击查看帮助详情</div>
+					<div>------------------</div>
+					<div>[2017-03-06]<br>增加了AI传送门</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="middle" id="middle" :style="{width: viewport.w + 'px',height: viewport.h + 'px'}">
+		<canvas id="structs" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
+		<canvas id="bg" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
+		<canvas id="mark" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
+		<canvas id="fg" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
+	</div>
+
+	<div class="win" v-if="win">
+		<div class="popup">任务完成</div>
+		<a class="btn btn-block" href="./rooms">返回</a>
+	</div>
+
+	<div class="joining" v-if="!playing"><div class="center">
+		<h4 class="message">加入游戏</h4>
+		你的名字：<input id="name-input" class="txt-input" placeholder="无名小卒" v-model="myName"/>
+		<div>
+			<a href="javascript:void(0)" v-if="playerCount < maxUser" class="btn joinBtn" v-on:click="joining">加入</a>
+			<div v-if="maxUser > 0 && playerCount >= maxUser" class="btn joinBtn" disabled="disabled">房间已满</div>
+			<a href="/rooms" class="btn">其他房间</a>
+			<a href="javascript:void(0)" class="btn btn-weak dismissBtn" v-on:click="ob">观战</a>
+		</div>
+	</div></div>
+
+	<div class="mobileController" style="display:none">
+		<div class="left">
+			<div data-act="l" class="moreBtn l">左</div>
+			<div data-act="r" class="moreBtn r">右</div>
+		</div>
+		<div class="right">
+			<div data-act="a" class="moreBtn item">act</div>
+			<div data-act="u" class="moreBtn up">上</div>
+			<div data-act="d" class="moreBtn down">下</div>
+		</div>
+	</div>
+</div>
+`,
 	methods: {
 		changeMap: function () {
 			socket.emit('changeMap');
@@ -14,25 +91,43 @@ var app = new Vue({
 		},
 		ob: function () {
 			app.playing = true;
+		},
+		toggleNotice: function () {
+			// 切换展开/收起。展开时清除 toast 计时器并隐藏 toast
+			if (noticeTimer) { clearTimeout(noticeTimer); }
+			app.noticeExpanded = !app.noticeExpanded;
+			if (app.noticeExpanded) { app.noticeVisible = false; }
+		},
+		toggleHelp: function () {
+			app.helpExpanded = !app.helpExpanded;
 		}
 	},
-	data: {
-		message: 'INIT DONE',
-		playing: false,
-		myName: localStorage.userName || "无名小卒",
-		type: "world",
-		clientCount: 0,
-		playerCount: 0,
-		maxUser: 0,
-		win: false,
-		logs: [],
-		viewport: {
-			scale: 1,
-			w: 1,
-			h: 1
+	data: function () {
+		return {
+			message: 'INIT DONE',
+			playing: false,
+			myName: localStorage.userName || "无名小卒",
+			type: "world",
+			clientCount: 0,
+			playerCount: 0,
+			maxUser: 6,
+			win: false,
+			logs: [],
+			noticeVisible: false,    // 新消息时短暂弹出3秒
+			noticeExpanded: false,  // 点击按钮展开查看全部
+			noticeKey: 0,           // 用于强制重渲染 toast，重新触发 CSS 动画
+			helpExpanded: false,
+			structs: [],
+			onStruct: null,
+			me: null,
+			viewport: {
+				scale: 1,
+				w: 1,
+				h: 1
+			}
 		}
 	}
-})
+}).mount('#gameView')
 
 
 
@@ -57,6 +152,11 @@ function parseParam () {
     return res;
 }
 var param = parseParam();
+// 兜底：访问首页但未带 roomID 时，走自动选房（未满加入/全满新建）
+// Node 端 / 已重定向到 /join，此分支主要覆盖 Worker 端静态资源直出首页的情况
+if (!param.roomID && location.pathname === '/') {
+	location.replace('/join');
+}
 
 var scoreText = [
 	'小试牛刀',
@@ -71,11 +171,21 @@ var scoreText = [
 	'已经超越神了'
 ]
 
+var noticeTimer = null;
 function notice (str) {
 	app.logs.unshift(str);
-	if (app.logs.length > 20) {
+	if (app.logs.length > 50) {
 		app.logs.pop();
 	}
+	// 展开状态下不打扰用户，不弹 toast
+	if (app.noticeExpanded) { return; }
+	// 新消息：短暂弹出3秒后隐藏。noticeKey++ 让 :key 变化，Vue 会重建 toast 节点，CSS 动画重新播放
+	app.noticeKey++;
+	app.noticeVisible = true;
+	if (noticeTimer) { clearTimeout(noticeTimer); }
+	noticeTimer = setTimeout(function () {
+		app.noticeVisible = false;
+	}, 3000);
 }
 
 var P;
@@ -268,6 +378,11 @@ function initDone () {
 				}
 				game.structsData[struct.y][struct.x] = struct;
 			}
+			// 全量同步（sync.all()）返回 structs 数组：据此初始化 app.structs，
+			// 使后续增量同步（structs:0 / structs:1 ...）能找到对应目标对象
+			app.structs = data.structs.map(function (s) {
+				return Object.assign({}, s, { clean: false });
+			});
 		}
 		syncData(data, app);
 	})
@@ -277,14 +392,23 @@ function initDone () {
 	});
 
 	function syncData (data, dest) {
+		if (dest == null) return;
 		for (var key in data) {
 			if (key.indexOf(':') != -1) {
 				var keys = key.split(':');
 				var old = dest[keys[0]];
 				if (Array.isArray(old)) {
-					syncData(data[key], old[parseInt(keys[1])]);
-					old[parseInt(keys[1])].clean = false;
+					var idx = parseInt(keys[1]);
+					if (old[idx] == null) {
+						// 目标数组对应位置尚无对象（struct 尚未初始化），跳过本次增量
+						continue;
+					}
+					syncData(data[key], old[idx]);
+					old[idx].clean = false;
 				} else {
+					if (old == null || old[keys[1]] == null) {
+						continue;
+					}
 					syncData(data[key], old[keys[1]]);
 					old[(keys[1])].clean = false;
 				}
@@ -346,13 +470,13 @@ var imgs = {};
 for (var key in imgUrls) {
 	if (typeof(imgUrls[key]) == "string") {
 		var Img = new Image();
-		Img.src = "/static/imgs/" + imgUrls[key];
+		Img.src = "/imgs" + imgUrls[key];
 		imgs[key] = Img;
 	} else {
 		var arr = [];
 		for (var i = 0; i < imgUrls[key].length; i++) {
 			var Img = new Image();
-			Img.src = "/static/imgs/" + imgUrls[key][i];
+			Img.src = "/imgs" + imgUrls[key][i];
 			arr.push(Img);
 		}
 		imgs[key] = arr;
@@ -772,4 +896,12 @@ function render (ctx, data) {
 	Effect.render(ctx);
 	ctx.restore();
 }
+
+// 点击页面空白处收起消息/帮助弹层（不影响弹层内部点击）
+document.addEventListener('click', function () {
+	app.noticeExpanded = false;
+	app.noticeVisible = false;
+	app.helpExpanded = false;
+});
+
 initDone();

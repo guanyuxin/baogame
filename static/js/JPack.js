@@ -160,8 +160,8 @@ var Packs = {
 	})
 }
 
-if (!this.CSS) {
+if (typeof module !== 'undefined' && module.exports) {
 	module.exports = Packs;
-} else {
-	this.Packs = Packs
+} else if (typeof window !== 'undefined') {
+	window.Packs = Packs;
 }

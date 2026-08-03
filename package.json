@@ -8,20 +8,21 @@
     "url": "git@github.com:guanyuxin/baogame.git"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=24.18.0"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "build": "node build.mjs",
+    "deploy": "wrangler deploy",
+    "dev:worker": "wrangler dev"
   },
   "dependencies": {
-    "compression": ">=1.0.0",
-    "cookieparser": "^0.1.0",
-    "express": ">=4.0",
-    "serve-static": ">=0.0.0",
-    "ws": "^1.0.1"
+    "express": "^5.2.1",
+    "vue": "^3.5.40",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-concat": "^2.6.1",
-    "gulp-csso": "^2.0.0",
-    "gulp-uglify": "^2.0.1",
-    "pump": "^1.0.2"
+    "esbuild": "^0.28.1",
+    "wrangler": "^4.118.0"
   }
 }

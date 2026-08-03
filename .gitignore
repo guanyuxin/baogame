@@ -6,3 +6,7 @@
 #
 node_modules/
 npm-debug.log
+
+# 构建产物（由 npm run build 从 node_modules/vue 生成，勿手写维护）
+build/
+static/js/vue.js

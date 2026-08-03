@@ -7,10 +7,10 @@ function DataSync (schema, obj) {
 	this.dist = {};
 	this.clean = true;
 	
-	var shce = {};
+	var props = {};
 	for (var key in schema) {((key) => {
 		this.store[key] = schema[key];
-		shce[key] = {
+		props[key] = {
 			get: () => {
 				return this.store[key];
 			},
@@ -21,7 +21,6 @@ function DataSync (schema, obj) {
 					}
 					this.store[key] = value;
 				} else {
-					//throw "DataSync not support direct update obj"
 					this.store[key] = value;
 				}
 				this.dist[key] = value;
@@ -29,7 +28,7 @@ function DataSync (schema, obj) {
 			}
 		}
 	})(key)}
-	Object.defineProperties(obj || this, shce);
+	Object.defineProperties(obj || this, props);
 }
 
 DataSync.prototype.isClean = function () {

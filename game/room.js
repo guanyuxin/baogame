@@ -38,7 +38,7 @@ var Room = {
 	userCount: function () {
 		var c = 0;
 		for (var i = 0; i < rooms.length; i++) {
-			c += rooms.game.clients.length;
+			c += rooms[i].game.clients.length;
 		}
 		return c;
 	},
@@ -56,6 +56,37 @@ var Room = {
 				return rooms[i];
 			}
 		}
+	},
+	// 查找一个未满的房间（按 id 升序，优先复用已存在的房间）
+	// 满判定依据：真实玩家数 >= maxUser（与前端 game.js 的 playerCount >= maxUser 一致）
+	// 返回房间对象；若全部已满则返回 null
+	findAvailableRoom: function () {
+		// rooms 按 push 顺序即 id 升序，无需额外排序
+		for (var i = 0; i < rooms.length; i++) {
+			var room = rooms[i];
+			var users = 0;
+			if (room.game && room.game.users) {
+				for (var j = 0; j < room.game.users.length; j++) {
+					if (!room.game.users[j].npc) {
+						users++;
+					}
+				}
+			}
+			if (users < room.game.maxUser) {
+				return room;
+			}
+		}
+		return null;
+	},
+	// 自动选房：有空位则返回该房间；全部已满则新建一个房间
+	// type 用于新建房间时的类型，默认 "大乱斗"
+	joinOrCreate: function (type) {
+		type = type || "大乱斗";
+		var room = this.findAvailableRoom();
+		if (!room) {
+			room = this.createRoom(type);
+		}
+		return room;
 	},
 	getRoomData: function () {
 		var rdata = [];

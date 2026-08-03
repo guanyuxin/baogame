@@ -1,35 +1,30 @@
 "use strict"
 
 var C = require('../../static/js/const.js');
-var DataSync = require('../lib/DataSync.js');
-
+var Struct = require('./base.js');
 
 var Door = function (game, data) {
-	this.game = game;
-
-	this.sync = new DataSync({
-		id: data.id,
-		type: "door",
-		x: data.x,
-		y: data.y,
+	// message 是 door 特有的字段
+	Struct.call(this, game, data, "door", {
 		message: "AI传送门，使用空格键开启/关闭",
-		working: 0, //运行
-		workingTime: data.workingTime || 80, //工作耗时
-		coolingTime: data.coolingTime || 2000, //冷却耗时
-		cooling: 0, //冷却
-		opening: data.opening == undefined ? true : data.opening, //开启状态
-	}, this);
-	
-	//最多使用几次
+		workingTime: data.workingTime || 80,
+		coolingTime: data.coolingTime || 2000,
+		opening: data.opening == undefined ? true : data.opening
+	});
+
+	// 最多使用几次
 	this.count = data.count;
-	
-	//同时最多控制多少npc
+
+	// 同时最多控制多少 npc
 	this.liveCount = data.liveCount;
 
 	this.npcConfig = data.npcConfig;
 
 	this.users = [];
 }
+Door.prototype = Object.create(Struct.prototype);
+Door.prototype.constructor = Door;
+
 Door.prototype.act = function () {
 	this.opening = !this.opening;
 }

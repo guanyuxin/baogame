@@ -1,0 +1,26 @@
+name = "baogame"
+main = "src/worker.js"
+compatibility_date = "2026-04-07"
+compatibility_flags = ["nodejs_compat"]
+
+# 每个房间对应一个 Durable Object 实例
+[[durable_objects.bindings]]
+name = "ROOM"
+class_name = "Room"
+
+# 房间列表（单例）Durable Object
+[[durable_objects.bindings]]
+name = "LOBBY"
+class_name = "Lobby"
+
+# Durable Object 迁移/命名空间配置
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room", "Lobby"]
+
+# 静态资源（HTML/CSS/JS/图片）通过 Workers Assets 提供
+# 直接指向 static/ 子目录，避免把项目根（含 node_modules）当成 asset 目录
+# 注意：game/ 与 src/ 不在此目录，仍会经 esbuild 打包进 Worker bundle 运行
+[assets]
+directory = "static"
+binding = "ASSETS"

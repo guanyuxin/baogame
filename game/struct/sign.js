@@ -1,32 +1,19 @@
+"use strict"
 
-var DataSync = require('../lib/DataSync.js');
+var Struct = require('./base.js');
 
 var Sign = function (game, data) {
-	this.game = game;
-
-	this.sync = new DataSync({
-		id: data.id,
-		type: "sign",
-		x: data.x,
-		y: data.y,
-		working: 0, //运行
-		workingTime: data.workingTime || 20, //工作耗时
-		coolingTime: data.coolingTime || 200, //冷却耗时
-		cooling: 0, //冷却
+	Struct.call(this, game, data, "sign", {
+		workingTime: data.workingTime || 20,
+		coolingTime: data.coolingTime || 200,
 		openMax: data.openMax || 200,
-		opening: data.opening || data.openMax || 200, //开启状态
-	}, this);
+		opening: data.opening || data.openMax || 200,
+		message: data.message
+	});
 }
-Sign.prototype.update = function () {
+Sign.prototype = Object.create(Struct.prototype);
+Sign.prototype.constructor = Sign;
 
-}
-Sign.prototype.getData = function () {
-	return {
-		id: this.id,
-		type: "sign",
-		x: this.x,
-		y: this.y,
-		message: this.message
-	}
-}
+Sign.prototype.update = function () {}
+
 module.exports = Sign;
