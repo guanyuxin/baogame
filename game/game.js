@@ -14,14 +14,12 @@ var AIController = require('./ai/AIController.js');
 
 var DataSync = require('./lib/DataSync.js');
 
-var Game = function (adminCode, maxUser, map, remove) {
+var Game = function (adminCode, maxUser, map, remove, autoTick) {
 	this.status = C.GAME_STATUS_INIT;
 	this.adminCode = adminCode;
 	this.mapConfig = map;
 	//其他人
 	this.users = [];
-	//A方面
-	this.teams = [];
 	//所有连接，包括ob
 	this.clients = [];
 	this.deadClients = [];
@@ -36,6 +34,7 @@ var Game = function (adminCode, maxUser, map, remove) {
 	this.tick = 0;
 	this.remove = remove;
 	this.structs = []; //预先建筑列表，map使用
+	this.clientCount = 0;
 	this.createMap();
 	//会与客户端同步的数据
 	this.sync = new DataSync({
@@ -45,9 +44,13 @@ var Game = function (adminCode, maxUser, map, remove) {
 		maxUser: maxUser //最多玩家数量
 	}, this);
 
-	this.runningTimer = setInterval(() => {
-		this.update();
-	}, 17);
+	// autoTick=true 时自行开启游戏循环（Node 直接运行）；
+	// 在 Cloudflare Workers/Durable Objects 中由外部驱动 update()，传 false
+	if (autoTick !== false) {
+		this.runningTimer = setInterval(() => {
+			this.update();
+		}, 17);
+	}
 }
 
 Game.prototype.createMap = function () {
@@ -81,7 +84,6 @@ Game.prototype.createMap = function () {
 	}
 
 }
-// todo remove
 Game.prototype.createNPC = function (data) {
 	data = data || {name: "萌萌的AI", npc: true, AI: "auto"};
 	var u = new User(this, data);
@@ -244,7 +246,8 @@ Game.prototype.announce = function (type, data) {
 Game.prototype.win = function (user) {
 	this.announce('win', user.id);
 	setTimeout(() => {
-		clearInterval(this.runningTimer);
+		// autoTick=true（Node 模式）下需停掉内部循环；Worker 模式下 runningTimer 为 undefined
+		if (this.runningTimer) clearInterval(this.runningTimer);
 		this.remove && this.remove(this);
 	}, 1000);
 }
@@ -286,32 +289,12 @@ Game.prototype.update = function () {
 	this.clean();
 }
 Game.prototype.clean = function () {
-	for(var i = this.items.length - 1; i >= 0; i--) {
-		var item = this.items[i];
-		if (!item.dead) {
-		} else {
-			this.items.splice(i, 1);
-		}
-	}
-	for(var i = this.mines.length - 1; i >= 0; i--) {
-		var mine = this.mines[i];
-		if (!mine.dead) {
-		} else {
-			this.mines.splice(i, 1);
-		}
-	}
-	for(var i = this.entitys.length - 1; i >= 0; i--) {
-		var entity = this.entitys[i];
-		if (!entity.dead) {
-		} else {
-			this.entitys.splice(i, 1);
-		}
-	}
-	for(var i = this.users.length - 1; i >= 0; i--) {
-		var user = this.users[i];
-		if (!user.dead) {
-		} else {
-			this.users.splice(i, 1);
+	this.items = this.items.filter(item => !item.dead);
+	this.mines = this.mines.filter(mine => !mine.dead);
+	this.entitys = this.entitys.filter(entity => !entity.dead);
+	for (var i = this.users.length - 1; i >= 0; i--) {
+		if (this.users[i].dead) {
+			var user = this.users.splice(i, 1)[0];
 			this.bodies.push(user);
 			if (this.bodies.length > 100) {
 				this.bodies = this.bodies.slice(0, 50);
@@ -336,17 +319,6 @@ Game.prototype.sendTick = function () {
 	for (let entity of this.entitys) {
 		entitydata.push(Pack.entityPack.encode(entity));
 	}
-
-	//team info
-	// var team1 = {
-	// 	users: [],
-	// 	score: this.team1.score
-	// }
-	// var team2 = {
-	// 	users: [],
-	// 	score: this.team2.score
-	// }
-
 
 	for (let client of this.clients) {
 		var p1 = client.p1 && client.p1.id;

@@ -103,7 +103,7 @@ function deepSearch (map, lengthMap, dirMap) {
 				if (lengthMap[i][j] == -1) {
 					continue;
 				}
-				dest = getDest(map, i, j);
+				var dest = getDest(map, i, j);
 				for (var k = 0; k < dest.length; k++) {
 					if (lengthMap[dest[k][0]][dest[k][1]] == -1 || lengthMap[dest[k][0]][dest[k][1]] > lengthMap[i][j] + dest[k][2]) {
 						lengthMap[dest[k][0]][dest[k][1]] = lengthMap[i][j] + dest[k][2];
@@ -118,14 +118,6 @@ function deepSearch (map, lengthMap, dirMap) {
 			break;
 		}
 	}
-}
-
-function DR_MAP (dirMap) {
-	console.log('\n\n');
-	for (var dd = 0; dd < dirMap.length; dd++){
-		console.log(dirMap[dd].join(' '))
-	}
-	console.log('\n\n');
 }
 
 var Path = function (map, P) {

@@ -1,8 +1,9 @@
 <!doctype>
 <html>
 <head>
+	<meta charset="utf-8">
 	<title>暴走大乱斗</title>
-	<script src="/static/js/zepto.js"></script>
+	<script src="/js/zepto-lite.js"></script>
 	<style>
 		body {
 			margin: 0;
@@ -57,8 +58,13 @@
 </html>
 <script>
 	$('.btn-lesson').click(function (e) {
-		$.get('./createRoom?type='+$(e.currentTarget).attr("roomtype"), function (roomID) {
-			location.href = './?roomID='+roomID
+		var roomType = this.getAttribute('roomtype');
+		$.get('./createRoom?type='+roomType, function (roomID) {
+			if (roomID) {
+				location.href = './?roomID='+roomID;
+			} else {
+				alert('创建房间失败，请重试');
+			}
 		});
 	});
 	function refresh () {

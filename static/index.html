@@ -1,86 +1,20 @@
 <!doctype/>
 <html>
 <head>
+	<meta charset="utf-8">
 	<meta name="viewport" content="width=1100, user-scalable=no">
-	<link rel="stylesheet" type="text/css" href="/static/css/game.css" />
+	<link rel="stylesheet" type="text/css" href="/css/game.css" />
 	<title>暴走大乱斗</title>
 </head>
 <body>
-<div id="gameView"  :style="{paddingTop: viewport.h + 'px'}">
-<div class="frame">
-	<div class="middle" id="middle" :style="{width: viewport.w + 'px',height: viewport.h + 'px'}">
-
-		<canvas id="structs" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
-		<canvas id="bg" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
-		<canvas id="mark" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
-		<canvas id="fg" v-bind:width="viewport.w" v-bind:height="viewport.h"></canvas>
-	</div>
-
-	<div class="win" v-if="!win">
-		<div class="popup">任务完成</div>
-		<a class="btn btn-block" href="./rooms">返回</a>
-	</div>
-
-	<div class="joining" v-if="!playing"><div class="center">
-		<h4 class="message">加入游戏</h4>
-		你的名字：<input id="name-input" class="txt-input" placeholder="无名小卒" v-model="myName"/>
-		<div>
-			<a href="javascript:void(0)" v-if="playerCount < maxUser" class="btn joinBtn" v-on:click="joining">加入</a>
-			<div v-if="playerCount >= maxUser" class="btn joinBtn" disabled="disabled">房间已满</div>
-			<a href="/rooms" class="btn">其他房间</a>
-			<a href="javascript:void(0)" class="btn btn-weak dismissBtn" v-on:click="ob">观战</a>
-		</div>
-	</div></div>
-
-	<div class="mobileController" style="display:none">
-		<div class="left">
-			<div data-act="l" class="moreBtn l">左</div>
-			<div data-act="r" class="moreBtn r">右</div>
-		</div>
-		<div class="right">
-			<div data-act="a" class="moreBtn item">act</div>
-			<div data-act="u" class="moreBtn up">上</div>
-			<div data-act="d" class="moreBtn down">下</div>
-		</div>
-	</div>
-
-	<div class="help">
-		<div class="help-icon"><a target="blank" href="https://github.com/guanyuxin/baogame">?</a></div>
-		<div class="help-content">
-			<div><b>W,A,S,D</b>:移动  <b>Q</b>:使用物品</div>
-			<div>点击查看帮助详情</div>
-			<div>------------------</div>
-			<div>[2017-03-06]<br>
-				增加了AI传送门</div>
-		</div>
-	</div>
-	<div class="leave">
-		<a href="./rooms" class="leave-icon">⇪</a>
-		<div class="leave-content">
-			返回房间列表
-		</div>
-	</div>
-</div>
-
-<div class="clients">
-	<div v-if="playing && type=='world'" class="controls">
-		<a class="btn" v-on:click="changeMap" title="1#玩家可以更换地图">更换地图</a>
-	</div>
-	<div class="clientCount counter">玩家数：{{clientCount}}</div>
-</div>
-
-<div class="notice">
-	<div v-for="log in logs" class="noticeItem" v-html="log"></div>
-</div>
-
-</div>
+<div id="gameView"></div>
 </body>
 </html>
 
-<script src="/static/js/JPack.js"></script>
-<script src="/static/js/const.js"></script>
-<script src="/static/js/socket.js"></script>
-<script src="/static/js/vue.js"></script>
-<script src="/static/js/pcController.js"></script>
-<script src="/static/js/effect.js"></script>
-<script src="/static/js/game.js"></script>
+<script src="/js/JPack.js"></script>
+<script src="/js/const.js"></script>
+<script src="/js/socket.js"></script>
+<script src="/js/vue.js"></script>
+<script src="/js/pcController.js"></script>
+<script src="/js/effect.js"></script>
+<script src="/js/game.js"></script>

@@ -1,7 +1,9 @@
+<!doctype>
 <html>
 <head>
+<meta charset="utf-8">
 <title>Obj design</title>
-<script src="/static/js/vue.js"></script>
+<script src="/js/vue.js"></script>
 <style>
 body {
 	margin: 0;
@@ -40,9 +42,9 @@ body {
 	</div>
 </div></body>
 <script>
-	var app = new Vue({
-		el: '#app',
-		data: {
+	var app = Vue.createApp({
+		data: function () {
+			return {
 			w: 500,
 			h: 500,
 			mods: [{
@@ -72,8 +74,9 @@ body {
 				],
 				closed: true,
 			}]
-		},
-	});
+		}
+		}
+	}).mount('#app');
 	document.addEventListener('input',update)
 	var ctx;
 

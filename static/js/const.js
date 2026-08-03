@@ -9,6 +9,8 @@ var C = {
 	GAME_STATUS_OVER: 4
 }
 
-if (!this.CSS) {
+if (typeof module !== 'undefined' && module.exports) {
 	module.exports = C;
+} else if (typeof window !== 'undefined') {
+	window.C = C;
 }

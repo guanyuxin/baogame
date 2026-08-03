@@ -3,9 +3,14 @@ var socket = {
 	error: null,
 	queueData: [],
 	ws: null,
+	currentRoomID: null,
 	begin: function (roomID) {
 		var _this = this;
-		_this.ws = new WebSocket("ws://"+location.host+"?roomID="+(roomID || 1));
+		// 保存当前 roomID，断线重连时复用，避免回退到默认房间 1
+		if (roomID) { _this.currentRoomID = roomID; }
+		var connectID = _this.currentRoomID || roomID || 1;
+		var protocol = location.protocol === "https:" ? "wss" : "ws";
+		_this.ws = new WebSocket(protocol + "://" + location.host + "/ws?roomID=" + connectID);
 		_this.ws.onopen = function () {
 			_this.open = true;
 			for (var i = 0; i < _this.queueData.length; i++) {
@@ -13,44 +18,44 @@ var socket = {
 			}
 		};
 
-		// 消息处理
-		_this.ws.onmessage = function (evt) {
-			function processData (str) {
-				var $s = str.indexOf('$');
-				if ($s == -1) {
-					var name = str;
-				} else {
-					var name = str.substring(0, $s);
-					var data = JSON.parse(str.substring($s + 1));
-				}
-				//被服务器主动关闭
-				if (name == "close") {
-					this.open = false;
-					this.error = data;
-				}
-				_this.listeners[name] && _this.listeners[name](data);
+	// 消息处理：协议为 "eventName$jsonData" 文本帧
+	_this.ws.onmessage = function (evt) {
+		var str = evt.data;
+		var $s = str.indexOf('$');
+		var name, data;
+		if ($s == -1) {
+			name = str;
+			data = undefined;
+		} else {
+			name = str.substring(0, $s);
+			try {
+				data = JSON.parse(str.substring($s + 1));
+			} catch (e) {
+				// 非 JSON 载荷（如纯文本错误消息）：原样作为字符串传递
+				data = str.substring($s + 1);
 			}
+		}
+		// 被服务器主动关闭
+		if (name == "close") {
+			_this.open = false;
+			_this.error = data;
+			return;
+		}
+		if (_this.listeners[name]) {
+			try {
+				_this.listeners[name](data);
+			} catch (e) {
+				console.log("listener error for " + name, e);
+			}
+		}
+	};
 
-			// 接收处理的数据
-			if (evt.data instanceof Blob) {
-				// 二进制
-				var reader = new FileReader();
-				reader.addEventListener("loadend", function () {
-					var x = new Uint8Array(reader.result);
-					var res = LZString.decompressFromUint8Array(x);
-					processData(res);
-				});
-				reader.readAsArrayBuffer(evt.data);
-			} else {
-				// 文本数据
-				processData(evt.data);
-			}
-		};
 		// 断线重连，1.5s
 		_this.ws.onclose = function (evt) {
 			if (_this.open) {
+				_this.open = false;
 				setTimeout(function () {
-					socket.begin();
+					socket.begin();   // 不传参，复用保存的 currentRoomID
 				}, 1500);
 			}
 		};
@@ -69,7 +74,7 @@ var socket = {
 		}
 	},
 
-	// 回调功能
+	// 注册回调
 	on: function (name, callback) {
 		this.listeners[name] = callback;
 	},
